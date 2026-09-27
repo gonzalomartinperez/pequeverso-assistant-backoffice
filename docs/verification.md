@@ -23,6 +23,22 @@ WSL2 (Linux 6.18), Node 24.21.0, Next.js 16.3.6, TypeScript 7.0.2, Playwright 1.
 Skips are intentional: the mobile-panel layout test on the three desktop projects, the
 frame-ancestors enforcement check outside Chromium, and WebKit's Shift+Tab step (see limitations).
 
+## Real API integration
+
+Joint verification against a **running** pequeverso-assistant-api (fixture provider, paid AI
+disabled), not the mock: **6/6 passed** in Chromium and WebKit (`npm run test:live`).
+
+| Item | Value |
+|---|---|
+| API state | Working-tree copy of `pequeverso-assistant-api` (bootstrap `8428fce` + uncommitted files), taken 2026-09-27T19:05Z; contract manifest `d163b6d7…` — **identical to the pinned snapshot** |
+| API settings | `AI_PROVIDER=fixture`, `ALLOW_PAID_AI=false`, `FIXTURE_CHUNK_DELAY_MS=350`, `ALLOWED_ORIGINS=["http://localhost:3207"]`, SQLite in a scratch directory; `/health/ready` reported catalog revision `ae6d237877c2`, `price_status: verified` |
+| Web settings | production build, `STOREFRONT_ORIGIN=https://pequeverso.com`, `EMBED_ALLOWED_ORIGINS=http://localhost:3210` |
+| Covered | embedded streamed answer with verified price card, resources, sources and API follow-ups; stop → `run.cancelled` → retry; history restored after reload; same session in the standalone page; `DELETE /session` clears history |
+
+Reproduce: run the API from a copy of its repository with the settings above on `:8000`, then
+`npm run build && npm run live:stack` and `npm run test:live`. Screenshot:
+`screenshots/live-chromium-embed-real-api.png`.
+
 ## Acceptance matrix
 
 Embedded (primary) criteria are verified through the cross-origin harness at real panel sizes.
@@ -74,7 +90,7 @@ caused by a scroll race, duplicated failure + unavailable messages, empty hint r
   skipped unless the user enables full keyboard access. Platform behavior, not app logic.
 - Screen-reader behavior (NVDA, VoiceOver, TalkBack) and real devices were **not** tested; axe scans
   are not proof of accessibility.
-- No real API: joint compatibility is verified only against the API's generated example streams
-  and a faithful mock, not a running API.
+- The real API was run from its **uncommitted** working tree; compatibility must be re-verified
+  once the API commits its contract (docs/api-contract.md).
 - Measurements (type-check/build durations, bundle size, container memory) are recorded in the
   verification increment that follows this document.

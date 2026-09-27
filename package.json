@@ -22,7 +22,9 @@
     "skills:check": "node scripts/check-skills.ts",
     "preview:fixture": "node scripts/test-server.ts",
     "harness": "node scripts/embed-host.ts",
-    "check": "npm run lint && npm run typecheck && npm test && npm run security:check && npm run docs:check && npm run skills:check && npm run build"
+    "check": "npm run lint && npm run typecheck && npm test && npm run security:check && npm run docs:check && npm run skills:check && npm run build",
+    "live:stack": "node scripts/live-stack.ts",
+    "test:live": "playwright test --config playwright.live.config.ts"
   },
   "dependencies": {
     "class-variance-authority": "0.7.1",

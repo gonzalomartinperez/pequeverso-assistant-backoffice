@@ -75,7 +75,8 @@ it, emit exactly the value above for `/embed`). Never emit both.
   no-new-privileges`; the full browser suite ran against that container in CI. See
   [verification.md](verification.md) for runs, sizes and memory.
 - Tested API contract: the snapshot in `contracts/source.json` (provisional; generated in the API
-  agent's uncommitted working tree). **Joint compatibility with a running API is not yet verified.**
+  agent's uncommitted working tree). A running copy of that API (fixture provider) passed the live
+  suite ([verification.md](verification.md#real-api-integration)); re-verify once the API commits its contract.
 
 ## Pending ops / owner decisions
 

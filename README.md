@@ -49,6 +49,7 @@ Details, including which compiler each command uses: [CONTRIBUTING.md](CONTRIBUT
 - [Deployment contract](docs/deployment-contract.md) — vps-ops handoff: image, variables, health, routing
 - [API contract](docs/api-contract.md) — pinned snapshot and refresh procedure
 - [Verification](docs/verification.md) — acceptance matrix, test runs, measurements, screenshots
+- [Dependencies](docs/dependencies.md) — Dependabot and the conservative auto-merge policy
 - [Coordination](docs/coordination.md) — inspected reference revisions and adopted decisions
 - [Decisions](docs/adr/) — architecture decision records
 

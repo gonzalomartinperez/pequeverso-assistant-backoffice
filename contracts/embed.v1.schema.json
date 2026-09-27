@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://assistant.pequeverso.com/contracts/embed.v1.schema.json",
+  "title": "Pequeverso assistant embed protocol v1",
+  "description": "postMessage messages between the storefront host and the assistant iframe. Coordination only: no credentials, message text, product data or transcripts. Receivers must also check event.origin (exact allowlist) and event.source (the expected window). See docs/embed-integration.md.",
+  "$defs": {
+    "host.init": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "channel",
+        "version",
+        "type",
+        "theme",
+        "locale",
+        "visible",
+        "expanded",
+        "page",
+        "canExpand"
+      ],
+      "properties": {
+        "channel": {
+          "const": "pequeverso-assistant"
+        },
+        "version": {
+          "const": 1
+        },
+        "type": {
+          "const": "host.init"
+        },
+        "theme": {
+          "enum": ["light", "dark"]
+        },
+        "locale": {
+          "enum": ["es"]
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "expanded": {
+          "type": "boolean"
+        },
+        "page": {
+          "enum": ["home", "product", "support", null]
+        },
+        "canExpand": {
+          "type": "boolean"
+        }
+      }
+    },
+    "host.state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "version", "type", "visible", "expanded"],
+      "properties": {
+        "channel": {
+          "const": "pequeverso-assistant"
+        },
+        "version": {
+          "const": 1
+        },
+        "type": {
+          "const": "host.state"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "expanded": {
+          "type": "boolean"
+        }
+      }
+    },
+    "host.preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "version", "type", "theme", "locale"],
+      "properties": {
+        "channel": {
+          "const": "pequeverso-assistant"
+        },
+        "version": {
+          "const": 1
+        },
+        "type": {
+          "const": "host.preferences"
+        },
+        "theme": {
+          "enum": ["light", "dark"]
+        },
+        "locale": {
+          "enum": ["es"]
+        }
+      }
+    },
+    "host.context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "version", "type", "page"],
+      "properties": {
+        "channel": {
+          "const": "pequeverso-assistant"
+        },
+        "version": {
+          "const": 1
+        },
+        "type": {
+          "const": "host.context"
+        },
+        "page": {
+          "enum": ["home", "product", "support", null]
+        }
+      }
+    },
+    "host.focus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "version", "type"],
+      "properties": {
+        "channel": {
+          "const": "pequeverso-assistant"
+        },
+        "version": {
+          "const": 1
+        },
+        "type": {
+          "const": "host.focus"
+        }
+      }
+    },
+    "assistant.ready": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "version", "type", "status"],
+      "properties": {
+        "channel": {
+          "const": "pequeverso-assistant"
+        },
+        "version": {
+          "const": 1
+        },
+        "type": {
+          "const": "assistant.ready"
+        },
+        "status": {
+          "enum": ["starting", "ready", "unavailable"]
+        }
+      }
+    },
+    "assistant.activity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "version", "type", "state"],
+      "properties": {
+        "channel": {
+          "const": "pequeverso-assistant"
+        },
+        "version": {
+          "const": 1
+        },
+        "type": {
+          "const": "assistant.activity"
+        },
+        "state": {
+          "enum": ["idle", "responding", "unread"]
+        }
+      }
+    },
+    "assistant.request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "version", "type", "action"],
+      "properties": {
+        "channel": {
+          "const": "pequeverso-assistant"
+        },
+        "version": {
+          "const": 1
+        },
+        "type": {
+          "const": "assistant.request"
+        },
+        "action": {
+          "enum": ["minimize", "expand", "restore"]
+        }
+      }
+    },
+    "HostMessage": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/host.init"
+        },
+        {
+          "$ref": "#/$defs/host.state"
+        },
+        {
+          "$ref": "#/$defs/host.preferences"
+        },
+        {
+          "$ref": "#/$defs/host.context"
+        },
+        {
+          "$ref": "#/$defs/host.focus"
+        }
+      ]
+    },
+    "AssistantMessage": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/assistant.ready"
+        },
+        {
+          "$ref": "#/$defs/assistant.activity"
+        },
+        {
+          "$ref": "#/$defs/assistant.request"
+        }
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/HostMessage"
+    },
+    {
+      "$ref": "#/$defs/AssistantMessage"
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "valid": {
+    "host": [
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.init",
+        "theme": "light",
+        "locale": "es",
+        "visible": true,
+        "expanded": false,
+        "page": "product",
+        "canExpand": true
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.init",
+        "theme": "dark",
+        "locale": "es",
+        "visible": false,
+        "expanded": true,
+        "page": null,
+        "canExpand": false
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.state",
+        "visible": false,
+        "expanded": false
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.preferences",
+        "theme": "dark",
+        "locale": "es"
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.context",
+        "page": "support"
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.focus"
+      }
+    ],
+    "assistant": [
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "assistant.ready",
+        "status": "starting"
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "assistant.ready",
+        "status": "unavailable"
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "assistant.activity",
+        "state": "unread"
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "assistant.request",
+        "action": "expand"
+      }
+    ]
+  },
+  "invalid": {
+    "host": [
+      {
+        "channel": "pequeverso-assistant",
+        "version": 2,
+        "type": "host.focus"
+      },
+      {
+        "channel": "other",
+        "version": 1,
+        "type": "host.focus"
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.focus",
+        "extra": true
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.preferences",
+        "theme": "neon",
+        "locale": "es"
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.preferences",
+        "theme": "dark",
+        "locale": "en"
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.state",
+        "visible": "yes",
+        "expanded": false
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.context",
+        "page": "checkout"
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.init",
+        "theme": "light",
+        "locale": "es",
+        "visible": true,
+        "expanded": false,
+        "page": "home"
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "host.navigate",
+        "target": "https://evil.example/"
+      },
+      "host.focus",
+      null,
+      [],
+      {
+        "version": 1,
+        "type": "host.focus"
+      }
+    ],
+    "assistant": [
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "assistant.request",
+        "action": "navigate"
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "assistant.ready",
+        "status": "ready",
+        "extra": 1
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": 1,
+        "type": "assistant.activity",
+        "state": "typing"
+      },
+      {
+        "channel": "pequeverso-assistant",
+        "version": "1",
+        "type": "assistant.ready",
+        "status": "ready"
+      }
+    ]
+  }
+}

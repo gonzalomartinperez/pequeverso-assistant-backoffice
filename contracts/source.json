@@ -1,0 +1,11 @@
+{
+  "api_repository": "https://github.com/gonzalomartinperez/pequeverso-assistant-api",
+  "api_commit": "8428fce",
+  "api_commit_note": "Bootstrap only. The contract below was generated in the API agent's UNCOMMITTED working tree (branch feat/assistant-foundation) and copied read-only; it is not yet a committed API revision.",
+  "snapshot_taken_at": "2026-09-27T17:08:57Z",
+  "api_manifest_sha256": "d163b6d775a9b8c82d0a61ab7f991863ffd611d62eab01febe1adc174d02b97a",
+  "contract_version": "1",
+  "schema_version": "1",
+  "status": "provisional",
+  "refresh": "docs/api-contract.md#refreshing-the-snapshot"
+}

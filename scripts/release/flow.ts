@@ -49,7 +49,7 @@ export function decideRelease(facts: ReleaseFacts): ReleaseDecision {
     .filter((event) => event.label === HOTFIX_LABEL)
     .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt))
     .at(-1);
-  if (!last || last.event !== "labeled")
+  if (last?.event !== "labeled")
     return { allowed: false, reason: `no current "${HOTFIX_LABEL}" label event` };
   if (last.actor !== facts.owner)
     return {

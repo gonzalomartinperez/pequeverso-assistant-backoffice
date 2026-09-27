@@ -17,8 +17,8 @@ route or Coolify resource exists, and `main` holds only the repository bootstrap
 | Filesystem | Read-only root tested; writable: `/tmp` and `/app/.next/cache` (tmpfs, 32 MiB, `uid=1000,gid=1000,mode=0700`) |
 | State | **Stateless.** No database, volume, migration or backup. Conversations and sessions live in the API. |
 | Secrets | **None.** No build args or runtime variables are secret. |
-| Shutdown | SIGTERM; Next.js closes the server. Budget ≤ 20 s (`stop_grace_period`). |
-| Resources (proposal) | request 0.1 CPU / 128 MB, limit 1 CPU / 384 MB; measured figures in [verification.md](verification.md). The split with the API within the host's capacity is an ops decision. |
+| Shutdown | SIGTERM ends the process immediately (exit 143). The web tier holds no long-lived streams (SSE goes to the API), so no drain period is needed; a 20 s `stop_grace_period` is ample. |
+| Resources (proposal) | request 0.1 CPU / 128 MB, limit 1 CPU / 384 MB (measured ≈ 51 MiB idle, ≈ 224 MiB after a 400-request burst; [verification.md](verification.md#production-container)). The split with the API within the host's capacity is an ops decision. |
 
 ## Runtime variables
 

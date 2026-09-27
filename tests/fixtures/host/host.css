@@ -1,0 +1,163 @@
+/* Harness styling only. The real storefront owns its launcher and panel design. */
+:root {
+  color-scheme: light;
+  font-family: system-ui, sans-serif;
+  --panel-gap: 24px;
+}
+body {
+  margin: 0;
+  background: #fffaf2;
+  color: #0b1f3a;
+}
+.site {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 24px;
+  background: #003068;
+  color: #fff;
+}
+.fixture-tag {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ffd840;
+  color: #0b1f3a;
+  font-weight: 700;
+}
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px;
+  line-height: 1.6;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 12px;
+  border: 1px dashed #5d6b80;
+  border-radius: 12px;
+}
+.controls summary {
+  width: 100%;
+  font-weight: 700;
+}
+.controls label,
+.controls button,
+.controls output {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.controls button {
+  padding: 0 12px;
+}
+.filler {
+  height: 1600px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.launcher {
+  position: fixed;
+  right: max(var(--panel-gap), env(safe-area-inset-right));
+  bottom: max(var(--panel-gap), env(safe-area-inset-bottom));
+  min-height: 56px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: #003068;
+  color: #fff;
+  font:
+    800 16px system-ui,
+    sans-serif;
+  box-shadow: 0 12px 32px rgb(0 48 104 / 24%);
+  cursor: pointer;
+}
+.launcher:focus-visible {
+  outline: 3px solid #007d79;
+  outline-offset: 3px;
+}
+.badge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #c64035;
+  box-shadow: 0 0 0 2px #fff;
+}
+body.panel-open .launcher {
+  display: none;
+}
+
+/* Compact desktop panel; expanded grows inside the viewport (no Fullscreen API). */
+.panel {
+  position: fixed;
+  right: var(--panel-gap);
+  bottom: var(--panel-gap);
+  z-index: 50;
+  width: min(400px, calc(100vw - 2 * var(--panel-gap)));
+  height: min(680px, calc(100dvh - 2 * var(--panel-gap)));
+  border-radius: 20px;
+  overflow: hidden;
+  background: #fffaf2;
+  box-shadow:
+    0 24px 56px rgb(0 48 104 / 22%),
+    0 0 0 1px rgb(0 48 104 / 12%);
+  transition:
+    width 220ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    height 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.panel[hidden] {
+  display: none;
+}
+.panel.expanded {
+  width: min(760px, calc(100vw - 2 * var(--panel-gap)));
+  height: calc(100dvh - 2 * var(--panel-gap));
+}
+.panel iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+}
+
+/* Mobile: near-full viewport, following the visual viewport so the keyboard never covers the composer. */
+@media (max-width: 639px) {
+  .panel,
+  .panel.expanded {
+    right: 0;
+    bottom: auto;
+    top: var(--vv-top, 0px);
+    left: 0;
+    width: 100vw;
+    height: var(--vv-height, 100dvh);
+    border-radius: 0;
+    box-shadow: none;
+  }
+  body.panel-open {
+    overflow: hidden;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    transition: none;
+  }
+}

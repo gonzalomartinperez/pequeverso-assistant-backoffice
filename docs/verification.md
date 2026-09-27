@@ -39,6 +39,50 @@ Reproduce: run the API from a copy of its repository with the settings above on 
 `npm run build && npm run live:stack` and `npm run test:live`. Screenshot:
 `screenshots/live-chromium-embed-real-api.png`.
 
+## Measurements
+
+Same WSL2 machine, which other workloads shared, so absolute times vary ±40 % between runs.
+Development-tool speed and browser performance are reported separately.
+
+### TypeScript 7.0.2 vs 5.9.3 (developer tooling)
+
+Two isolated copies of the same source, identical lockfile except `typescript`; cold runs.
+
+| Measure | TypeScript 7.0.2 | TypeScript 5.9.3 | Finding |
+|---|---|---|---|
+| `tsc --noEmit`, whole project (3 runs) | 2.3 / 3.2 / 3.3 s | 7.3 / 9.6 / 6.3 s | ≈ 2.3× faster (median 3.2 s vs 7.3 s) |
+| Type-check step inside `next build` (6 interleaved builds) | 1.2 / 1.9 / 1.2 s | 8.7 / 14.3 / 5.5 s | 4–7× faster in every pair |
+| Whole `next build`, interleaved pairs | 68 / 110 / 60 s | 79 / 105 / 62 s | **within noise**: webpack compile (13–21 s both), page generation and tracing dominate; no total-build gain is claimed |
+
+A faster checker does not change what ships to browsers: the client bundle is identical.
+
+### Browser (production build, Chromium desktop)
+
+| Measure | Result |
+|---|---|
+| JavaScript loaded by `/embed` | 7 scripts, 528 KB raw / **157 KB gzip** (≈ 127 KB Next.js + React runtime, ≈ 30 KB this app: feature 16 KB, icons + primitives 12 KB, page 2.3 KB); `/` is the same within 1 KB. Legacy polyfills (40 KB gz) are not loaded by modern browsers. |
+| CSS | 30 KB raw (one file, Tailwind output) |
+| Streaming a 12-part answer in the embedded panel, native CPU | 0 long tasks, 0 ms total blocking time |
+| Same, 4× CPU throttling | 5 long tasks, max 131 ms, 164 ms total blocking time |
+| Event Timing, embedded interactions (type, send, minimize, reopen, expand, restore) | max keydown 16 ms / click 24 ms native; 96 ms / 48 ms at 4× throttling |
+
+Structural guarantees behind these numbers: the committed transcript is memoized and keeps the same
+props while tokens arrive (only the draft re-renders), answers are parsed by a linear-time parser,
+and no animation runs per token.
+
+### Production container
+
+| Measure | Result |
+|---|---|
+| Image | 96 MB (`docker image inspect` size), `linux/amd64` |
+| Runtime | UID 1000, read-only root, `/tmp` + 32 MiB `.next/cache` tmpfs, all capabilities dropped, `healthy` |
+| Memory | ≈ 51 MiB idle; ≈ 224 MiB immediately after 400 concurrent page renders |
+| SIGTERM | exits at once with code 143 (signal); acceptable because the web tier holds no streams (SSE goes to the API) |
+| Headers | `/embed`: `frame-ancestors https://pequeverso.com`, `Cache-Control: private, no-store`, no `X-Frame-Options` |
+
+CI (GitHub Actions, PR #1): static checks, image build, and the full browser suite **against this
+image** — 107 passed, 6 skipped.
+
 ## Acceptance matrix
 
 Embedded (primary) criteria are verified through the cross-origin harness at real panel sizes.
@@ -92,5 +136,3 @@ caused by a scroll race, duplicated failure + unavailable messages, empty hint r
   are not proof of accessibility.
 - The real API was run from its **uncommitted** working tree; compatibility must be re-verified
   once the API commits its contract (docs/api-contract.md).
-- Measurements (type-check/build durations, bundle size, container memory) are recorded in the
-  verification increment that follows this document.

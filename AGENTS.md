@@ -34,8 +34,10 @@ secondary demo/testing surface. Public repository; source visible, all rights re
 ## Workflow
 
 - Task branches from `develop` (`feat/`, `fix/`, `docs/`, `test/`, `ci/`, `chore/`, `build/`), PRs
-  into `develop`. Nothing merges into `main` and nothing is deployed without explicit owner
-  authorization. Preserve other agents' uncommitted work; never reset or stash it.
+  into `develop`. `main` receives only `develop` (release) or, with the owner's explicit
+  authorization (label `hotfix-approved` applied by the owner), a `hotfix/*` branch that is then
+  merged back into `develop`. Nothing is deployed without explicit owner authorization. Preserve
+  other agents' uncommitted work; never reset or stash it.
 - Before a PR: `npm run check` (lint, typecheck, unit + contract + boundaries, security, docs,
   skills, build) and `npm run test:browser`. Inspect real screenshots for UI changes, at embedded
   panel sizes through the harness — not only full-page `/embed`.

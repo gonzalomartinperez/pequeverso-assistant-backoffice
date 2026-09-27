@@ -208,6 +208,15 @@ describe("Dependabot auto-merge policy", () => {
     assert.equal(pushed.verdict, "manual");
   });
 
+  it("describes a non-npm update (e.g. GitHub Actions) accurately", () => {
+    const decision = decide(
+      pr({ files: [".github/workflows/quality.yml"], headPackageJson: manifest() }),
+    );
+    assert.equal(decision.verdict, "manual");
+    assert.match(decision.reasons.join(), /not an npm manifest update/);
+    assert.doesNotMatch(decision.reasons.join(), /lockfile-only/);
+  });
+
   it("requires review for lockfile-only maintenance", () => {
     const decision = decide(pr({ files: ["package-lock.json"], headPackageJson: manifest() }));
     assert.equal(decision.verdict, "manual");

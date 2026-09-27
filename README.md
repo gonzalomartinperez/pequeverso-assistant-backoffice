@@ -11,7 +11,8 @@ One conversation implementation, two shells:
 - **`/`** — a secondary standalone page for demos and testing, same components and logic.
 
 Public repository; all rights reserved (see `LICENSE`). **Status:** local release candidate. Not
-deployed; not yet integrated into the storefront; API contract pinned from a provisional snapshot.
+deployed; not yet integrated into the storefront; API contract pinned to the committed API revision
+`dc4e4c6` and verified live against it.
 
 ## Quick start
 

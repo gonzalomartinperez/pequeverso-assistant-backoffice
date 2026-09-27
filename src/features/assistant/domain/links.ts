@@ -1,7 +1,8 @@
 /**
  * URL policy. Every URL the UI renders or acts on (product pages, purchase sections, images,
  * links, sources and links inside answer text) is untrusted until it passes here, even though the
- * API allowlists them too. Pure: uses only the WHATWG `URL` parser.
+ * API allowlists them too. Answer text never produces links (see rich-text.ts). Pure: uses only
+ * the WHATWG `URL` parser.
  */
 import type { Message, Product, Resource } from "./models.ts";
 
@@ -36,9 +37,6 @@ export function externalUrl(value: string, policy: LinkPolicy): string | null {
   if (url.origin === policy.storefrontOrigin) return url.href;
   return url.protocol === "https:" && policy.linkHosts.includes(url.hostname) ? url.href : null;
 }
-
-/** Answer text links are advisory only: same policy as external links, nothing else. */
-export const answerLinkUrl = externalUrl;
 
 function safeImage<T extends { image: Product["image"] }>(item: T, policy: LinkPolicy): T {
   if (!item.image) return item;

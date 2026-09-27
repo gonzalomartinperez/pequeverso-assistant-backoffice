@@ -62,8 +62,8 @@ src/
 - URLs: `domain/links.ts` allows product/purchase/image URLs only on the exact storefront origin and
   informational links only there or on allowlisted https hosts. Products failing the policy are
   dropped, not rendered broken.
-- Answer text: parsed by `domain/rich-text.ts` into a tiny tree (paragraphs, bold, lists, links) and
-  rendered as React elements; there is no HTML rendering path.
+- Answer text: parsed by `domain/rich-text.ts` into a tiny tree (paragraphs, bold, lists) and
+  rendered as React text elements; there is no HTML and no link path (URLs in text stay text).
 - Embedding: see [embed-integration.md](embed-integration.md).
 
 ## Adopted from reference repositories (read-only)

@@ -100,12 +100,19 @@ export function FollowUps({
   );
 }
 
+/**
+ * Per the API handoff, only redacted contact data needs extra UI: a refused payment message is
+ * explained in the answer text, and a replaced answer needs no notice.
+ */
+const SHOWN_NOTICES: readonly Notice[] = ["contact_data_redacted"];
+
 export function Notices({ notices }: { notices: Notice[] }) {
   const { t } = usePresentation();
-  if (!notices.length) return null;
+  const shown = notices.filter((notice) => SHOWN_NOTICES.includes(notice));
+  if (!shown.length) return null;
   return (
     <div className="flex flex-col gap-2">
-      {notices.map((notice) => (
+      {shown.map((notice) => (
         <Callout key={notice} tone="notice">
           <Info aria-hidden="true" />
           <p>{t.notices[notice]}</p>

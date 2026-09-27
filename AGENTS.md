@@ -20,8 +20,8 @@ secondary demo/testing surface. Public repository; source visible, all rights re
 - Never display invented prices, ratings, discounts, stock, urgency or testimonials. Prices appear
   only when the API sends `price` (it omits unverified prices), always with its note and date.
 - Treat API payloads, answer text, URLs and postMessage data as untrusted: validate at the adapter
-  or protocol boundary; render answer text only through `RichTextView` (no HTML path); every URL
-  passes `domain/links.ts`.
+  or protocol boundary; render answer text only through `RichTextView` (no HTML, no auto-linking);
+  every URL passes `domain/links.ts`.
 - No credentials, CSRF tokens or conversation text in URLs, storage, logs or postMessage. Never use
   `"*"` as a postMessage target.
 - No tracking, analytics, session replay or third-party feedback services.

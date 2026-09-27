@@ -74,9 +74,9 @@ it, emit exactly the value above for `/embed`). Never emit both.
   /app/.next/cache:uid=1000,gid=1000,mode=0700,size=32m --cap-drop ALL --security-opt
   no-new-privileges`; the full browser suite ran against that container in CI. See
   [verification.md](verification.md) for runs, sizes and memory.
-- Tested API contract: the snapshot in `contracts/source.json` (provisional; generated in the API
-  agent's uncommitted working tree). A running copy of that API (fixture provider) passed the live
-  suite ([verification.md](verification.md#real-api-integration)); re-verify once the API commits its contract.
+- Tested API contract: `contracts/source.json` — API `dc4e4c6` (committed; contract v1 from
+  `0750524`). That API revision, running with its fixture provider, passed the live suite
+  ([verification.md](verification.md#real-api-integration)).
 
 ## Pending ops / owner decisions
 
@@ -84,4 +84,3 @@ it, emit exactly the value above for `/embed`). Never emit both.
 2. Private registry and publication authorization; first image digest.
 3. Pequeverso-specific Traefik renderer with the header ownership above.
 4. Final CPU/memory split between web and API.
-5. Committed API contract revision to pin before release (replacing the provisional snapshot).

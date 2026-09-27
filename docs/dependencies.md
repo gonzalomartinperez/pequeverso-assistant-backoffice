@@ -72,8 +72,8 @@ churn for routine updates; they do not delay security updates.
 ## Security updates
 
 Dependabot raises security updates against the **default branch (`main`)**, not `target-branch`.
-They are never auto-merged, and the **Branch policy** check blocks merging them into `main`
-directly. Re-target them for normal integration: `gh pr edit <number> --base develop` (or let the
+They are never auto-merged and must not be merged into `main` directly (only `develop` is
+released into `main`). Re-target them for normal integration: `gh pr edit <number> --base develop` (or let the
 next version update carry the fix). Alerts stay open until the fix reaches `main` through a release;
 do not dismiss them to get around the flow.
 
@@ -100,6 +100,7 @@ correctly withheld auto-merge (label `dependencies:manual-review`):
 | #9 | `actions/checkout` 4.4.0 → 7.0.1 | workflow files changed | full CI green → merged |
 | #10 | `actions/upload-artifact` 4.6.2 → 7.0.1 | workflow files changed | full CI green → merged |
 | #11 | Docker `node` 24.21.0 → 26.10.0 | Dockerfile changed | declined: runtime major outside the Node 24 LTS line; ignore rule added |
+| #17 | `actions/setup-node` 4.4.0 → 7.0.0 | workflow files changed | full CI green → merged |
 
 The positive path (an allowlisted npm patch receiving native auto-merge) has only been verified by
 the deterministic tests so far; it will be observed live on the first such Dependabot PR.

@@ -28,6 +28,12 @@ artifacts (manifest `d163b6d7…`). The storefront and vps-ops were unchanged.
 | `portfolio-assistant-web` | `develop` `aed8ea7`, clean tree | embed work and reviewed dependency updates committed | No change needed; this repository's protocol remains independent (no shared package). |
 | `vps-ops` | `develop` `04be619` | dependency-review documentation | No Pequeverso web allocation yet; the deployment contract stands. |
 
+Branch protection was aligned with `pequeverso-assistant-api` (`73d1f3b`, "simplify branch
+protection to match the portfolio"): rulesets require pull requests and strict Required checks, block
+force-pushes and deletion, and have no bypass; the branch flow and the owner-authorized hotfix rule
+are a documented working agreement instead of a Branch policy check (removed to avoid friction,
+after it had been verified live).
+
 ## Requests to other owners
 
 - **API agent:** (done: contract committed.) Web revision verified together: this repository's

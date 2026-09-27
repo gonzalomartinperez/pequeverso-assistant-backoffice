@@ -32,34 +32,25 @@ Describe verification (commands, browsers, screenshots at panel sizes). See `AGE
 
 ## Branch flow and protection
 
-`main` is the default branch (released code); `develop` is the integration branch. Both are
-protected by repository rulesets (`protect-main`, `protect-develop`) with **no bypass actors**:
+`main` is the default branch (released code); `develop` is the integration branch. The flow is a
+working agreement we follow ourselves; GitHub enforces only the safety net, with the same rulesets
+as the other Pequeverso and portfolio repositories (`protect-main`, `protect-develop`, **no bypass
+actors**):
 
 - changes arrive only through pull requests, merged with a **merge commit** (squash and rebase are
   disabled) so ancestry between the long-lived branches is preserved;
-- the aggregate **Required checks** job (GitHub Actions) must pass on a branch that is up to date
-  with its base (strict); it depends on static checks, the production image and the browser suite
-  against that image;
-- the **Branch policy** check (`.github/workflows/branch-policy.yml`; GitHub runs
-  `pull_request_target` workflows from the default branch `main`, and the script is checked out from
-  `main`, so a pull request cannot alter it — changes to it take effect after a release; same route model as the portfolio repository) accepts into
-  `develop` only `type/kebab-case` task branches (`feat`, `fix`, `chore`, `docs`, `refactor`,
-  `perf`, `test`, `ci`, `build`, `revert`), Dependabot branches opened by `dependabot[bot]`, and the
-  `main` back-merge after a hotfix; into `main` only `develop`, or a `hotfix/*` branch the repository
-  owner has approved (see below);
+- the aggregate **Required checks** job (static checks, the production image and the browser suite
+  against that image) must pass on a branch that is up to date with its base (strict);
 - force-pushes and deletion of `main`/`develop` are blocked; review threads must be resolved.
 
-### Hotfixes (owner authorization only)
+Working agreement (not automated, to avoid friction):
 
-A hotfix may go directly into `main` only with the owner's explicit authorization:
-
-1. Branch `hotfix/<short-name>` from `main`, fix, and open a pull request into `main`.
-2. The owner reviews it and applies the label **`hotfix-approved`**. Branch policy verifies through
-   the API that the label was applied by the repository owner **after the latest push**; a label from
-   anyone else, or new commits after the approval, fail the check until the owner re-applies it.
-3. Required checks must still pass; merge with a merge commit.
-4. Immediately open a pull request from `main` into `develop` (an accepted route) and merge it, so
-   both branches stay in sync.
+- task branches `type/kebab-case` (`feat`, `fix`, `chore`, `docs`, `refactor`, `perf`, `test`, `ci`,
+  `build`, `revert`) from `develop`, pull requests into `develop`;
+- only `develop` is merged into `main` (a release);
+- **hotfixes go directly into `main` only with the owner's explicit authorization**: branch
+  `hotfix/<short-name>` from `main`, pull request into `main` with Required checks green, then merge
+  `main` back into `develop` right away so both branches stay in sync.
 
 No approving review is required: the repository has a single maintainer and GitHub does not let an
 author approve their own pull request. If a second maintainer joins, raise

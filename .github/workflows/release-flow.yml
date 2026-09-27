@@ -1,0 +1,38 @@
+name: Release flow
+# Guards the branch flow into main (CONTRIBUTING.md#branch-flow-and-protection): only develop, or a
+# hotfix/* branch approved by the repository owner (label hotfix-approved applied by the owner
+# after the latest push). pull_request_target runs this workflow and its script from the BASE
+# branch, so a pull request cannot weaken the rule; the PR head is never checked out.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+    branches: [main]
+permissions: {}
+concurrency:
+  group: release-flow-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  release-source:
+    name: Release source
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      pull-requests: read
+      issues: read
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/release
+            .nvmrc
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - name: Check the branch flow (base-branch code, API metadata only)
+        run: node scripts/release/run.ts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}

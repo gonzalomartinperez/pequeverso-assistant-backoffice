@@ -1,0 +1,119 @@
+name: Quality
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  static:
+    name: Static checks, unit tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Audit locked dependencies
+        run: npm audit --audit-level=moderate
+      - name: Lint and format (Biome)
+        run: npm run lint
+      - name: Type-check with TypeScript 7 (route types included)
+        run: npm run typecheck
+      - name: Contract snapshot, unit tests and architecture boundaries
+        run: npm test
+      - name: Public-file scan, documentation links and skills
+        run: npm run security:check && npm run docs:check && npm run skills:check
+  image:
+    name: Production image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          load: true
+          tags: pequeverso-assistant-web:rc
+          cache-from: type=gha,scope=web-node24-amd64
+          cache-to: type=gha,mode=max,scope=web-node24-amd64
+      - name: Export the verified image
+        run: docker save pequeverso-assistant-web:rc | gzip -1 > /tmp/image.tar.gz
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: production-image
+          path: /tmp/image.tar.gz
+          retention-days: 7
+          compression-level: 0
+  browser:
+    name: Browser suite against the production image
+    needs: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: production-image
+          path: /tmp/image
+      - name: Load the exact image built above
+        run: gunzip -c /tmp/image/image.tar.gz | docker load
+      - name: Run it hardened (read-only root, no capabilities)
+        run: >-
+          docker run -d --name assistant-web --read-only --tmpfs /tmp
+          --tmpfs /app/.next/cache:uid=1000,gid=1000,mode=0700,size=32m
+          --cap-drop ALL --security-opt no-new-privileges
+          -e EMBED_ALLOWED_ORIGINS=http://localhost:3210 -e STOREFRONT_ORIGIN=http://localhost:3210
+          -p 127.0.0.1:3208:3000 pequeverso-assistant-web:rc
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - name: Embedded (harness) and standalone suites, all engines
+        run: npm run test:browser
+        env:
+          WEB_UPSTREAM: http://127.0.0.1:3208
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: browser-verification
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+      - name: Container logs
+        if: always()
+        run: docker logs assistant-web
+      - if: always()
+        run: docker rm -f assistant-web
+  checks:
+    name: Required checks
+    if: always()
+    needs: [static, image, browser]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail unless every job succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $RESULTS; do [ "$result" = success ] || { echo "job result: $result"; exit 1; }; done

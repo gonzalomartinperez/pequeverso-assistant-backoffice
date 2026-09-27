@@ -1,0 +1,39 @@
+name: Dependency policy
+# Trusted evaluation of Dependabot pull requests (docs/dependencies.md). pull_request_target runs
+# this workflow and the policy code from the BASE branch; the PR head is never checked out,
+# installed or executed. Its only write action is enabling/disabling native auto-merge (pinned to
+# the evaluated head SHA) and setting informational labels.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited, ready_for_review, labeled, unlabeled]
+    branches: [develop, main]
+permissions: {}
+concurrency:
+  group: dependency-policy-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  policy:
+    name: Dependency policy
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # required by enablePullRequestAutoMerge
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/dependabot
+            .nvmrc
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - name: Evaluate and apply the policy (base-branch code only)
+        run: node scripts/dependabot/run.ts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          DEPENDABOT_AUTOMERGE: ${{ vars.DEPENDABOT_AUTOMERGE }}

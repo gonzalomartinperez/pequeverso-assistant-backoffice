@@ -106,10 +106,27 @@ jobs:
         run: docker logs assistant-web
       - if: always()
         run: docker rm -f assistant-web
+  release-source:
+    name: Release source
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Only develop may be merged into main
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$BASE" = main ] && { [ "$HEAD" != develop ] || [ "$HEAD_REPO" != "$REPO" ]; }; then
+            echo "Pull requests into main must come from this repository's develop branch."
+            exit 1
+          fi
+          echo "Branch flow OK (${HEAD:-push} → ${BASE:-n/a})."
   checks:
     name: Required checks
     if: always()
-    needs: [static, image, browser]
+    needs: [static, image, browser, release-source]
     runs-on: ubuntu-latest
     steps:
       - name: Fail unless every job succeeded

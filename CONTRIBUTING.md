@@ -38,11 +38,24 @@ protected by repository rulesets (`protect-main`, `protect-develop`) with **no b
 - changes arrive only through pull requests, merged with a **merge commit** (squash and rebase are
   disabled) so ancestry between the long-lived branches is preserved;
 - the aggregate **Required checks** job (GitHub Actions) must pass on a branch that is up to date
-  with its base (strict); it depends on static checks, the production image, the browser suite
-  against that image, and **Release source**;
-- **Release source** fails any pull request into `main` whose head is not this repository's
-  `develop`, so task branches cannot skip integration;
+  with its base (strict); it depends on static checks, the production image and the browser suite
+  against that image;
+- into `main`, the **Release source** check (`.github/workflows/release-flow.yml`, run from the base
+  branch so a pull request cannot alter it) allows only `develop`, or a `hotfix/*` branch that the
+  repository owner has approved (see below);
 - force-pushes and deletion of `main`/`develop` are blocked; review threads must be resolved.
+
+### Hotfixes (owner authorization only)
+
+A hotfix may go directly into `main` only with the owner's explicit authorization:
+
+1. Branch `hotfix/<short-name>` from `main`, fix, and open a pull request into `main`.
+2. The owner reviews it and applies the label **`hotfix-approved`**. Release source verifies through
+   the API that the label was applied by the repository owner **after the latest push**; a label from
+   anyone else, or new commits after the approval, fail the check until the owner re-applies it.
+3. Required checks must still pass; merge with a merge commit.
+4. Immediately open a pull request from `main` into `develop` (Release source only restricts pull
+   requests into `main`) and merge it, so both branches stay in sync.
 
 No approving review is required: the repository has a single maintainer and GitHub does not let an
 author approve their own pull request. If a second maintainer joins, raise

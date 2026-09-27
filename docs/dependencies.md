@@ -40,8 +40,9 @@ Source of truth: `scripts/dependabot/policy.ts` (tested in `tests/unit/dependabo
 ## How the decision is applied
 
 1. `.github/workflows/dependency-policy.yml` runs on `pull_request_target` (opened, synchronize,
-   reopened, edited, ready_for_review, labeled, unlabeled) for Dependabot PRs. It checks out the
-   **base** revision's `scripts/dependabot/` only and runs it with Node; the PR head is never checked
+   reopened, edited, ready_for_review, labeled, unlabeled) for Dependabot PRs. GitHub runs the
+   workflow file from the default branch (`main`); it checks out `scripts/dependabot/` from `main`
+   only and runs it with Node; the PR head is never checked
    out, installed or executed, and PR text is never interpolated into shell commands.
 2. Eligible → `enablePullRequestAutoMerge` with `mergeMethod: MERGE` and
    `expectedHeadOid` = the evaluated head SHA. Not eligible → auto-merge is disabled if it was on.
@@ -84,12 +85,13 @@ do not dismiss them to get around the flow.
 - **Recover from a bad update:** open a normal PR into `develop` that reverts the merge commit
   (`git revert -m 1 <merge-sha>`) and let CI verify it; never push to protected branches.
 - **Change the policy:** edit `scripts/dependabot/policy.ts` and its tests in a normal PR. The new
-  policy takes effect for PRs based on `develop` once merged there.
+  policy takes effect once it is released to `main` (both the workflow and its scripts come from
+  the default branch).
 
 ## Live verification (2026-09-27)
 
 As soon as the configuration reached `main`, Dependabot opened four real pull requests against
-`develop`. The policy workflow ran on `pull_request_target` from the base branch for each and
+`develop`. The policy workflow ran on `pull_request_target` (from the default branch) for each and
 correctly withheld auto-merge (label `dependencies:manual-review`):
 
 | PR | Update | Policy reason | Human decision |
@@ -106,8 +108,10 @@ the deterministic tests so far; it will be observed live on the first such Depen
 
 - Dependabot reads `.github/dependabot.yml` from the **default branch (`main`)**: version updates
   start only after this configuration reaches `main` through the release flow.
-- `pull_request_target` uses the workflow from the PR's base branch (`develop`), so the policy is
-  active for Dependabot PRs as soon as it is merged into `develop`.
+- `pull_request_target` always runs workflow files from the **default branch** (`main`), whatever the
+  PR's base; the policy scripts are checked out from `main` too. Policy changes therefore take effect
+  only after a release reaches `main` (observed live: a workflow present only on `develop` did not
+  run).
 - Repository settings already in place: auto-merge allowed, merge commits only, branch deletion on
   merge, rulesets `protect-main` / `protect-develop` without bypass. The repository is public, so
   rulesets are available on the current plan.

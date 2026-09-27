@@ -250,9 +250,9 @@ describe("merge gating stays native", () => {
     assert.doesNotMatch(runner, /mergePullRequest|\/merge"|gh pr merge/);
   });
 
-  it("runs trusted base-branch code without checking out or executing the PR head", () => {
+  it("runs trusted default-branch code without checking out or executing the PR head", () => {
     assert.match(workflow, /pull_request_target:/);
-    assert.match(workflow, /ref: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/);
+    assert.match(workflow, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
     assert.doesNotMatch(
       workflow,
       /head\.sha|head\.ref|npm (ci|install)|github\.event\.pull_request\.title/,

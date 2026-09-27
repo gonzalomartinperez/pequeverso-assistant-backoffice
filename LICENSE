@@ -1,6 +1,7 @@
 Copyright (c) 2026 Gonzalo Martín Pérez / Pequeverso. All rights reserved.
 
-This repository is private. No licence is granted to copy, modify, distribute or use its source
-code, the Pequeverso name, logo system, visual identity, copy or media, except by the owner.
+This repository is publicly visible for transparency and review. Public visibility is not a licence:
+no permission is granted to copy, modify, distribute or use its source code, the Pequeverso name,
+logo system, visual identity, copy or media, except by the owner.
 
-Third-party components keep their own licences; see THIRD_PARTY_NOTICES.md where present.
+Third-party components keep their own licences; see THIRD_PARTY_NOTICES.md.

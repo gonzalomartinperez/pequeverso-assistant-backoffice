@@ -47,14 +47,11 @@ const AssistantMessage = memo(function AssistantMessage({
   followUps,
   onFollowUp,
 }: AssistantMessageProps) {
-  const { t, policy } = usePresentation();
   return (
     <AssistantFrame>
       {/* No entrance motion: the final answer replaces the visible draft in place. */}
       <div className="flex flex-col gap-4">
-        {message.content && (
-          <RichTextView text={message.content} policy={policy} newTab={t.opensInNewTab} />
-        )}
+        {message.content && <RichTextView text={message.content} />}
         <Notices notices={message.notices} />
         <ProductSection products={message.products} resources={message.resources} />
         <Links links={message.links} />
@@ -108,13 +105,13 @@ export function PendingQuestion({ pending }: { pending: Pending }) {
 
 /** The live draft: same renderer as the final answer, so completion causes no reflow of format. */
 export function StreamingAnswer({ pending }: { pending: Pending }) {
-  const { t, policy } = usePresentation();
+  const { t } = usePresentation();
   if (pending.answered) return null;
   return (
     <AssistantFrame busy>
       {pending.draft ? (
         <div className="relative">
-          <RichTextView text={pending.draft} policy={policy} newTab={t.opensInNewTab} />
+          <RichTextView text={pending.draft} />
           {!pending.stopping && (
             <span
               aria-hidden="true"
@@ -159,7 +156,7 @@ export function OutcomeView({
   onRetry: () => void;
   onDismiss: () => void;
 }) {
-  const { t, policy } = usePresentation();
+  const { t } = usePresentation();
   const { title, detail, Icon } = outcomeCopy(outcome, t);
   const retryable = outcome.kind !== "failed" || outcome.retryable;
   return (
@@ -171,8 +168,6 @@ export function OutcomeView({
           </p>
           <RichTextView
             text={outcome.partial}
-            policy={policy}
-            newTab={t.opensInNewTab}
             className="border-s-2 border-line-strong ps-3 opacity-80"
           />
         </div>

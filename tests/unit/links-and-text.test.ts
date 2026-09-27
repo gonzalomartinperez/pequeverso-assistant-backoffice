@@ -95,14 +95,14 @@ describe("URL policy", () => {
 });
 
 describe("rich text", () => {
-  it("parses paragraphs, bold and bullet lists without any HTML path", () => {
+  it("parses paragraphs, bold and bullet/numbered lists; markup stays literal text", () => {
     const blocks = parseRichText("**Hola** <b>x</b>\n\n- uno\n- **dos**\n\n1. a\n2. b");
     assert.equal(blocks.length, 3);
     assert.deepEqual(blocks[0], {
       kind: "paragraph",
       lines: [
         [
-          { kind: "strong", children: [{ kind: "text", text: "Hola" }] },
+          { kind: "strong", text: "Hola" },
           { kind: "text", text: " <b>x</b>" },
         ],
       ],
@@ -111,16 +111,11 @@ describe("rich text", () => {
     assert.equal(blocks[2]?.kind === "list" && blocks[2].ordered, true);
   });
 
-  it("turns only http(s) URLs into link candidates and trims sentence punctuation", () => {
-    const nodes = parseInline(
-      "Mira https://pequeverso.com/soporte/. o [aquí](javascript:alert(1))",
-    );
-    assert.deepEqual(nodes[1], {
-      kind: "link",
-      label: "https://pequeverso.com/soporte/",
-      url: "https://pequeverso.com/soporte/",
-    });
-    assert.ok(!nodes.some((node) => node.kind === "link" && node.url.startsWith("javascript")));
+  it("never auto-links: URLs and [label](url) stay plain text (API handoff rule)", () => {
+    const nodes = parseInline("Mira https://pequeverso.com/soporte/ o [aquí](javascript:alert(1))");
+    assert.deepEqual(nodes, [
+      { kind: "text", text: "Mira https://pequeverso.com/soporte/ o [aquí](javascript:alert(1))" },
+    ]);
   });
 
   it("stays linear on adversarial input", () => {

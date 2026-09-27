@@ -382,12 +382,14 @@ test.describe("preferences, themes and protocol abuse", () => {
     const frame = await openPanel(page);
     await ask(frame, "muéstrame enlaces");
     await expect(frame.getByRole("article")).toHaveCount(1); // the foreign-URL product is dropped
-    await expect(frame.getByRole("link", { name: /^soporte/ })).toHaveAttribute(
+    // Answer text is never linkified, not even for allowed URLs; actions come from links[].
+    await expect(frame.getByText("[soporte](", { exact: false })).toBeVisible();
+    await expect(frame.getByRole("link", { name: /^soporte/ })).toHaveCount(0);
+    await expect(frame.getByRole("link", { name: "sitio externo" })).toHaveCount(0);
+    await expect(frame.getByRole("link", { name: /Soporte y contacto/ })).toHaveAttribute(
       "href",
       `${HARNESS}/soporte/`,
     );
-    await expect(frame.getByRole("link", { name: "sitio externo" })).toHaveCount(0);
-    await expect(frame.getByText("sitio externo")).toBeVisible();
     await expect(frame.getByRole("link", { name: "Enlace no permitido" })).toHaveCount(0);
     await ask(frame, "respuesta larga");
     await expect(frame.getByText("<script>alert(1)</script>").first()).toBeVisible();

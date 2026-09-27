@@ -19,12 +19,21 @@ The API working tree gained `app/presentation/*` and generated `contracts/` afte
 routes were unchanged, `http.py` hash changed. The snapshot was re-taken from the generated
 artifacts (manifest `d163b6d7…`). The storefront and vps-ops were unchanged.
 
+## Milestone 2 — before the first release (2026-09-27 20:05 UTC)
+
+| Repository | Revision | Change since milestone 1 | Adopted / decided |
+|---|---|---|---|
+| `pequeverso-assistant-api` | `develop` `dc4e4c6` (released to its `main` `207a61f`); clean tree | Everything committed; contract v1 introduced in `0750524`; committed handoffs `docs/handoffs/assistant-web.md` and `storefront-transition.md` | Repinned to the committed revision (artifacts byte-identical). Aligned with the handoff: answer text is never auto-linked; only `contact_data_redacted` shows a notice. Kept deliberately: key reuse once after an interruption (API replay semantics), "Cómo comprar" label. Live suite re-run against `dc4e4c6`: 6/6. The storefront transition confirms **no storefront chat work ever existed**, so there was nothing to hand over. |
+| `pequeverso` | `develop` `7ae5987` | unchanged | — |
+| `portfolio-assistant-web` | `develop` `aed8ea7`, clean tree | embed work and reviewed dependency updates committed | No change needed; this repository's protocol remains independent (no shared package). |
+| `vps-ops` | `develop` `04be619` | dependency-review documentation | No Pequeverso web allocation yet; the deployment contract stands. |
+
 ## Requests to other owners
 
-- **API agent:** commit the contract (`contracts/`), so this repository can pin a real revision;
-  confirm `purchase_url` stays on the storefront origin; a retry of a failed run stores the question
-  twice (visible after reload) — consider an explicit retry semantic; confirm the idle heartbeat
-  (15 s) stays ≤ 15 s since the client treats 45 s of silence as a dead stream.
+- **API agent:** (done: contract committed.) Web revision verified together: this repository's
+  `develop` after the handoff-alignment PR, against API `dc4e4c6`. Open points: a retry of a failed
+  run stores the question twice (visible after reload) — consider an explicit retry semantic; keep
+  the idle heartbeat ≤ 15 s (the client treats 45 s of silence as a dead stream).
 - **Storefront owner (deferred integration):** see [embed-integration.md](embed-integration.md) —
   `frame-src` addition, launcher/panel port of `tests/fixtures/host/host.ts`, page context values.
 - **vps-ops:** see [deployment-contract.md](deployment-contract.md) — domain approval, Pequeverso

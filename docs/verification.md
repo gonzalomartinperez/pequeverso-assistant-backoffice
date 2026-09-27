@@ -30,7 +30,7 @@ disabled), not the mock: **6/6 passed** in Chromium and WebKit (`npm run test:li
 
 | Item | Value |
 |---|---|
-| API state | Working-tree copy of `pequeverso-assistant-api` (bootstrap `8428fce` + uncommitted files), taken 2026-09-27T19:05Z; contract manifest `d163b6d7…` — **identical to the pinned snapshot** |
+| API state | **Committed** `pequeverso-assistant-api` `develop` `dc4e4c6` (`git archive`), contract manifest `d163b6d7…` = the pinned contract. An earlier run against the same contract from the API's then-uncommitted tree also passed 6/6. |
 | API settings | `AI_PROVIDER=fixture`, `ALLOW_PAID_AI=false`, `FIXTURE_CHUNK_DELAY_MS=350`, `ALLOWED_ORIGINS=["http://localhost:3207"]`, SQLite in a scratch directory; `/health/ready` reported catalog revision `ae6d237877c2`, `price_status: verified` |
 | Web settings | production build, `STOREFRONT_ORIGIN=https://pequeverso.com`, `EMBED_ALLOWED_ORIGINS=http://localhost:3210` |
 | Covered | embedded streamed answer with verified price card, resources, sources and API follow-ups; stop → `run.cancelled` → retry; history restored after reload; same session in the standalone page; `DELETE /session` clears history |
@@ -95,7 +95,7 @@ Embedded (primary) criteria are verified through the cross-origin harness at rea
 | Answer | Streamed answer, verified product card with price, note and date | ✔ | ✔ |
 | Answer | Sources disclosure, useful links, follow-up chips | ✔ | ✔ |
 | Answer | Price omitted when the API sends none (unit: API example) | ✔ | ✔ |
-| Safety | Foreign product URL dropped, unlisted links not rendered, markup shown as text | ✔ | shared view |
+| Safety | Foreign product URL dropped, unlisted links not rendered, answer text never linkified, markup shown as text | ✔ | shared view |
 | Streaming | Stop keeps partial text; retry succeeds | ✔ | shared view |
 | Streaming | Interrupted stream (EOF, stall ≥ 45 s) reported with partial text | ✔ (+ unit) | shared view |
 | Streaming | No forced scroll while rereading; jump-to-latest control | ✔ | shared view |
@@ -134,5 +134,3 @@ caused by a scroll race, duplicated failure + unavailable messages, empty hint r
   skipped unless the user enables full keyboard access. Platform behavior, not app logic.
 - Screen-reader behavior (NVDA, VoiceOver, TalkBack) and real devices were **not** tested; axe scans
   are not proof of accessibility.
-- The real API was run from its **uncommitted** working tree; compatibility must be re-verified
-  once the API commits its contract (docs/api-contract.md).

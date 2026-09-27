@@ -1,0 +1,19 @@
+# Build context: only what the image needs (see Dockerfile COPY lines).
+node_modules
+.next
+.git
+.github
+.claude
+.agents
+.env
+.env.*
+!.env.example
+*.log
+test-results
+playwright-report
+blob-report
+tests
+docs
+contracts
+scripts
+.integration

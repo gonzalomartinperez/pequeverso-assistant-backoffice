@@ -40,9 +40,13 @@ protected by repository rulesets (`protect-main`, `protect-develop`) with **no b
 - the aggregate **Required checks** job (GitHub Actions) must pass on a branch that is up to date
   with its base (strict); it depends on static checks, the production image and the browser suite
   against that image;
-- into `main`, the **Release source** check (`.github/workflows/release-flow.yml`, run from the base
-  branch so a pull request cannot alter it) allows only `develop`, or a `hotfix/*` branch that the
-  repository owner has approved (see below);
+- the **Branch policy** check (`.github/workflows/branch-policy.yml`; GitHub runs
+  `pull_request_target` workflows from the default branch `main`, and the script is checked out from
+  `main`, so a pull request cannot alter it — changes to it take effect after a release; same route model as the portfolio repository) accepts into
+  `develop` only `type/kebab-case` task branches (`feat`, `fix`, `chore`, `docs`, `refactor`,
+  `perf`, `test`, `ci`, `build`, `revert`), Dependabot branches opened by `dependabot[bot]`, and the
+  `main` back-merge after a hotfix; into `main` only `develop`, or a `hotfix/*` branch the repository
+  owner has approved (see below);
 - force-pushes and deletion of `main`/`develop` are blocked; review threads must be resolved.
 
 ### Hotfixes (owner authorization only)
@@ -50,12 +54,12 @@ protected by repository rulesets (`protect-main`, `protect-develop`) with **no b
 A hotfix may go directly into `main` only with the owner's explicit authorization:
 
 1. Branch `hotfix/<short-name>` from `main`, fix, and open a pull request into `main`.
-2. The owner reviews it and applies the label **`hotfix-approved`**. Release source verifies through
+2. The owner reviews it and applies the label **`hotfix-approved`**. Branch policy verifies through
    the API that the label was applied by the repository owner **after the latest push**; a label from
    anyone else, or new commits after the approval, fail the check until the owner re-applies it.
 3. Required checks must still pass; merge with a merge commit.
-4. Immediately open a pull request from `main` into `develop` (Release source only restricts pull
-   requests into `main`) and merge it, so both branches stay in sync.
+4. Immediately open a pull request from `main` into `develop` (an accepted route) and merge it, so
+   both branches stay in sync.
 
 No approving review is required: the repository has a single maintainer and GitHub does not let an
 author approve their own pull request. If a second maintainer joins, raise

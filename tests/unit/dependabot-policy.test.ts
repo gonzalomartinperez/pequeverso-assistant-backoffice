@@ -208,6 +208,15 @@ describe("Dependabot auto-merge policy", () => {
     assert.equal(pushed.verdict, "manual");
   });
 
+  it("describes a non-npm update (e.g. GitHub Actions) accurately", () => {
+    const decision = decide(
+      pr({ files: [".github/workflows/quality.yml"], headPackageJson: manifest() }),
+    );
+    assert.equal(decision.verdict, "manual");
+    assert.match(decision.reasons.join(), /not an npm manifest update/);
+    assert.doesNotMatch(decision.reasons.join(), /lockfile-only/);
+  });
+
   it("requires review for lockfile-only maintenance", () => {
     const decision = decide(pr({ files: ["package-lock.json"], headPackageJson: manifest() }));
     assert.equal(decision.verdict, "manual");
@@ -241,9 +250,9 @@ describe("merge gating stays native", () => {
     assert.doesNotMatch(runner, /mergePullRequest|\/merge"|gh pr merge/);
   });
 
-  it("runs trusted base-branch code without checking out or executing the PR head", () => {
+  it("runs trusted default-branch code without checking out or executing the PR head", () => {
     assert.match(workflow, /pull_request_target:/);
-    assert.match(workflow, /ref: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/);
+    assert.match(workflow, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
     assert.doesNotMatch(
       workflow,
       /head\.sha|head\.ref|npm (ci|install)|github\.event\.pull_request\.title/,

@@ -1,0 +1,66 @@
+# Dependency updates (docs/dependencies.md). Read from the default branch (main); version updates
+# target develop. Security updates are raised against the default branch and are never auto-merged.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Argentina/Buenos_Aires
+    open-pull-requests-limit: 5
+    rebase-strategy: auto
+    # Cooldown delays routine version updates only; security updates are not delayed.
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      # Every member must also pass the policy allowlist for the group to auto-merge.
+      low-risk-patches:
+        applies-to: version-updates
+        update-types: [patch]
+        patterns:
+          - lucide-react
+          - clsx
+          - tailwind-merge
+          - class-variance-authority
+          - "@biomejs/biome"
+          - "@axe-core/playwright"
+          - "@types/node"
+          - "@types/react"
+          - "@types/react-dom"
+    ignore:
+      # Node typings follow the Node LTS line in .nvmrc (24.x).
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
+    labels: [dependencies]
+    commit-message:
+      prefix: build(deps)
+      prefix-development: build(deps-dev)
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Argentina/Buenos_Aires
+    open-pull-requests-limit: 3
+    rebase-strategy: auto
+    labels: [dependencies, ci]
+    commit-message:
+      prefix: ci(deps)
+  - package-ecosystem: docker
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    rebase-strategy: auto
+    labels: [dependencies, docker]
+    commit-message:
+      prefix: build(docker)

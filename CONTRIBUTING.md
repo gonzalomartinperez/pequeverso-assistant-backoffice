@@ -29,3 +29,22 @@ not provide it): the boundary checker scans imports without it, and Next uses th
 
 Branch from `develop`, keep changes focused, use Conventional Commits, and target `develop`.
 Describe verification (commands, browsers, screenshots at panel sizes). See `AGENTS.md`.
+
+## Branch flow and protection
+
+`main` is the default branch (released code); `develop` is the integration branch. Both are
+protected by repository rulesets (`protect-main`, `protect-develop`) with **no bypass actors**:
+
+- changes arrive only through pull requests, merged with a **merge commit** (squash and rebase are
+  disabled) so ancestry between the long-lived branches is preserved;
+- the aggregate **Required checks** job (GitHub Actions) must pass on a branch that is up to date
+  with its base (strict); it depends on static checks, the production image, the browser suite
+  against that image, and **Release source**;
+- **Release source** fails any pull request into `main` whose head is not this repository's
+  `develop`, so task branches cannot skip integration;
+- force-pushes and deletion of `main`/`develop` are blocked; review threads must be resolved.
+
+No approving review is required: the repository has a single maintainer and GitHub does not let an
+author approve their own pull request. If a second maintainer joins, raise
+`required_approving_review_count` in both rulesets. Task branches are deleted automatically after
+merge; at rest only `main` and `develop` exist.

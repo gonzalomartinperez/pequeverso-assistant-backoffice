@@ -40,8 +40,9 @@ protected by repository rulesets (`protect-main`, `protect-develop`) with **no b
 - the aggregate **Required checks** job (GitHub Actions) must pass on a branch that is up to date
   with its base (strict); it depends on static checks, the production image and the browser suite
   against that image;
-- the **Branch policy** check (`.github/workflows/branch-policy.yml`, run from the base branch so a
-  pull request cannot alter it; same route model as the portfolio repository) accepts into
+- the **Branch policy** check (`.github/workflows/branch-policy.yml`; GitHub runs
+  `pull_request_target` workflows from the default branch `main`, and the script is checked out from
+  `main`, so a pull request cannot alter it — changes to it take effect after a release; same route model as the portfolio repository) accepts into
   `develop` only `type/kebab-case` task branches (`feat`, `fix`, `chore`, `docs`, `refactor`,
   `perf`, `test`, `ci`, `build`, `revert`), Dependabot branches opened by `dependabot[bot]`, and the
   `main` back-merge after a hotfix; into `main` only `develop`, or a `hotfix/*` branch the repository

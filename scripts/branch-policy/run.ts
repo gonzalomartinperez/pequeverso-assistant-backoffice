@@ -1,10 +1,10 @@
 /**
- * Evaluates the branch-flow rule for one pull request (.github/workflows/release-flow.yml) from
+ * Evaluates the branch policy for one pull request (.github/workflows/branch-policy.yml) from
  * authenticated GitHub API metadata and fails the check when the flow is not allowed.
  * Environment: GITHUB_TOKEN, GITHUB_REPOSITORY, PR_NUMBER, GITHUB_STEP_SUMMARY.
  */
 import { appendFileSync } from "node:fs";
-import { decideRelease, type LabelEvent } from "./flow.ts";
+import { decideRoute, type LabelEvent } from "./policy.ts";
 
 const API = "https://api.github.com";
 const token = process.env.GITHUB_TOKEN ?? "";
@@ -31,6 +31,7 @@ async function get<T>(path: string): Promise<T> {
 }
 
 type Pull = {
+  user: { login: string };
   base: { ref: string; repo: { full_name: string; owner: { login: string } } };
   head: { ref: string; sha: string; repo: { full_name: string } | null };
   labels: { name: string }[];
@@ -66,12 +67,13 @@ const labelEvents: LabelEvent[] = events.flatMap((event) =>
       ]
     : [],
 );
-const decision = decideRelease({
+const decision = decideRoute({
   baseRef: pr.base.ref,
   headRef: pr.head.ref,
   headRepo: pr.head.repo?.full_name ?? "",
   repo: pr.base.repo.full_name,
   owner: pr.base.repo.owner.login,
+  author: pr.user.login,
   currentLabels: pr.labels.map((label) => label.name),
   labelEvents,
   headCommittedAt: head.commit.committer.date,
@@ -79,5 +81,5 @@ const decision = decideRelease({
 const line = `${decision.allowed ? "Allowed" : "Refused"}: ${decision.reason}`;
 console.log(line);
 if (process.env.GITHUB_STEP_SUMMARY)
-  appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Release source\n\n${line}\n`);
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Branch policy\n\n${line}\n`);
 if (!decision.allowed) process.exitCode = 1;

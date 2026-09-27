@@ -204,7 +204,9 @@ export function decide(pr: PullRequestFacts): Decision {
     reasons.push(`changes outside package.json/package-lock.json: ${unexpected.join(", ")}`);
   if (!pr.files.includes("package.json"))
     reasons.push(
-      "lockfile-only change: its full transitive impact cannot be established automatically",
+      pr.files.includes("package-lock.json")
+        ? "lockfile-only change: its full transitive impact cannot be established automatically"
+        : "not an npm manifest update (package.json unchanged)",
     );
   const { updates, problems } = manifestUpdates(pr.basePackageJson, pr.headPackageJson);
   reasons.push(...problems);

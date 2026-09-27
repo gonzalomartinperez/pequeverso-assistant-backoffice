@@ -71,7 +71,7 @@ churn for routine updates; they do not delay security updates.
 ## Security updates
 
 Dependabot raises security updates against the **default branch (`main`)**, not `target-branch`.
-They are never auto-merged, and the **Release source** check blocks merging them into `main`
+They are never auto-merged, and the **Branch policy** check blocks merging them into `main`
 directly. Re-target them for normal integration: `gh pr edit <number> --base develop` (or let the
 next version update carry the fix). Alerts stay open until the fix reaches `main` through a release;
 do not dismiss them to get around the flow.
@@ -85,6 +85,22 @@ do not dismiss them to get around the flow.
   (`git revert -m 1 <merge-sha>`) and let CI verify it; never push to protected branches.
 - **Change the policy:** edit `scripts/dependabot/policy.ts` and its tests in a normal PR. The new
   policy takes effect for PRs based on `develop` once merged there.
+
+## Live verification (2026-09-27)
+
+As soon as the configuration reached `main`, Dependabot opened four real pull requests against
+`develop`. The policy workflow ran on `pull_request_target` from the base branch for each and
+correctly withheld auto-merge (label `dependencies:manual-review`):
+
+| PR | Update | Policy reason | Human decision |
+|---|---|---|---|
+| #8 | `actions/download-artifact` 4.3.0 → 8.0.1 | workflow files changed | full CI green (artifact round trip) → merged |
+| #9 | `actions/checkout` 4.4.0 → 7.0.1 | workflow files changed | full CI green → merged |
+| #10 | `actions/upload-artifact` 4.6.2 → 7.0.1 | workflow files changed | full CI green → merged |
+| #11 | Docker `node` 24.21.0 → 26.10.0 | Dockerfile changed | declined: runtime major outside the Node 24 LTS line; ignore rule added |
+
+The positive path (an allowlisted npm patch receiving native auto-merge) has only been verified by
+the deterministic tests so far; it will be observed live on the first such Dependabot PR.
 
 ## Activation prerequisites
 

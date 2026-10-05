@@ -90,7 +90,7 @@ configuration and committed for review; `npm run db:check` fails if the two ever
   callback refusal, database rate limiting, id-only audit, no password endpoints, invitation not
   spent when the sign-up transaction rolls back, 8 concurrent first sign-ups on a 5-connection
   pool, viewer refused on every linking endpoint, concurrent invitations for one e-mail.
-- `npm run test:backoffice`: the same flows in Chromium, Firefox and WebKit against the production
+- `npm run test:browser`: the same flows in Chromium, Firefox and WebKit against the production
   build, signing in through the fake provider (no session minting or bypass).
 - Test-only switches (`AUTH_TEST_ISSUER`, `AUTH_DISABLE_RATE_LIMIT`) are refused in production and
   outside a loopback origin and a loopback database named `*test*`/`*fixture*`; scripts that create

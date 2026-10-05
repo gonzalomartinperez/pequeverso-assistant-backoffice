@@ -3,7 +3,7 @@
 Private operations backoffice of the Pequeverso shopping assistant: OAuth sign-in for the owner
 and invited people, access management, and a dashboard of the assistant's health, catalog
 freshness, runs, latency, tokens and spend. The public conversation lives only in the storefront
-(`pequeverso`); this repository's legacy chat shells (`/`, `/embed`) are scheduled for removal.
+(`pequeverso`); the former chat shells were removed from this repository (see git history).
 
 The repository is public; the application is private. All rights reserved (see `LICENSE`).
 **Status:** not deployed. No OAuth apps, domain, database or image exist in any environment.
@@ -31,9 +31,8 @@ provider signs you in as `owner@example.test`; the dashboard shows the **synthet
 |---|---|
 | `npm run check` | Biome, TypeScript 7, unit/contract/boundary tests, file/docs/skills checks, build |
 | `npm run test:db` | Schema drift check + PostgreSQL integration suite (`DATABASE_URL` or `TEST_DATABASE_URL`: a disposable server) |
-| `npm run test:backoffice` | Playwright against the production build, real PostgreSQL, fake IdP, mock ops |
+| `npm run test:browser` | Playwright against the production build, real PostgreSQL, fake IdP, mock ops |
 | `npm run db:migrate` | Apply `migrations/` to `DATABASE_URL` |
-| `npm run test:browser` | Legacy chat suite (until removal) |
 
 ## Documentation
 

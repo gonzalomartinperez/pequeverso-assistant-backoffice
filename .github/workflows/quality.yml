@@ -150,90 +150,8 @@ jobs:
           tags: pequeverso-assistant-web:rc
           cache-from: type=gha,scope=web-node24-amd64
           cache-to: type=gha,mode=max,scope=web-node24-amd64
-      - name: Export the verified image
-        run: |
-          docker save pequeverso-assistant-web:rc | gzip -1 > /tmp/image.tar.gz
-          docker image inspect pequeverso-assistant-web:rc --format '{{.Id}}' | tee /tmp/image-id.txt
-          echo "Image id: $(cat /tmp/image-id.txt)" >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: production-image
-          path: |
-            /tmp/image.tar.gz
-            /tmp/image-id.txt
-          retention-days: 7
-          compression-level: 0
-
-  browser:
-    # The exact image built above, run hardened, split into three shards that load the same image.
-    name: Browser suite against the production image (${{ matrix.shard }}/3)
-    needs: image
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: production-image
-          path: /tmp/image
-      - name: Load the exact image built above
-        run: |
-          gunzip -c /tmp/image/image.tar.gz | docker load
-          test "$(docker image inspect pequeverso-assistant-web:rc --format '{{.Id}}')" = "$(cat /tmp/image/image-id.txt)"
-      - name: Run it hardened (read-only root, no capabilities)
-        run: >-
-          docker run -d --name assistant-web --read-only --tmpfs /tmp
-          --tmpfs /app/.next/cache:uid=1000,gid=1000,mode=0700,size=32m
-          --cap-drop ALL --security-opt no-new-privileges
-          -e EMBED_ALLOWED_ORIGINS=http://localhost:3210 -e STOREFRONT_ORIGIN=http://localhost:3210
-          -e BACKOFFICE_ENVIRONMENT=test
-          -p 127.0.0.1:3208:3000 pequeverso-assistant-web:rc
-      - name: Resolve Playwright version
-        id: playwright
-        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-      - name: Restore Playwright browsers
-        id: browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-all
-      - name: Install Playwright browsers
-        if: steps.browsers.outputs.cache-hit != 'true'
-        run: npx playwright install chromium firefox webkit
-      - name: Install browser system dependencies
-        run: npx playwright install-deps chromium firefox webkit
-      - name: Embedded (harness) and standalone suites, all engines (shard ${{ matrix.shard }}/3)
-        run: npm run test:browser -- --shard="${SHARD}/3"
-        env:
-          SHARD: ${{ matrix.shard }}
-          WEB_UPSTREAM: http://127.0.0.1:3208
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: always()
-        with:
-          name: browser-verification-${{ matrix.shard }}
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 14
-          if-no-files-found: ignore
-      - name: Container logs
-        if: always()
-        run: docker logs assistant-web
-      - if: always()
-        run: docker rm -f assistant-web
+      - name: Smoke the exact image hardened (fail-closed, migrations, readiness, headers)
+        run: scripts/smoke-image.sh pequeverso-assistant-web:rc
 
   backoffice:
     # Production build + real PostgreSQL + the real Better Auth callback against the local fake
@@ -280,7 +198,7 @@ jobs:
       - name: Install browser system dependencies
         run: npx playwright install-deps chromium firefox webkit
       - name: Backoffice suite, all engines
-        run: npm run test:backoffice
+        run: npm run test:browser
         env:
           TEST_DATABASE_URL: postgres://backoffice:ci-only@127.0.0.1:5432/backoffice_test
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -288,14 +206,14 @@ jobs:
         with:
           # Report only: traces would hold the disposable test sessions' cookies.
           name: backoffice-verification
-          path: playwright-report-backoffice/
+          path: playwright-report/
           retention-days: 14
           if-no-files-found: ignore
 
   checks:
     name: Required checks
     if: always()
-    needs: [workflows, secrets, static, database, image, browser, backoffice]
+    needs: [workflows, secrets, static, database, image, backoffice]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions: {}

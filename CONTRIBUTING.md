@@ -13,16 +13,15 @@ cp .env.example .env.local   # optional: local runtime values (never commit)
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | Next dev server on :3201 (needs an API on the same origin for conversations; prefer `preview:fixture`) |
-| `npm run preview:fixture` | Builds nothing; serves the last `npm run build` behind the test proxy (:3207) with the mock API (:8207) and the storefront harness (:3210). Open http://localhost:3210 for the embedded experience, http://localhost:3207 for standalone |
+| `npm run dev` | Next dev server on :3201 (needs `DATABASE_URL` and the other variables in `.env.local`; prefer `npm run preview:backoffice`) |
+| `npm run preview:backoffice` | Serves the last `npm run build` with a fresh PostgreSQL database, the fake IdP and the synthetic ops mock (`TEST_DATABASE_URL` required) on :3241 |
 | `npm run build` | `next build --webpack`; type-checks with the project-local **TypeScript 7** `tsc` CLI (Next's default `useTypeScriptCli`) |
 | `npm run typecheck` | `next typegen` (route types) then **TypeScript 7** `tsc --noEmit` over the whole project, tests included |
-| `npm test` | Contract snapshot check, then `node --test` on `tests/unit/**/*.test.ts` (Node 24 strips types natively; no compiler involved) including the architecture-boundary check |
-| `npm run test:browser` | Playwright: Chromium, Firefox, WebKit desktop + mobile Chromium/WebKit (`@mobile` specs) against the deterministic stack |
+| `npm test` | `node --test` on `tests/unit/**/*.test.ts` (Node 24 strips types natively; no compiler involved): access rules, pinned ops contract, configuration, CSP, fixture safety and the architecture-boundary check |
 | `npm run lint` / `npm run format` | Biome (lint + format); Biome does not type-check |
 | `npm run check` | Everything above except browsers and databases |
 | `npm run test:db` | `scripts/db-check.ts` (migrations vs Better Auth schema, idempotent re-apply) and `tests/integration` (real OAuth callback against `scripts/fake-idp.ts`); needs a disposable PostgreSQL in `DATABASE_URL` or `TEST_DATABASE_URL`; each run creates and drops its own databases |
-| `npm run test:backoffice` | Playwright (`playwright.backoffice.config.ts`) against the production build started by `scripts/backoffice-stack.ts`: ports 3241 (web), 8237 (mock ops), 8238 (fake IdP); needs `TEST_DATABASE_URL`. With `LIVE_OPS_URL`/`LIVE_OPS_TOKEN` it reads a running API instead of the mock (`live-ops.spec.ts`) |
+| `npm run test:browser` | Playwright (`playwright.config.ts`) against the production build started by `scripts/backoffice-stack.ts`: ports 3241 (web), 8237 (mock ops), 8238 (fake IdP); needs `TEST_DATABASE_URL`. With `LIVE_OPS_URL`/`LIVE_OPS_TOKEN` it reads a running API instead of the mock (`live-ops.spec.ts`) |
 
 No tool in this repository requires the TypeScript JavaScript compiler API (TypeScript 7 does
 not provide it): the boundary checker scans imports without it, and Next uses the CLI checker.

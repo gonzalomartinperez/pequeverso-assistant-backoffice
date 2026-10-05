@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 // Dashboard against a RUNNING pequeverso-assistant-api (fixture provider, no paid calls):
-//   LIVE_OPS_URL=http://127.0.0.1:8257 LIVE_OPS_TOKEN=… npm run test:backoffice -- live-ops.spec.ts
+//   LIVE_OPS_URL=http://127.0.0.1:8257 LIVE_OPS_TOKEN=… npm run test:browser -- live-ops.spec.ts
 // Skipped otherwise. The API's data is real bookkeeping of fixture runs, labelled synthetic.
 test.skip(!process.env.LIVE_OPS_URL, "LIVE_OPS_URL not set");
 

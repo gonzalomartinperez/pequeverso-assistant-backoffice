@@ -23,7 +23,6 @@ src/
       application/ports.ts  OpsSource port
       adapters/             HTTP client (server to server) and runtime validation
       presentation/         dashboard (server component), Recharts daily charts (client), formatting
-    assistant/, embed/      legacy chat shells (to be removed)
   shared/ui                 owned primitives on the design tokens
 migrations/                 committed SQL (Better Auth core + invitations/audit)
 ```
@@ -51,8 +50,5 @@ See [ADR 007](adr/007-ops-data-source.md). The contract is pinned in `contracts/
 committed API revision (`contracts/ops/source.json`); a unit test checks the pinned hashes and
 that the example parses.
 
-## Legacy chat shells
-
-`/` and `/embed` (features `assistant` and `embed`) remain until the storefront's native
-assistant reaches verified parity; their design is described in the git history of this file and
-in [embed-integration.md](embed-integration.md).
+The former public chat shells (`/`, `/embed`) were removed once the storefront's native
+assistant reached parity; their design remains in the git history.

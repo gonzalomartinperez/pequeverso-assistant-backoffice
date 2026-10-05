@@ -7,7 +7,6 @@ out/
 !.env.example
 test-results/
 playwright-report/
-playwright-report/
 blob-report/
 .integration/
 *.log

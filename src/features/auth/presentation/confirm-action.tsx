@@ -1,5 +1,5 @@
 "use client";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/shared/ui/button";
 
 /**
@@ -33,13 +33,29 @@ export function ConfirmAction({
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
 
+  const fallbackId = useRef(fallbackFocusId);
+  fallbackId.current = fallbackFocusId;
+
+  function focusHeading() {
+    focusById(fallbackId.current);
+  }
+
+  // The server action's response can re-render the table and unmount this row before the dialog's
+  // close event runs; in that case focus still has to land on the section heading, not on <body>.
+  useEffect(() => {
+    return () => {
+      if (succeeded.current) focusById(fallbackId.current);
+    };
+  }, []);
+
   function restoreFocus() {
     const toHeading = succeeded.current;
     succeeded.current = false;
-    requestAnimationFrame(() => {
-      if (!toHeading && trigger.current?.isConnected) trigger.current.focus();
-      else document.getElementById(fallbackFocusId)?.focus();
-    });
+    if (toHeading || !trigger.current?.isConnected) {
+      focusHeading();
+      return;
+    }
+    requestAnimationFrame(() => trigger.current?.focus());
   }
 
   async function confirm() {
@@ -101,4 +117,8 @@ export function ConfirmAction({
       </dialog>
     </>
   );
+}
+
+function focusById(id: string) {
+  requestAnimationFrame(() => document.getElementById(id)?.focus());
 }

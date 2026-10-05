@@ -200,7 +200,9 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   page,
   browser,
 }, info) => {
-  const email = `viewer-${info.project.name}@example.test`;
+  // Unique per attempt: a retry must not collide with the previous attempt's database rows.
+  const attempt = `${info.project.name}-${info.retry}`;
+  const email = `viewer-${attempt}@example.test`;
   await signIn(page, "owner@example.test", "owner");
   await page.goto("/panel/accesos");
   await page.getByLabel("E-mail verificado de la persona").fill(email);
@@ -216,14 +218,14 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   await intruder.goto(link);
   await expect(intruder).toHaveURL(/\/ingresar\?invitacion=1$/);
   expect(intruder.url()).not.toContain("/invitacion/");
-  await identity(`intruder-${info.project.name}@example.test`, `intruder-${info.project.name}`);
+  await identity(`intruder-${attempt}@example.test`, `intruder-${attempt}`);
   await continueWithTestProvider(intruder);
   await expect(intruder).toHaveURL(/error=unable_to_create_user/);
   await intruder.context().close();
 
   const viewer = await newPage(browser);
   await viewer.goto(link);
-  await identity(email, `viewer-${info.project.name}`);
+  await identity(email, `viewer-${attempt}`);
   await continueWithTestProvider(viewer);
   await expect(viewer).toHaveURL(/\/panel$/);
   await expect(viewer.getByTestId("actor")).toContainText(`${email} · lectura`);

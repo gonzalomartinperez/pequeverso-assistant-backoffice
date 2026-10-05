@@ -127,6 +127,14 @@
     0 1px 2px oklch(0.3175 0.1094 256.25 / 6%), 0 4px 12px oklch(0.3175 0.1094 256.25 / 6%);
   --shadow-md: 0 12px 32px oklch(0.3175 0.1094 256.25 / 12%);
   --shadow-purchase: 0 8px 20px oklch(0.5623 0.1722 28.49 / 22%);
+
+  /* Backoffice charts (status series; never coral, which stays commercial). */
+  --chart-completed: var(--pv-teal);
+  --chart-failed: var(--pv-navy);
+  --chart-cancelled: var(--pv-muted);
+  --chart-interrupted: oklch(0.72 0.15 75);
+  --chart-confirmed: var(--pv-navy);
+  --chart-estimated: oklch(0.72 0.15 75);
 }
 
 /* Dark: the storefront's night-sky bands, extended into a full theme for low-light reading. */
@@ -166,6 +174,13 @@
   --shadow-sm: 0 1px 2px oklch(0 0 0 / 30%);
   --shadow-md: 0 12px 32px oklch(0 0 0 / 40%);
   --shadow-purchase: 0 8px 20px oklch(0 0 0 / 35%);
+
+  --chart-completed: var(--pv-turquoise);
+  --chart-failed: oklch(0.78 0.09 256);
+  --chart-cancelled: oklch(1 0 0 / 55%);
+  --chart-interrupted: var(--pv-gold);
+  --chart-confirmed: var(--pv-turquoise);
+  --chart-estimated: var(--pv-gold);
 }
 
 /* 4. Tailwind theme: utilities read semantic roles only. */

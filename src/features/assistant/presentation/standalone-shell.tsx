@@ -2,11 +2,11 @@
 import { ArrowLeft, Moon, Sun } from "lucide-react";
 import { useSyncExternalStore } from "react";
 import { copy } from "@/shared/i18n/copy";
+import { BrandMark } from "@/shared/ui/brand-mark";
 import { LinkButton } from "@/shared/ui/button";
 import { IconButton } from "@/shared/ui/icon-button";
 import type { LinkPolicy } from "../domain/links";
 import { useAssistantInstance } from "../entry";
-import { BrandMark } from "./brand-mark";
 import { ClearControl } from "./clear-control";
 import { PresentationProvider } from "./context";
 import { ConversationView } from "./conversation-view";

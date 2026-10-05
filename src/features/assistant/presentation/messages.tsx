@@ -1,12 +1,12 @@
 import { AlertCircle, CircleStop, RotateCcw, WifiOff, X } from "lucide-react";
 import { memo } from "react";
+import { BrandMark } from "@/shared/ui/brand-mark";
 import { Button } from "@/shared/ui/button";
 import { Callout } from "@/shared/ui/callout";
 import { cn } from "@/shared/ui/cn";
 import type { Outcome, Pending } from "../domain/conversation";
 import type { ErrorCode, Message } from "../domain/models";
 import { FollowUps, Links, Notices, Sources } from "./answer-extras";
-import { BrandMark } from "./brand-mark";
 import { usePresentation } from "./context";
 import { ProductSection } from "./products";
 import { RichTextView } from "./rich-text-view";

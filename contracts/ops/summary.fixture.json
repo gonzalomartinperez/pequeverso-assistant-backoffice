@@ -1,0 +1,220 @@
+{
+  "_comment": "SYNTHETIC FIXTURE. Shape of the API's private GET /internal/v1/ops/summary (contract v1, see contracts/ops/source.json). Values are invented for tests and screenshots; they are not measurements.",
+  "schema_version": "1",
+  "generated_at": "2026-10-05T12:00:00Z",
+  "service": {
+    "environment": "development",
+    "revision": "fixture000000",
+    "provider": "fixture",
+    "model": "fixture",
+    "reasoning_effort": "medium",
+    "assistant_enabled": true,
+    "started_at": "2026-10-05T08:00:00Z",
+    "synthetic": true
+  },
+  "availability": {
+    "status": "available",
+    "reason": null
+  },
+  "catalog": {
+    "status": "active",
+    "source": "bundled",
+    "revision": "ae6d237877c2",
+    "sha256": "3f1c0f5e2a9b",
+    "generated_at": "2026-10-04T10:00:00Z",
+    "verified_at": "2026-10-04T10:00:00Z",
+    "price_status": "verified",
+    "price_max_age_hours": 168,
+    "last_attempt_at": "2026-10-05T11:45:00Z",
+    "last_failure": null,
+    "products": 1,
+    "documents": 23,
+    "activated_at": "2026-10-04T10:00:00Z",
+    "last_failure_at": null
+  },
+  "budget": {
+    "month": "2026-10",
+    "day": "2026-10-05",
+    "monthly_limit": "10.00",
+    "monthly_cutoff": "9.00",
+    "daily_limit": "1.00",
+    "month_spend": {
+      "confirmed": "0.412300",
+      "estimated": "0.018000",
+      "pending": "0.005400"
+    },
+    "day_spend": {
+      "confirmed": "0.061200",
+      "estimated": "0.000000",
+      "pending": "0.005400"
+    },
+    "remaining_month": "8.564300"
+  },
+  "windows": [
+    {
+      "hours": 24,
+      "runs": {
+        "completed": 52,
+        "failed": 2,
+        "cancelled": 3,
+        "interrupted": 1,
+        "refused": 2
+      },
+      "replaced": 1,
+      "failures": {
+        "provider_unavailable": 1,
+        "timeout": 1,
+        "budget_exhausted": 2
+      },
+      "latency_ms": {
+        "first_delta": {
+          "p50": 1840,
+          "p95": 4210,
+          "count": 52
+        },
+        "total": {
+          "p50": 6120,
+          "p95": 11800,
+          "count": 52
+        }
+      },
+      "tokens": {
+        "input": 341000,
+        "cached_input": 248000,
+        "output": 61200,
+        "reasoning": 38400,
+        "runs_with_usage": 52
+      }
+    },
+    {
+      "hours": 720,
+      "runs": {
+        "completed": 371,
+        "failed": 9,
+        "cancelled": 17,
+        "interrupted": 5,
+        "refused": 11
+      },
+      "replaced": 4,
+      "failures": {
+        "provider_unavailable": 4,
+        "timeout": 3,
+        "generation_failed": 2,
+        "busy": 11
+      },
+      "latency_ms": {
+        "first_delta": {
+          "p50": 1910,
+          "p95": 4630,
+          "count": 371
+        },
+        "total": {
+          "p50": 6340,
+          "p95": 12900,
+          "count": 371
+        }
+      },
+      "tokens": {
+        "input": 2380000,
+        "cached_input": 1710000,
+        "output": 432000,
+        "reasoning": 270000,
+        "runs_with_usage": 371
+      }
+    }
+  ],
+  "daily": [
+    {
+      "day": "2026-09-29",
+      "completed": 38,
+      "failed": 1,
+      "cancelled": 2,
+      "interrupted": 0,
+      "confirmed": "0.041000",
+      "estimated": "0.000000",
+      "input_tokens": 240000,
+      "output_tokens": 43000,
+      "reasoning_tokens": 27000,
+      "refused": 1
+    },
+    {
+      "day": "2026-09-30",
+      "completed": 58,
+      "failed": 2,
+      "cancelled": 3,
+      "interrupted": 0,
+      "confirmed": "0.066100",
+      "estimated": "0.004000",
+      "input_tokens": 372000,
+      "output_tokens": 66000,
+      "reasoning_tokens": 41000,
+      "refused": 1
+    },
+    {
+      "day": "2026-10-01",
+      "completed": 51,
+      "failed": 1,
+      "cancelled": 2,
+      "interrupted": 1,
+      "confirmed": "0.057300",
+      "estimated": "0.004000",
+      "input_tokens": 326000,
+      "output_tokens": 59000,
+      "reasoning_tokens": 36500,
+      "refused": 1
+    },
+    {
+      "day": "2026-10-02",
+      "completed": 67,
+      "failed": 2,
+      "cancelled": 3,
+      "interrupted": 0,
+      "confirmed": "0.075400",
+      "estimated": "0.004000",
+      "input_tokens": 428000,
+      "output_tokens": 77000,
+      "reasoning_tokens": 48000,
+      "refused": 1
+    },
+    {
+      "day": "2026-10-03",
+      "completed": 45,
+      "failed": 1,
+      "cancelled": 2,
+      "interrupted": 1,
+      "confirmed": "0.050800",
+      "estimated": "0.002000",
+      "input_tokens": 290000,
+      "output_tokens": 52000,
+      "reasoning_tokens": 32500,
+      "refused": 1
+    },
+    {
+      "day": "2026-10-04",
+      "completed": 60,
+      "failed": 1,
+      "cancelled": 2,
+      "interrupted": 1,
+      "confirmed": "0.060800",
+      "estimated": "0.004000",
+      "input_tokens": 383000,
+      "output_tokens": 69000,
+      "reasoning_tokens": 43000,
+      "refused": 1
+    },
+    {
+      "day": "2026-10-05",
+      "completed": 52,
+      "failed": 2,
+      "cancelled": 3,
+      "interrupted": 1,
+      "confirmed": "0.061200",
+      "estimated": "0.000000",
+      "input_tokens": 341000,
+      "output_tokens": 61200,
+      "reasoning_tokens": 38400,
+      "refused": 1
+    }
+  ],
+  "metrics_since": "2026-09-29T09:12:00Z"
+}

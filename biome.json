@@ -6,7 +6,15 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!package-lock.json", "!next-env.d.ts", "!public", "!contracts/api"]
+    "includes": [
+      "**",
+      "!package-lock.json",
+      "!next-env.d.ts",
+      "!public",
+      "!contracts/api",
+      "!contracts/ops/ops.schema.json",
+      "!contracts/ops/ops.summary.example.json"
+    ]
   },
   "formatter": {
     "enabled": true,

@@ -1,8 +1,8 @@
 import { CloudOff, LifeBuoy, Loader2, RotateCcw } from "lucide-react";
+import { BrandMark } from "@/shared/ui/brand-mark";
 import { Button, LinkButton } from "@/shared/ui/button";
 import { Callout } from "@/shared/ui/callout";
 import type { Availability } from "../domain/models";
-import { BrandMark } from "./brand-mark";
 import { usePresentation } from "./context";
 
 export function Connecting() {

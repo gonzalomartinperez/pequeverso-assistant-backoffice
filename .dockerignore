@@ -16,4 +16,5 @@ tests
 docs
 contracts
 scripts
+!scripts/db-migrate.ts
 .integration

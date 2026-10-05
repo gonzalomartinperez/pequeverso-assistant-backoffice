@@ -1,61 +1,50 @@
-# pequeverso-assistant-web
+# pequeverso-assistant-web (target name: pequeverso-assistant-backoffice)
 
-Frontend of the Pequeverso shopping assistant: an advisory, read-only helper that answers questions
-about the store's printable learning kits with grounded answers, product cards, sources and
-follow-up suggestions — and leaves checkout to the store.
+Private operations backoffice of the Pequeverso shopping assistant: OAuth sign-in for the owner
+and invited people, access management, and a dashboard of the assistant's health, catalog
+freshness, runs, latency, tokens and spend. The public conversation lives only in the storefront
+(`pequeverso`); this repository's legacy chat shells (`/`, `/embed`) are scheduled for removal.
 
-One conversation implementation, two shells:
+The repository is public; the application is private. All rights reserved (see `LICENSE`).
+**Status:** not deployed. No OAuth apps, domain, database or image exist in any environment.
 
-- **`/embed`** — the primary customer experience, framed by the storefront's own launcher panel
-  (compact and expanded desktop, near-full-screen mobile).
-- **`/`** — a secondary standalone page for demos and testing, same components and logic.
-
-Public repository; all rights reserved (see `LICENSE`). **Status:** local release candidate. Not
-deployed; not yet integrated into the storefront; API contract pinned to the committed API revision
-`dc4e4c6` and verified live against it.
-
-## Quick start
+## Quick start (no real credentials)
 
 ```bash
 nvm use && npm ci
 npx playwright install --with-deps chromium firefox webkit
+docker run -d --rm --name bo-pg -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test \
+  -p 127.0.0.1:55432:5432 postgres:17.6-alpine
 npm run build
-npm run preview:fixture
+TEST_DATABASE_URL=postgres://test:test@127.0.0.1:55432/postgres npm run preview:backoffice
 ```
 
-- http://localhost:3210 — local storefront **harness** (cross-origin host, fixture only) with the
-  embedded assistant: click "Asistente".
-- http://localhost:3207 — standalone page.
-
-Both use a deterministic **mock** of the API (`scripts/mock-api.ts`); no model is called. Type
-"lento", "interrumpir", "falla", "ocupado", "expirar", "presupuesto", "largo", "enlaces" or
-"comparar" to exercise states (mock test hooks only).
+Open http://localhost:3241/ingresar and choose "Proveedor de prueba": a local fake identity
+provider signs you in as `owner@example.test`; the dashboard shows the **synthetic** fixture from
+`scripts/mock-ops.ts`, clearly labelled. To read a real API instead, run
+`pequeverso-assistant-api` with `OPS_READ_TOKEN` set and start the stack with `LIVE_OPS_URL` and
+`LIVE_OPS_TOKEN` (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ## Commands
 
 | Command | Purpose |
 |---|---|
-| `npm run check` | Biome, TypeScript 7 typecheck, contract + unit + boundary tests, security/docs/skills checks, build |
-| `npm run test:browser` | Playwright: embedded (through the harness) and standalone, Chromium/Firefox/WebKit + mobile |
-| `npm run preview:fixture` | Serve the last build with the mock API and harness |
-| `npm run dev` | Next dev server (:3201) |
-
-Details, including which compiler each command uses: [CONTRIBUTING.md](CONTRIBUTING.md).
+| `npm run check` | Biome, TypeScript 7, unit/contract/boundary tests, file/docs/skills checks, build |
+| `npm run test:db` | Schema drift check + PostgreSQL integration suite (`DATABASE_URL` or `TEST_DATABASE_URL`: a disposable server) |
+| `npm run test:backoffice` | Playwright against the production build, real PostgreSQL, fake IdP, mock ops |
+| `npm run db:migrate` | Apply `migrations/` to `DATABASE_URL` |
+| `npm run test:browser` | Legacy chat suite (until removal) |
 
 ## Documentation
 
-- [Architecture](docs/architecture.md) — layers, data flow, conversation rules, security model
-- [Design system](docs/design-system.md) — tokens, typography, components, motion, layout
-- [Embed integration](docs/embed-integration.md) — storefront handoff: iframe, protocol v1, headers, focus
-- [Deployment contract](docs/deployment-contract.md) — vps-ops handoff: image, variables, health, routing
-- [API contract](docs/api-contract.md) — pinned snapshot and refresh procedure
-- [Verification](docs/verification.md) — acceptance matrix, test runs, measurements, screenshots
-- [Dependencies](docs/dependencies.md) — Dependabot and the conservative auto-merge policy
-- [Coordination](docs/coordination.md) — inspected reference revisions and adopted decisions
-- [Decisions](docs/adr/) — architecture decision records
+- [Architecture](docs/architecture.md) and decisions: [auth](docs/adr/005-backoffice-auth-better-auth.md),
+  [IAM in PostgreSQL](docs/adr/006-iam-in-postgresql.md), [ops data](docs/adr/007-ops-data-source.md)
+- [Deployment contract](docs/deployment-contract.md) — vps-ops handoff: image, PostgreSQL, secrets, routing
+- [Verification](docs/verification.md) — what ran, what it proves, screenshots, limits
+- [Design system](docs/design-system.md), [dependencies](docs/dependencies.md), [security](SECURITY.md)
 
 ## Stack
 
-Next.js 16.3.6 (App Router, standalone output), React 19.3, TypeScript 7.0.2 (strict, sole type
-checker), Tailwind CSS 4.3 with owned shadcn-style primitives (CVA), lucide icons, Biome 2.5,
-Playwright 1.63 + axe-core. Node 24.21.0.
+Next.js 16.3.6 (App Router, standalone), React 19.3, TypeScript 7.0.2, Better Auth 1.7.7,
+PostgreSQL (`pg` 8.23), Recharts 3.10, Tailwind CSS 4.3 with owned primitives, lucide icons,
+Biome 2.5, Playwright 1.63 + axe-core. Node 24.21.0.

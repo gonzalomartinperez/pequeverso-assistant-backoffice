@@ -2,11 +2,11 @@
 import { ChevronDown, Maximize2, Minimize2 } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { copy } from "@/shared/i18n/copy";
+import { BrandMark } from "@/shared/ui/brand-mark";
 import { IconButton } from "@/shared/ui/icon-button";
 import type { LinkPolicy } from "../assistant/domain/links";
 import type { Page } from "../assistant/domain/models";
 import { useAssistantInstance } from "../assistant/entry";
-import { BrandMark } from "../assistant/presentation/brand-mark";
 import { ClearControl } from "../assistant/presentation/clear-control";
 import { PresentationProvider } from "../assistant/presentation/context";
 import { ConversationView } from "../assistant/presentation/conversation-view";

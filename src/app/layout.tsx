@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import type { ReactNode } from "react";
 import { preload } from "react-dom";
 import "./globals.css";
@@ -26,7 +27,9 @@ export const viewport: Viewport = {
  */
 const themeScript = `(()=>{try{var d=document.documentElement,q=new URLSearchParams(location.search).get("theme");if(location.pathname==="/embed"){d.dataset.theme=q==="dark"?"dark":"light";return}var s=null;try{s=localStorage.getItem("pv-assistant-theme")}catch(e){}d.dataset.theme=s==="dark"||s==="light"?s:matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}catch(e){}})()`;
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  // Backoffice routes carry a per-request CSP nonce (src/proxy.ts); other routes have none.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   preload("/fonts/nunito-sans-latin-wght-29e38904.woff2", {
     as: "font",
     type: "font/woff2",
@@ -41,7 +44,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="es" data-theme="light" suppressHydrationWarning>
       <head>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static pre-paint theme script, no user input */}
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>{children}</body>
     </html>

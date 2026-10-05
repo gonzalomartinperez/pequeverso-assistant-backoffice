@@ -24,15 +24,24 @@
     "harness": "node scripts/embed-host.ts",
     "check": "npm run lint && npm run typecheck && npm test && npm run security:check && npm run docs:check && npm run skills:check && npm run build",
     "live:stack": "node scripts/live-stack.ts",
-    "test:live": "playwright test --config playwright.live.config.ts"
+    "test:live": "playwright test --config playwright.live.config.ts",
+    "test:integration": "node --test \"tests/integration/**/*.test.ts\"",
+    "test:backoffice": "playwright test -c playwright.backoffice.config.ts",
+    "preview:backoffice": "node scripts/backoffice-stack.ts",
+    "db:migrate": "node scripts/db-migrate.ts",
+    "db:check": "node scripts/db-check.ts",
+    "test:db": "node scripts/db-check.ts && npm run test:integration"
   },
   "dependencies": {
+    "better-auth": "1.7.7",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "lucide-react": "1.48.0",
     "next": "16.3.6",
+    "pg": "8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "recharts": "3.10.1",
     "server-only": "0.0.1",
     "tailwind-merge": "3.7.0"
   },
@@ -42,6 +51,7 @@
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "24.13.6",
+    "@types/pg": "8.23.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "tailwindcss": "4.3.3",

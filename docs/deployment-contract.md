@@ -1,86 +1,113 @@
 # Deployment contract (vps-ops handoff)
 
 What this repository provides for the shared VPS managed by `vps-ops` (Coolify + Traefik), and what
-it expects from it. **Nothing is deployed.** No image has been published, no DNS record, domain,
-route or Coolify resource exists, and `main` holds only the repository bootstrap.
+it needs from it. **Nothing is deployed.** No image is published, and no DNS record, domain,
+route, database or Coolify resource exists for the backoffice.
 
 ## Artifact
 
 | Item | Value |
 |---|---|
-| Image | Built from `Dockerfile` at a reviewed `develop` commit; publish to a private registry and deploy **by digest** (`@sha256:…`) only. No image is published yet. |
-| Base | `node:24.21.0-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6` |
-| Architecture | `linux/amd64` (built and run locally; other architectures untested) |
-| Process | `node server.js` (Next.js 16.3.6 standalone output), PID 1 under Coolify's `init: true` |
-| User | `node` (UID/GID 1000:1000), no capabilities needed |
+| Image | Built from `Dockerfile` at a reviewed `develop` commit; publish to a private registry and deploy **by digest** only. Not published yet. |
+| Base | `node:24.21.0-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6`, `linux/amd64` (built and run locally; other architectures untested) |
+| Commands | default `node server.js` (Next.js 16.3.6 standalone); one-shot `node scripts/db-migrate.ts` (migrations) |
+| User | `node` (UID/GID 1000:1000), no capabilities |
 | Port | `3000/tcp` on `0.0.0.0` (`PORT`, `HOSTNAME`) |
-| Filesystem | Read-only root tested; writable: `/tmp` and `/app/.next/cache` (tmpfs, 32 MiB, `uid=1000,gid=1000,mode=0700`) |
-| State | **Stateless.** No database, volume, migration or backup. Conversations and sessions live in the API. |
-| Secrets | **None.** No build args or runtime variables are secret. |
-| Shutdown | SIGTERM ends the process immediately (exit 143). The web tier holds no long-lived streams (SSE goes to the API), so no drain period is needed; a 20 s `stop_grace_period` is ample. |
-| Resources (proposal) | request 0.1 CPU / 128 MB, limit 1 CPU / 384 MB (measured ≈ 51 MiB idle, ≈ 224 MiB after a 400-request burst; [verification.md](verification.md#production-container)). The split with the API within the host's capacity is an ops decision. |
+| Filesystem | Read-only root tested; writable tmpfs `/tmp` and `/app/.next/cache` (`uid=1000,gid=1000,mode=0700,size=32m`) |
+| State | None in the container. Identity and access live in PostgreSQL (below). |
+| Shutdown | SIGTERM ends the process (no long-lived streams); a 20 s stop grace period is ample |
+| Resources | Measured locally: ~64 MiB right after start (read-only, production config). Proposal: request 0.1 CPU / 128 MB, limit 1 CPU / 384 MB; confirm under real use |
+| Size | ~97 MB uncompressed (local build, 2026-10-05) |
+
+## PostgreSQL (required)
+
+- A dedicated database and role for the backoffice on a private network; never exposed publicly,
+  never shared with portfolio services. Tested with PostgreSQL 17.6 and 18.4.
+- Migrations: run `node scripts/db-migrate.ts` with `DATABASE_URL` as a one-shot container of the
+  **same image digest** before starting it. Idempotent, advisory-locked, checksum-verified,
+  append-only (additive), so the previous image keeps working after a migration.
+- Rollback: redeploy the previous digest; migrations are not reversed. Restore from backup only for
+  data loss (separate decision).
+- Backups: daily logical dump (`pg_dump -Fc`), encrypted, off-server; restore drill before
+  activation. Retention proposal: 30 days. RPO/RTO to be confirmed by the owner.
+- Data classification: operator identities (e-mail, name), encrypted OAuth tokens, sessions with
+  IP/user agent, rate-limit counters, invitations (e-mail, role, token digest), access audit (ids
+  only). No buyer or conversation data.
+- Pool: at most 5 connections per container, 5 s connect timeout, 5 s statement timeout.
 
 ## Runtime variables
 
-| Variable | Required | Production value | Purpose |
+| Variable | Secret | Required | Purpose |
 |---|---|---|---|
-| `EMBED_ALLOWED_ORIGINS` | yes, for embedding | `https://pequeverso.com` | Exact origins allowed to frame `/embed` (`frame-ancestors`) and to talk to it by postMessage. Empty = embedding denied. |
-| `STOREFRONT_ORIGIN` | no | `https://pequeverso.com` (default) | Only origin accepted for product, purchase, image and support URLs |
-| `ASSISTANT_LINK_HOSTS` | no | `consumer.hotmart.com,refund.hotmart.com` (default) | Extra https hosts allowed for informational links (mirrors the API catalog allowlist) |
-| `PORT`, `HOSTNAME`, `NODE_ENV`, `NEXT_TELEMETRY_DISABLED` | set by the image | `3000`, `0.0.0.0`, `production`, `1` | Standard |
+| `BACKOFFICE_ENVIRONMENT` | no | set to `production` by the image | Fail-closed checks; also implied by `NODE_ENV=production`, which refuses `development` |
+| `BACKOFFICE_ORIGIN` | no | yes | Exact https origin of the backoffice (trusted origin, OAuth callbacks, invitation links) |
+| `BETTER_AUTH_SECRET` | **yes** | yes | ≥ 32 random characters; rotating it signs everyone out |
+| `DATABASE_URL` | **yes** | yes | Backoffice PostgreSQL |
+| `OWNER_EMAIL` | no | yes | The only identity admitted without invitation |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | secret: yes | at least one provider | Google OAuth app (owner-created) |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | secret: yes | at least one provider | GitHub OAuth app (owner-created) |
+| `OPS_API_URL` | no | for the dashboard | API base URL on the **internal** network. https, or plain http only to a single-label Docker service name (e.g. `http://pequeverso-assistant-api:8000`) or a host in `OPS_API_INSECURE_INTERNAL_HOSTS`: the bearer token then travels only on the private Docker network, which must not be shared with untrusted services |
+| `OPS_API_INSECURE_INTERNAL_HOSTS` | no | no | Extra internal host names allowed over http |
+| `TRUSTED_PROXY_IPS` | no | yes in production | Exact address(es)/narrow CIDR of the Traefik container(s) that forward requests; Better Auth then reads the client IP from `X-Forwarded-For` for per-IP sign-in limits. Empty: forwarded chains are ignored (a startup warning is logged) and limits may group clients. vps-ops must supply the proxy's stable address on the backoffice network |
+| `OPS_READ_TOKEN` | **yes** | with `OPS_API_URL` | Same value as the API's `OPS_READ_TOKEN` (≥ 32 chars) |
+| `AUTH_TEST_ISSUER`, `AUTH_DISABLE_RATE_LIMIT` | — | never | Test only; production refuses them |
 
-All variables are read per request, so changing them needs a container restart, not a rebuild.
-There are no `NEXT_PUBLIC_*` variables: the browser calls the API same-origin at `/api/v1`.
+The server validates this configuration at startup (`src/instrumentation.ts`) and exits with a
+redacted `configuration_invalid` log when a production requirement is missing. No `NEXT_PUBLIC_*` variables exist; all values are read on the server at runtime (restart, not
+rebuild, to change them). Secret names proposed for vps-ops: `pequeverso-backoffice-auth-secret`,
+`pequeverso-backoffice-database-url`, `pequeverso-backoffice-google-oauth`,
+`pequeverso-backoffice-github-oauth`, `pequeverso-assistant-ops-read-token` (shared with the API).
 
 ## Health
 
-- `GET /healthz` → `200 {"status":"ok"}`, `Cache-Control: no-store`. Liveness of the frontend
-  process only; it does **not** call the API. Use it for the container healthcheck (the image's
-  `HEALTHCHECK` does). The API's own `/health/ready` remains the readiness signal for answering.
-- The store must never depend on either endpoint.
+- `GET /healthz` → `200 {"status":"ok"}`, `no-store`: process liveness only.
+- `GET /readyz` → `200 {"status":"ready"}` only when configuration parses, PostgreSQL answers and
+  every migrated table exists; otherwise `503 {"status":"not_ready"}` without details. Internal
+  only (do not route publicly). Use it as the readiness check.
+- If the database drops, the pool reconnects on the next query; meanwhile protected pages redirect
+  to a safe "unavailable" sign-in page. The dashboard reports "no disponible" if the API is
+  unreachable.
 
-## Routing (proposed; needs owner approval of the domain)
+## Routing (proposal, pending owner approval)
 
-Single host `assistant.pequeverso.com` (proposed, **not verified or approved**):
+A **separate host** from the public assistant API (example only: `backoffice.assistant.pequeverso.com`;
+not approved, no DNS). Reasons: host-only cookies of the backoffice and of the API never share an
+origin, the API's `/api/` prefix does not collide with Better Auth's `/api/auth/*`, and the private
+app can be restricted at the edge independently.
 
-| Match | Service | Notes |
-|---|---|---|
-| `PathPrefix(/api/)` | pequeverso-assistant-api:8000 | Unchanged path (no prefix stripping); SSE must not be buffered, compressed or retried |
-| everything else (`/`, `/embed`, `/healthz`, `/_next/*`, static files) | pequeverso-assistant-web:3000 | |
+| Match | Service |
+|---|---|
+| everything on the backoffice host | backoffice:3000 |
+| (internal only) `http://pequeverso-assistant-api:8000/internal/v1/ops/summary` | reached by the backoffice over the private network; **never routed publicly** |
 
-Same-origin `/api` is what makes the session cookie first-party and removes CORS from the design.
-API health endpoints stay internal. The API heartbeats every 15 s during a stream and the client
-treats 45 s of silence as a dead stream, so proxy idle/response timeouts must exceed 15 s and
-buffering must be off for `/api/`.
+OAuth callback URLs to register (per environment): `<BACKOFFICE_ORIGIN>/api/auth/callback/google`
+and `<BACKOFFICE_ORIGIN>/api/auth/callback/github`.
 
 ## Header ownership
 
-| Header | Owner | Requirement |
-|---|---|---|
-| `Content-Security-Policy` (incl. `frame-ancestors`) | **Application** | The proxy must not set or override it for the web service. `/embed` needs `frame-ancestors https://pequeverso.com`; other routes send `frame-ancestors 'none'`. |
-| `X-Frame-Options` | **Application** | Must be absent on `/embed`; `DENY` elsewhere. |
-| `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` | Application (proxy may duplicate identical values) | |
-| `Strict-Transport-Security` | Proxy / edge | TLS is terminated there. |
-| `Cache-Control` | Application for HTML (`/embed`: `private, no-store`); immutable for `/_next/static/*` | Proxy must not cache HTML. |
+The application sets `Content-Security-Policy` (nonce-based, per request), `X-Frame-Options`,
+`Cache-Control: private, no-store` and `X-Robots-Tag` on backoffice routes; the proxy must not
+override or cache them. The application also sends `Strict-Transport-Security: max-age=31536000` on backoffice routes when
+`BACKOFFICE_ORIGIN` is https; the proxy/edge must send HSTS on every response of the host (same or
+stronger value) because TLS terminates there.
 
-**Conflict to resolve in vps-ops:** the current proxy label renderer adds a
-`Content-Security-Policy: frame-ancestors 'none'` response header to the services it renders. Applied to this web service, it would block the storefront
-iframe. The Pequeverso renderer must omit that header for the web service (or, if the proxy must own
-it, emit exactly the value above for `/embed`). Never emit both.
+## Smoke test for an authorized deployment
+
+1. `node scripts/db-migrate.ts` → `Migrations: N applied` (or none pending).
+2. `GET /healthz` → 200 and `GET /readyz` → 200. `GET /panel` without a session → 307 to `/ingresar`.
+3. `GET /ingresar` → CSP with a nonce, `frame-ancestors 'none'`, `no-store`.
+4. Owner signs in with the real provider → `/panel` shows the API reading (not synthetic).
+5. A non-invited account is refused; the ops endpoint is unreachable from outside the network.
 
 ## Verification performed here
 
-- Image built from a clean checkout and run with `--read-only --tmpfs /tmp --tmpfs
-  /app/.next/cache:uid=1000,gid=1000,mode=0700,size=32m --cap-drop ALL --security-opt
-  no-new-privileges`; the full browser suite ran against that container in CI. See
-  [verification.md](verification.md) for runs, sizes and memory.
-- Tested API contract: `contracts/source.json` — API `dc4e4c6` (committed; contract v1 from
-  `0750524`). That API revision, running with its fixture provider, passed the live suite
-  ([verification.md](verification.md#real-api-integration)).
+Image built and run with `--read-only --tmpfs … --cap-drop ALL --security-opt no-new-privileges`
+as uid 1000: migrations applied, health and headers checked. Browser suite against the production
+build with real PostgreSQL and a fake IdP: [verification.md](verification.md#backoffice).
+Not verified: real Google/GitHub OAuth, TLS/cookie prefixes through the proxy, the real API ops
+endpoint over the private network.
 
-## Pending ops / owner decisions
+## Legacy chat shells
 
-1. Approve the assistant domain and DNS (Cloudflare) — not done.
-2. Private registry and publication authorization; first image digest.
-3. Pequeverso-specific Traefik renderer with the header ownership above.
-4. Final CPU/memory split between web and API.
+Until their removal the image still serves `/` and `/embed`; they are no longer the public chat
+(the storefront hosts the native assistant). Do not route them publicly.

@@ -20,7 +20,9 @@ cp .env.example .env.local   # optional: local runtime values (never commit)
 | `npm test` | Contract snapshot check, then `node --test` on `tests/unit/**/*.test.ts` (Node 24 strips types natively; no compiler involved) including the architecture-boundary check |
 | `npm run test:browser` | Playwright: Chromium, Firefox, WebKit desktop + mobile Chromium/WebKit (`@mobile` specs) against the deterministic stack |
 | `npm run lint` / `npm run format` | Biome (lint + format); Biome does not type-check |
-| `npm run check` | Everything above except browsers |
+| `npm run check` | Everything above except browsers and databases |
+| `npm run test:db` | `scripts/db-check.ts` (migrations vs Better Auth schema, idempotent re-apply) and `tests/integration` (real OAuth callback against `scripts/fake-idp.ts`); needs a disposable PostgreSQL in `DATABASE_URL` or `TEST_DATABASE_URL`; each run creates and drops its own databases |
+| `npm run test:backoffice` | Playwright (`playwright.backoffice.config.ts`) against the production build started by `scripts/backoffice-stack.ts`: ports 3241 (web), 8237 (mock ops), 8238 (fake IdP); needs `TEST_DATABASE_URL`. With `LIVE_OPS_URL`/`LIVE_OPS_TOKEN` it reads a running API instead of the mock (`live-ops.spec.ts`) |
 
 No tool in this repository requires the TypeScript JavaScript compiler API (TypeScript 7 does
 not provide it): the boundary checker scans imports without it, and Next uses the CLI checker.
@@ -57,3 +59,20 @@ No approving review is required: the repository has a single maintainer and GitH
 author approve their own pull request. If a second maintainer joins, raise
 `required_approving_review_count` in both rulesets. Task branches are deleted automatically after
 merge; at rest only `main` and `develop` exist.
+
+## TypeScript style
+
+The [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) is the
+readability reference, adapted to React/Next.js and this toolchain:
+
+- Named exports only, except where Next.js requires a default export (pages, layouts, `proxy`).
+- File names in kebab-case; React components in PascalCase; route folders follow the URL (Spanish).
+- `type` aliases for data shapes and unions (discriminated unions for states and results);
+  `interface` for ports implemented by adapters. No `enum` and no parameter properties
+  (`erasableSyntaxOnly`); classes only for stateful adapters.
+- No `any`; `unknown` at boundaries, then runtime validation (`adapters/validate.ts`). Typed
+  dictionaries (`Record<Union, …>`) instead of string-keyed objects.
+- Relative imports inside a feature carry the `.ts` extension so Node can run sources directly;
+  `@/` aliases are used by routes and React modules resolved by Next.js.
+- Comments explain why and invariants, not what the code does. Biome formats (100 columns).
+- `strict`, `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` stay on.

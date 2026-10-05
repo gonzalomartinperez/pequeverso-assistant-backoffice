@@ -1,5 +1,5 @@
+import { BrandMark } from "@/shared/ui/brand-mark";
 import { Button } from "@/shared/ui/button";
-import { BrandMark } from "./brand-mark";
 import { usePresentation } from "./context";
 
 export function EmptyState({

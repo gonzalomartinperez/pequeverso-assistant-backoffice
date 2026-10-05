@@ -23,3 +23,8 @@ description: "Review a pequeverso-assistant-backoffice change or prepare its pul
 6. Open the PR against `develop` with a Conventional Commit title, verification notes and the
    attribution footer required by the session. Never push to `main`, merge a release, or deploy
    without explicit owner authorization.
+
+## Limits
+
+Review and PR preparation only: never push to `main`, merge a release, deploy, bypass rulesets
+or approve on the author's behalf without the owner's explicit authorization for that action.

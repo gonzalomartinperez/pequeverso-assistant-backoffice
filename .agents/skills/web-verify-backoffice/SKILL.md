@@ -25,5 +25,7 @@ not available, stop and report the database and browser suites as not run; do no
 6. Open the PNGs in `docs/verification/backoffice/` and judge them (layout, contrast, overflow,
    honest empty states). Record results and limits in `docs/verification.md`.
 
+## Limits
+
 Evidence to report: commands, counts, engines, API revision used, what was not verified (real
 Google/GitHub OAuth, TLS cookies, deployment). This skill never authorizes merging or deploying.

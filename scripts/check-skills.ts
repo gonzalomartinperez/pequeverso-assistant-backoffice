@@ -61,6 +61,12 @@ for (const name of canonical) {
     if (meta.name !== name || !/^web-[a-z0-9-]{1,60}$/.test(meta.name ?? ""))
       fail(`${file}: name must match its folder and ^web-[a-z0-9-]+$`);
     const description = meta.description ?? "";
+    if (kind === "canonical" && !/^## Limits$/m.test(body))
+      fail(`${file}: missing "## Limits" section`);
+    if (!/\bNot (for|an authorization)\b/.test(description))
+      fail(`${file}: description must state what the skill is not for`);
+    if (/\b(sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})/.test(body))
+      fail(`${file}: secret-like token`);
     if (description.length < 40 || description.length > 1024)
       fail(`${file}: description must be 40–1024 characters`);
     if (/\b(TODO|FIXME|TBD)\b|\/home\//.test(body))

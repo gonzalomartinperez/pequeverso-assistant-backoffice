@@ -26,5 +26,7 @@ Scope: `src/features/auth`, `src/features/operations`, `src/server`, `src/app/{i
    `adapters/validate.ts` and the fixture. Never pin from a working tree.
 5. Verify with the [backoffice verification skill](../web-verify-backoffice/SKILL.md).
 
+## Limits
+
 Not an authorization to merge into `main`, deploy, create OAuth apps, use real credentials or edit
 other repositories.

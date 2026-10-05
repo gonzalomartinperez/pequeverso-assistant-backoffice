@@ -46,6 +46,10 @@ async function continueWithTestProvider(page: Page) {
 }
 
 async function axe(page: Page) {
+  // Audit a settled page: right after a server action React may be mid-commit (Firefox has shown
+  // a transient empty <title> then). A page whose title never appears still fails here.
+  await page.waitForLoadState("load");
+  await expect(page).toHaveTitle(/\S/);
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
@@ -201,7 +205,7 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   browser,
 }, info) => {
   // Unique per attempt: a retry must not collide with the previous attempt's database rows.
-  const attempt = `${info.project.name}-${info.retry}`;
+  const attempt = `${info.project.name}-${info.repeatEachIndex}-${info.retry}`;
   const email = `viewer-${attempt}@example.test`;
   await signIn(page, "owner@example.test", "owner");
   await page.goto("/panel/accesos");

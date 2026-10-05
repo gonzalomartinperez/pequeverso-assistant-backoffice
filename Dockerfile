@@ -15,7 +15,7 @@ COPY public ./public
 RUN npx next build --webpack
 
 FROM node:24.21.0-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6 AS runtime
-LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-assistant-web"
+LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice"
 LABEL org.opencontainers.image.description="Pequeverso assistant private backoffice (operations dashboard and access)"
 LABEL org.opencontainers.image.licenses="LicenseRef-Proprietary"
 WORKDIR /app

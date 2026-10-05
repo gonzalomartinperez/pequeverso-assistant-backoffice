@@ -1,6 +1,6 @@
 ---
 name: web-change-backoffice
-description: "Change backoffice access control, invitations, sessions, the operations dashboard or the pinned ops contract in pequeverso-assistant-web. Not for the API repository, OAuth app setup or deployment."
+description: "Change backoffice access control, invitations, sessions, the operations dashboard or the pinned ops contract in pequeverso-assistant-backoffice. Not for the API repository, OAuth app setup or deployment."
 ---
 
 # Change the backoffice

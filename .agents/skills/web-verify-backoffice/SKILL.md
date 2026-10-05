@@ -1,6 +1,6 @@
 ---
 name: web-verify-backoffice
-description: "Verify the pequeverso-assistant-web backoffice end to end: checks, database suite, browser suite with the fake identity provider, optional real-API reading, image smoke and screenshot review. Not for writing features."
+description: "Verify the pequeverso-assistant-backoffice app end to end: checks, database suite, browser suite with the fake identity provider, optional real-API reading, image smoke and screenshot review. Not for writing features."
 ---
 
 # Verify the backoffice

@@ -147,11 +147,11 @@ jobs:
         with:
           context: .
           load: true
-          tags: pequeverso-assistant-web:rc
+          tags: pequeverso-assistant-backoffice:rc
           cache-from: type=gha,scope=web-node24-amd64
           cache-to: type=gha,mode=max,scope=web-node24-amd64
       - name: Smoke the exact image hardened (fail-closed, migrations, readiness, headers)
-        run: scripts/smoke-image.sh pequeverso-assistant-web:rc
+        run: scripts/smoke-image.sh pequeverso-assistant-backoffice:rc
 
   backoffice:
     # Production build + real PostgreSQL + the real Better Auth callback against the local fake

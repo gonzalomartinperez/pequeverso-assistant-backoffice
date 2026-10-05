@@ -68,3 +68,12 @@ Kept different on purpose: committed SQL for Better Auth's schema plus `npm run 
 (reviewable diffs; the reference applies the library's plan at deploy time); browser tests sign
 in through a fake OAuth provider instead of minting sessions; role on the user row and removal by
 deleting the account (the reference keeps a member table with `revoked_at`); Spanish-only UI.
+
+## Repository rename (2026-10-05)
+
+Renamed `pequeverso-assistant-web` → `pequeverso-assistant-backoffice` with GitHub's rename
+(history, PRs, rulesets, visibility and license preserved; the old URL redirects). Done after the
+public chat moved to the storefront (`pequeverso#69`) and its shells were removed (#23). Earlier
+entries above keep the old name as historical record. vps-ops still references the old name in
+its inventory; the redirect keeps it working and its owner updates it (handoff in the API's
+`docs/handoffs/vps-ops.md`).

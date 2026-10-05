@@ -1,4 +1,4 @@
-# pequeverso-assistant-web (target name: pequeverso-assistant-backoffice)
+# pequeverso-assistant-backoffice
 
 Private operations backoffice of the Pequeverso shopping assistant: OAuth sign-in for the owner
 and invited people, access management, and a dashboard of the assistant's health, catalog

@@ -40,19 +40,13 @@ export async function admitSignUp(
   if (route.kind === "denied") return { allowed: false, reason: route.reason };
   if (route.kind === "owner") return { allowed: true, role: "owner", via: "owner" };
   const now = deps.clock.now();
-  const role = await deps.store.consumeInvitation(
+  const accepted = await deps.store.consumeInvitation(
     deps.secrets.digest(token ?? ""),
     route.email,
     now,
   );
-  if (!role) return { allowed: false, reason: "invitation_invalid" };
-  await deps.store.audit({
-    action: "invitation_accepted",
-    actorId: null,
-    targetEmail: route.email,
-    at: now,
-  });
-  return { allowed: true, role, via: "invitation" };
+  if (!accepted) return { allowed: false, reason: "invitation_invalid" };
+  return { allowed: true, role: accepted.role, via: "invitation" };
 }
 
 export type InvitationView =
@@ -99,7 +93,7 @@ export async function inviteMember(
     acceptedAt: null,
     revokedAt: null,
   };
-  await deps.store.createInvitation({
+  const created = await deps.store.createInvitation({
     id: invitation.id,
     email,
     role,
@@ -108,12 +102,7 @@ export async function inviteMember(
     createdAt: now,
     expiresAt: invitation.expiresAt,
   });
-  await deps.store.audit({
-    action: "invitation_created",
-    actorId: actor.id,
-    targetEmail: email,
-    at: now,
-  });
+  if (!created) return { ok: false, reason: "forbidden" };
   return { ok: true, token, invitation };
 }
 
@@ -123,19 +112,7 @@ export async function revokeInvitation(
   invitationId: string,
 ): Promise<boolean> {
   if (!can(actor.role, "manage_access")) return false;
-  const invitations = await deps.store.listInvitations();
-  const target = invitations.find((invitation) => invitation.id === invitationId);
-  if (!target) return false;
-  const now = deps.clock.now();
-  const revoked = await deps.store.revokeInvitation(invitationId, now);
-  if (revoked)
-    await deps.store.audit({
-      action: "invitation_revoked",
-      actorId: actor.id,
-      targetEmail: target.email,
-      at: now,
-    });
-  return revoked;
+  return deps.store.revokeInvitation(invitationId, actor.id, deps.clock.now());
 }
 
 export type RemoveResult =
@@ -155,23 +132,17 @@ export async function removeMember(
   if (!target) return { ok: false, reason: "not_found" };
   if (target.email === normalizeEmail(deps.ownerEmail))
     return { ok: false, reason: "configured_owner" };
-  const removed = await deps.store.removeMember(userId);
+  const removed = await deps.store.removeMember(userId, actor.id, deps.clock.now());
   if (!removed) return { ok: false, reason: "not_found" };
-  await deps.store.audit({
-    action: "member_removed",
-    actorId: actor.id,
-    targetEmail: removed.email,
-    at: deps.clock.now(),
-  });
   return { ok: true, member: removed };
 }
 
 /** Role of an authenticated account, re-read from storage on every request (no cached role). */
 export async function resolveActor(
   deps: AccessDeps,
-  session: { userId: string; email: string } | null,
+  session: { userId: string; email: string; emailVerified: boolean } | null,
 ): Promise<Actor | null> {
-  if (!session) return null;
+  if (!session?.emailVerified) return null;
   const role = await deps.store.memberRole(session.userId);
   return role ? { id: session.userId, email: session.email, role } : null;
 }

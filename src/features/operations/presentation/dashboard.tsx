@@ -75,6 +75,7 @@ function Summary({ summary, now }: { summary: OpsSummary; now: Date }) {
         </Section>
       )}
       <Daily summary={summary} />
+      <Recent summary={summary} />
       <p className="text-tiny text-muted">
         Métricas registradas desde: {f.when(summary.metricsSince)}. Resumen generado por la API el{" "}
         {f.when(summary.generatedAt)}.
@@ -201,20 +202,18 @@ function Budget({ summary }: { summary: OpsSummary }) {
           <span className="tabular-nums text-ink">{f.pct(use)}</span>
         </div>
         {use == null ? null : (
-          <div
-            role="meter"
+          <meter
+            className="budget-meter"
+            data-high={use >= 90 ? "true" : undefined}
+            min={0}
+            max={100}
+            low={70}
+            high={90}
+            optimum={0}
+            value={Math.min(use, 100)}
             aria-label="Uso del presupuesto mensual"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.min(use, 100)}
             aria-valuetext={f.pct(use)}
-            className="h-3 w-full overflow-hidden rounded-pill bg-surface-sunken"
-          >
-            <div
-              className={`h-full rounded-pill ${use >= 90 ? "bg-danger" : "bg-icon"}`}
-              style={{ width: `${Math.min(Math.max(use, 1), 100)}%` }}
-            />
-          </div>
+          />
         )}
       </div>
       <div className="mt-4">
@@ -263,6 +262,7 @@ function Budget({ summary }: { summary: OpsSummary }) {
           </table>
         </TableRegion>
       </div>
+      <Rates summary={summary} />
       <p className="mt-3 text-small text-copy">
         Corte de seguridad mensual: {f.usd(b.monthlyCutoff)}. Restante antes del límite:{" "}
         {f.usd(b.remainingMonth)}.
@@ -446,6 +446,106 @@ function Daily({ summary }: { summary: OpsSummary }) {
             </table>
           </TableRegion>
         </div>
+      )}
+    </Section>
+  );
+}
+
+function Rates({ summary }: { summary: OpsSummary }) {
+  const p = summary.pricing;
+  return (
+    <p className="mt-3 text-small text-copy" data-testid="pricing">
+      {p ? (
+        <>
+          Estimaciones calculadas con las tarifas «{p.revision}» ({p.model}): entrada{" "}
+          {f.usd(p.inputPerMillion)}, en caché {f.usd(p.cachedInputPerMillion)}, escritura de caché{" "}
+          {f.usd(p.cacheWritePerMillion)} y salida (incluye razonamiento){" "}
+          {f.usd(p.outputPerMillion)} por millón de tokens.{" "}
+          <strong>No es la factura del proveedor:</strong> contrástala con el panel de facturación
+          de OpenAI.
+        </>
+      ) : (
+        <>Tarifas de estimación: {f.UNAVAILABLE}. Las cifras no son la factura del proveedor.</>
+      )}
+    </p>
+  );
+}
+
+const OUTCOME_LABEL = {
+  completed: "Completada",
+  failed: "Fallida",
+  cancelled: "Cancelada",
+  interrupted: "Interrumpida",
+  refused: "Rechazada",
+} as const;
+
+function Recent({ summary }: { summary: OpsSummary }) {
+  const runs = summary.recent;
+  return (
+    <Section
+      id="recent"
+      title="Últimas ejecuciones"
+      description="Hasta 50, la más reciente primero. Identificador opaco, sin contenido de la conversación."
+    >
+      {runs.length === 0 ? (
+        <p className="text-small text-copy">
+          {f.UNAVAILABLE}: la API no informó ejecuciones recientes.
+        </p>
+      ) : (
+        <TableRegion label="Últimas ejecuciones">
+          <table className="w-full border-collapse">
+            <caption className="sr-only">Últimas ejecuciones del asistente (UTC)</caption>
+            <thead>
+              <tr>
+                <th scope="col" className={th}>
+                  Inicio (UTC)
+                </th>
+                <th scope="col" className={th}>
+                  Resultado
+                </th>
+                <th scope="col" className={th}>
+                  Código
+                </th>
+                <th scope="col" className={th}>
+                  Modelo
+                </th>
+                <th scope="col" className={th}>
+                  Idioma
+                </th>
+                <th scope="col" className={th}>
+                  Primer texto
+                </th>
+                <th scope="col" className={th}>
+                  Total
+                </th>
+                <th scope="col" className={th}>
+                  Id
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {runs.map((run) => (
+                <tr key={run.id}>
+                  <th scope="row" className={`${td} text-left font-normal`}>
+                    {f.when(run.startedAt)}
+                  </th>
+                  <td className={td}>
+                    {OUTCOME_LABEL[run.outcome]}
+                    {run.replaced ? " · reemplazada" : ""}
+                  </td>
+                  <td className={td}>{run.code ? <code>{run.code}</code> : "—"}</td>
+                  <td className={td}>{run.modelCall ? "Sí" : "No"}</td>
+                  <td className={td}>{run.language ?? "—"}</td>
+                  <td className={td}>{f.ms(run.firstDeltaMs)}</td>
+                  <td className={td}>{f.ms(run.totalMs)}</td>
+                  <td className={td}>
+                    <code>{run.id}</code>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </TableRegion>
       )}
     </Section>
   );

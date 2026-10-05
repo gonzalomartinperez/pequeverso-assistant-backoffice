@@ -23,7 +23,8 @@ export function Section({
         className,
       )}
     >
-      <h2 id={`${id}-title`} className="text-title">
+      {/* tabIndex -1: focus target after an action removes the control that had focus. */}
+      <h2 id={`${id}-title`} tabIndex={-1} className="text-title focus-visible:outline-none">
         {title}
       </h2>
       {description ? <p className="mt-1 text-small text-muted">{description}</p> : null}

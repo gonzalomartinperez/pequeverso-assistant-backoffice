@@ -51,10 +51,11 @@ export function ms(value: number | null): string {
     : `${integer.format(value)} ms`;
 }
 
+/** Percentage with one decimal; a small non-zero share never collapses to "0 %". */
 export function pct(value: number | null): string {
-  return value == null
-    ? UNAVAILABLE
-    : `${new Intl.NumberFormat("es", { maximumFractionDigits: 1 }).format(value)} %`;
+  if (value == null) return UNAVAILABLE;
+  if (value > 0 && value < 0.1) return "< 0,1 %";
+  return `${new Intl.NumberFormat("es", { maximumFractionDigits: 1 }).format(value)} %`;
 }
 
 /** Relative age ("hace 3 h") for freshness, from a fixed reading time. */

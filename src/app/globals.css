@@ -365,3 +365,38 @@
     scroll-behavior: auto;
   }
 }
+
+/* Backoffice budget meter on design tokens (native <meter>, styled per engine). */
+.budget-meter {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 0.75rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+.budget-meter::-webkit-meter-bar {
+  background: var(--surface-sunken);
+  border: 0;
+  border-radius: var(--radius-pill);
+  height: 0.75rem;
+}
+.budget-meter::-webkit-meter-optimum-value,
+.budget-meter::-webkit-meter-suboptimum-value,
+.budget-meter::-webkit-meter-even-less-good-value {
+  background: var(--icon);
+  border-radius: var(--radius-pill);
+}
+.budget-meter::-moz-meter-bar {
+  background: var(--icon);
+  border-radius: var(--radius-pill);
+}
+.budget-meter[data-high="true"]::-webkit-meter-even-less-good-value,
+.budget-meter[data-high="true"]::-webkit-meter-suboptimum-value {
+  background: var(--danger);
+}
+.budget-meter[data-high="true"]::-moz-meter-bar {
+  background: var(--danger);
+}

@@ -29,7 +29,8 @@
     "test:backoffice": "playwright test -c playwright.backoffice.config.ts",
     "preview:backoffice": "node scripts/backoffice-stack.ts",
     "db:migrate": "node scripts/db-migrate.ts",
-    "db:check": "node scripts/db-check.ts"
+    "db:check": "node scripts/db-check.ts",
+    "test:db": "node scripts/db-check.ts && npm run test:integration"
   },
   "dependencies": {
     "better-auth": "1.7.7",

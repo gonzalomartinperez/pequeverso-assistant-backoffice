@@ -7,14 +7,17 @@ import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
 import pg from "pg";
+import { assertDisposableDatabase } from "../src/server/fixture-safety.ts";
 import { migrate } from "./db-migrate.ts";
 
-const base = process.env.TEST_DATABASE_URL;
-if (!base) {
-  console.error("TEST_DATABASE_URL is required (disposable PostgreSQL)");
+let base: string;
+try {
+  base = assertDisposableDatabase(process.env.TEST_DATABASE_URL, false);
+} catch (error) {
+  console.error(error instanceof Error ? error.message : "invalid TEST_DATABASE_URL");
   process.exit(2);
 }
-const name = `bo_e2e_${randomBytes(4).toString("hex")}`;
+const name = `bo_test_e2e_${randomBytes(4).toString("hex")}`;
 const admin = new pg.Client({ connectionString: base });
 await admin.connect();
 await admin.query(`CREATE DATABASE ${name}`);
@@ -22,12 +25,21 @@ const url = new URL(base);
 url.pathname = `/${name}`;
 await migrate(url.toString(), path.resolve(import.meta.dirname, "..", "migrations"));
 
-const token = "test-ops-read-token-0000000000000000";
+// LIVE_OPS_URL/LIVE_OPS_TOKEN point the dashboard at a running pequeverso-assistant-api (fixture
+// provider) instead of the mock; used by tests/backoffice/live-ops.spec.ts.
+const live = process.env.LIVE_OPS_URL
+  ? { url: process.env.LIVE_OPS_URL, token: process.env.LIVE_OPS_TOKEN ?? "" }
+  : null;
+const token = live?.token ?? "test-ops-read-token-0000000000000000";
 const children = [
-  spawn(process.execPath, ["scripts/mock-ops.ts"], {
-    stdio: "inherit",
-    env: { ...process.env, MOCK_OPS_PORT: "8237", OPS_READ_TOKEN: token },
-  }),
+  ...(live
+    ? []
+    : [
+        spawn(process.execPath, ["scripts/mock-ops.ts"], {
+          stdio: "inherit",
+          env: { ...process.env, MOCK_OPS_PORT: "8237", OPS_READ_TOKEN: token },
+        }),
+      ]),
   spawn(process.execPath, ["scripts/fake-idp.ts"], {
     stdio: "inherit",
     env: { ...process.env, FAKE_IDP_PORT: "8238" },
@@ -44,7 +56,7 @@ const children = [
       AUTH_TEST_ISSUER: "http://127.0.0.1:8238",
       // Every test signs in from 127.0.0.1; Better Auth allows 3 sign-in starts per 10 s per IP.
       AUTH_DISABLE_RATE_LIMIT: "1",
-      OPS_API_URL: "http://127.0.0.1:8237",
+      OPS_API_URL: live?.url ?? "http://127.0.0.1:8237",
       OPS_READ_TOKEN: token,
     },
   }),

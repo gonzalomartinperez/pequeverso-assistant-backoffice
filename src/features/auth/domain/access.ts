@@ -36,8 +36,7 @@ export function normalizeEmail(raw: string | null | undefined): string | null {
   return email.length <= 254 && EMAIL.test(email) ? email : null;
 }
 
-export const INVITATION_TTL_HOURS = 72;
-export const MAX_INVITATION_TTL_HOURS = 24 * 7;
+export const INVITATION_TTL_HOURS = 48;
 
 export type InvitationState = "pending" | "accepted" | "revoked" | "expired";
 

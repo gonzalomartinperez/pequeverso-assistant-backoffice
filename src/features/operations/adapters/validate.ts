@@ -1,10 +1,14 @@
-import type {
-  DailyRow,
-  Money,
-  OpsSummary,
-  Percentiles,
-  RunWindow,
-  Spend,
+import {
+  type DailyRow,
+  type Money,
+  type OpsSummary,
+  type Percentiles,
+  type Pricing,
+  type RecentRun,
+  RUN_OUTCOMES,
+  type RunOutcome,
+  type RunWindow,
+  type Spend,
 } from "../domain/summary.ts";
 
 /**
@@ -151,6 +155,45 @@ function dailyRow(value: unknown, path: string): DailyRow {
   };
 }
 
+const OPAQUE_ID = /^[0-9a-f]{16}$/;
+
+function recentRun(value: unknown, path: string): RecentRun {
+  const raw = object(value, path);
+  const id = pattern(raw.id, OPAQUE_ID, `${path}.id`) ?? fail(`${path}.id`);
+  const outcome = raw.outcome;
+  if (!RUN_OUTCOMES.includes(outcome as RunOutcome)) fail(`${path}.outcome`);
+  const language = raw.language ?? null;
+  if (language !== null && language !== "es" && language !== "en") fail(`${path}.language`);
+  const flag = (key: string) => bool(raw[key], `${path}.${key}`) ?? fail(`${path}.${key}`);
+  return {
+    id,
+    startedAt: date(raw.started_at, `${path}.started_at`) ?? fail(`${path}.started_at`),
+    outcome: outcome as RunOutcome,
+    code: pattern(raw.code, CODE, `${path}.code`),
+    modelCall: flag("model_call"),
+    replaced: flag("replaced"),
+    language,
+    firstDeltaMs: count(raw.first_delta_ms, `${path}.first_delta_ms`),
+    totalMs: count(raw.total_ms, `${path}.total_ms`) ?? fail(`${path}.total_ms`),
+  };
+}
+
+function pricing(value: unknown): Pricing | null {
+  const raw = optionalObject(value, "$.pricing");
+  if (!raw) return null;
+  return {
+    revision: text(raw.revision, "$.pricing.revision") ?? fail("$.pricing.revision"),
+    model: text(raw.model, "$.pricing.model") ?? fail("$.pricing.model"),
+    inputPerMillion: money(raw.input_per_million, "$.pricing.input_per_million"),
+    cachedInputPerMillion: money(
+      raw.cached_input_per_million,
+      "$.pricing.cached_input_per_million",
+    ),
+    cacheWritePerMillion: money(raw.cache_write_per_million, "$.pricing.cache_write_per_million"),
+    outputPerMillion: money(raw.output_per_million, "$.pricing.output_per_million"),
+  };
+}
+
 function list<T>(
   value: unknown,
   max: number,
@@ -224,5 +267,7 @@ export function parseOpsSummary(value: unknown): OpsSummary {
     windows: list(raw.windows, 8, "$.windows", runWindow),
     daily,
     metricsSince: date(raw.metrics_since, "$.metrics_since"),
+    pricing: pricing(raw.pricing),
+    recent: list(raw.recent, 50, "$.recent", recentRun),
   };
 }

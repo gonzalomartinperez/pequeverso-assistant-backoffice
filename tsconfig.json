@@ -39,5 +39,12 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", ".next", ".integration", "test-results", "playwright-report", "playwright-report-backoffice"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    ".integration",
+    "test-results",
+    "playwright-report",
+    "playwright-report-backoffice"
+  ]
 }

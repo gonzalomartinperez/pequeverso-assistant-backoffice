@@ -1,3 +1,5 @@
+import { assertDisposableDatabase, isLoopbackUrl } from "./fixture-safety.ts";
+
 /**
  * Backoffice runtime configuration, read on the server only (never inlined into the browser bundle). Parsed lazily
  * on first use so `next build` needs no secrets. Production fails closed: https origin, a strong
@@ -73,6 +75,13 @@ export function parseConfig(env: Record<string, string | undefined>): Backoffice
   const rateLimitOff = env.AUTH_DISABLE_RATE_LIMIT === "1";
   if (rateLimitOff && production)
     throw new Error("AUTH_DISABLE_RATE_LIMIT is not allowed in production");
+  // Test-only switches also require a loopback origin and a disposable loopback database, so a
+  // misconfigured shared or remote environment can never run with them.
+  if (testIssuerRaw || rateLimitOff) {
+    if (!isLoopbackUrl(origin) || (testIssuerRaw && !isLoopbackUrl(testIssuerRaw)))
+      throw new Error("test-only authentication settings require loopback origins");
+    assertDisposableDatabase(env.DATABASE_URL, true);
+  }
   const testIssuer = testIssuerRaw ? bareOrigin("AUTH_TEST_ISSUER", testIssuerRaw, true) : null;
   if (production && !google && !github)
     throw new Error("production needs at least one OAuth provider (Google or GitHub)");

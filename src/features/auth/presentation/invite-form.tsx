@@ -22,7 +22,6 @@ export function InviteForm({
   action: (state: InviteState, form: FormData) => Promise<InviteState>;
 }) {
   const [state, submit, pending] = useActionState(action, { status: "idle" });
-  const [copied, setCopied] = useState(false);
   const emailId = useId();
   const roleId = useId();
   return (
@@ -76,26 +75,38 @@ export function InviteForm({
               >
                 {state.link}
               </code>
-              <Button
-                variant="outline"
-                size="sm"
-                className="self-start"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(state.link);
-                    setCopied(true);
-                  } catch {
-                    setCopied(false);
-                  }
-                }}
-              >
-                {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
-                {copied ? "Copiado" : "Copiar enlace"}
-              </Button>
+              <CopyLink key={state.link} link={state.link} />
             </div>
           </Callout>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+/** Copy feedback belongs to one link: a new invitation remounts it, so "Copiado" never lingers. */
+function CopyLink({ link }: { link: string }) {
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(link);
+            setState("copied");
+          } catch {
+            setState("failed");
+          }
+        }}
+      >
+        {state === "copied" ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+        {state === "copied" ? "Copiado" : "Copiar enlace"}
+      </Button>
+      <span role="status" className="text-tiny">
+        {state === "failed" ? "No se pudo copiar; selecciona el enlace y cópialo a mano." : ""}
+      </span>
     </div>
   );
 }

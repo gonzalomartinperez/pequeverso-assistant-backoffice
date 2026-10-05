@@ -1,5 +1,5 @@
 import { invitationState } from "@/features/auth/domain/access";
-import { ConfirmSubmit } from "@/features/auth/presentation/confirm-submit";
+import { ConfirmAction } from "@/features/auth/presentation/confirm-action";
 import { InviteForm } from "@/features/auth/presentation/invite-form";
 import { when } from "@/features/operations/presentation/format";
 import { accessDeps, requireActor } from "@/server/auth";
@@ -79,13 +79,15 @@ export default async function AccessPage() {
                     ) : member.email === ownerEmail ? (
                       <span className="text-tiny text-muted">Propietario configurado</span>
                     ) : (
-                      <form action={removeMemberAction}>
-                        <input type="hidden" name="id" value={member.id} />
-                        <ConfirmSubmit
-                          label="Quitar acceso"
-                          confirmLabel={`Quitar a ${member.email}`}
-                        />
-                      </form>
+                      <ConfirmAction
+                        label="Quitar acceso"
+                        subject={member.email}
+                        title="¿Quitar el acceso?"
+                        description="Se cierran sus sesiones de inmediato. Para volver a entrar necesitará una invitación nueva."
+                        confirmLabel="Quitar acceso"
+                        fallbackFocusId="members-title"
+                        action={removeMemberAction.bind(null, member.id)}
+                      />
                     )}
                   </td>
                 </tr>
@@ -137,10 +139,15 @@ export default async function AccessPage() {
                       <td className={td}>{when(invitation.expiresAt)}</td>
                       <td className={td}>
                         {state === "pending" ? (
-                          <form action={revokeInvitationAction}>
-                            <input type="hidden" name="id" value={invitation.id} />
-                            <ConfirmSubmit label="Revocar" confirmLabel="Confirmar revocación" />
-                          </form>
+                          <ConfirmAction
+                            label="Revocar"
+                            subject={invitation.email}
+                            title="¿Revocar la invitación?"
+                            description="El enlace deja de servir de inmediato."
+                            confirmLabel="Revocar invitación"
+                            fallbackFocusId="invitations-title"
+                            action={revokeInvitationAction.bind(null, invitation.id)}
+                          />
                         ) : null}
                       </td>
                     </tr>

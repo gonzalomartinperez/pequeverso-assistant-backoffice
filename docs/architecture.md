@@ -1,71 +1,58 @@
 # Architecture
 
-One conversation feature, two thin shells. Dependencies point inward; the boundaries below are
-enforced by `scripts/check-boundaries.ts` (part of `npm test`).
+The private backoffice of the Pequeverso assistant: sign-in, access management and an operations
+dashboard. Feature-organized, with dependencies pointing inward; `scripts/check-boundaries.ts`
+enforces the layers (part of `npm test`). The public conversation lives only in the storefront.
 
 ```
 src/
-  app/                         route shells (server components): read runtime config, render a shell
-    page.tsx                   standalone (secondary)       embed/page.tsx   embedded (primary)
-    healthz/route.ts           liveness                     layout.tsx       pre-paint theme, fonts
-  proxy.ts                     per-request framing headers (frame-ancestors from EMBED_ALLOWED_ORIGINS)
-  features/assistant/
-    domain/                    pure: models, conversation reducer, URL policy, rich-text parser
-    application/               controller (external store) + ports; no browser APIs beyond AbortSignal
-    adapters/                  HTTP transport, SSE reader, runtime validation of API payloads
-    presentation/              React components/hooks shared by both shells, standalone shell
-    entry.tsx                  composition root: the only module that imports adapters
-  features/embed/
-    protocol.ts                pure postMessage protocol v1 (types, validators, origin parser)
-    use-host-bridge.ts         origin/source-checked bridge to the host window
-    embedded-shell.tsx         compact panel header + the shared conversation view
-  shared/                      config (server-only runtime config), i18n copy, UI primitives
+  app/                      routes: composition and metadata only
+    ingresar/               sign-in            invitacion/[token]/  invitation landing (route handler)
+    panel/                  layout guard + dashboard, accesos/ (owner), cuenta/
+    api/auth/[...all]/      Better Auth endpoints       healthz/  liveness
+  proxy.ts                  per-request headers (nonce CSP on backoffice routes)
+  server/                   server-only composition: config, auth (pool, Better Auth, guards), operations
+  features/
+    auth/
+      domain/access.ts      roles, permissions, e-mail normalization, invitation state, admission route
+      application/          use cases (admitSignUp, invite, revoke, remove, resolveActor) + ports
+      adapters/             Better Auth config, PostgreSQL store, node crypto
+      presentation/         sign-in, invite form, account controls, frame, navigation
+    operations/
+      domain/summary.ts     ops summary model and pure derivations (money, percentages, freshness)
+      application/ports.ts  OpsSource port
+      adapters/             HTTP client (server to server) and runtime validation
+      presentation/         dashboard (server component), Recharts daily charts (client), formatting
+    assistant/, embed/      legacy chat shells (to be removed)
+  shared/ui                 owned primitives on the design tokens
+migrations/                 committed SQL (Better Auth core + invitations/audit)
 ```
 
-## Data flow
+## Request flow
 
-1. The route shell reads `STOREFRONT_ORIGIN`, `ASSISTANT_LINK_HOSTS`, `EMBED_ALLOWED_ORIGINS` on the
-   server (per request) and passes plain values to the client shell.
-2. `entry.tsx` creates the controller with the HTTP transport (same-origin `/api/v1`).
-3. `createAssistant` (application) opens the session once (single-flight), and for each question
-   runs one generation: optimistic question → `POST /api/v1/messages` (Idempotency-Key) → validated
-   SSE events → reducer events tagged with the turn key.
-4. `reduce` (domain) is the only state transition function. Late events from stopped, cleared or
-   superseded turns are ignored by key in the reducer and by generation identity in the controller.
-5. Presentation reads state with `useSyncExternalStore`. The committed transcript is memoized and
-   does not re-render while tokens arrive; only the streaming draft does.
+1. `proxy.ts` sets a per-request nonce CSP, `frame-ancestors 'none'`, no-store and noindex on
+   `/panel`, `/ingresar`, `/invitacion` and `/api/auth`.
+2. `panel/layout.tsx` calls `requireActor("read_operations")`: the Better Auth session is read
+   from PostgreSQL and the role re-read from the user row; anonymous visitors go to `/ingresar`.
+3. The dashboard page reads the API's private summary through `server/operations.ts` (bearer
+   token from server env), validates it and renders it; failures become "no disponible".
+4. Owner mutations are server actions that call `requireActor("manage_access")` again before the
+   use case runs.
 
-## Conversation rules
+## Access model
 
-- **Streaming**: deltas are provisional; `message.completed` is authoritative and replaces the draft
-  in place (same renderer, so no format jump). `run.completed` without an answer, EOF without a
-  terminal event, a protocol error after start, or 45 s without bytes (three missed API heartbeats)
-  all become an *interrupted* outcome that keeps the partial text.
-- **Stop**: with a run id, `POST /runs/{id}/cancel` and wait up to 5 s for `run.cancelled`; before
-  the run id is known, abort the request. Deltas after stop are ignored.
-- **Retry** is always explicit. After an interruption it reuses the Idempotency-Key, so the API can
-  replay a completed answer instead of generating again; if the API answers
-  `idempotency_conflict` (the run failed server-side), one retry with a fresh key follows. After a
-  failure or cancellation, retry uses a fresh key. The question bubble is not duplicated.
-- **Refusals before streaming** (4xx/503 envelopes) return the question to the composer.
-  `session_expired` and `csrf_failed` reopen the session; expiry shows a notice.
-- **Unavailable** (`assistant_disabled`, `budget_exhausted`, `catalog_unavailable`, from the session
-  or a run): new questions are disabled, history stays readable, support is linked.
-- **Reopen**: `start()` is idempotent; minimizing/restoring the iframe never reopens the session.
-- **History/deletion**: the session restores stored history on load; "Nueva conversación" deletes
-  the session (`DELETE /api/v1/session`) and opens a fresh one.
+See [ADR 005](adr/005-backoffice-auth-better-auth.md) and [ADR 006](adr/006-iam-in-postgresql.md):
+OAuth only, owner by configuration, everyone else by single-use invitation bound to the verified
+e-mail, explicit linking only, revocation by deleting the account.
 
-## Security model
+## Operations data
 
-- API payloads: strict runtime validation (`adapters/validate.ts`, `adapters/sse.ts`) with size
-  bounds; unknown SSE event types or fields are protocol errors.
-- URLs: `domain/links.ts` allows product/purchase/image URLs only on the exact storefront origin and
-  informational links only there or on allowlisted https hosts. Products failing the policy are
-  dropped, not rendered broken.
-- Answer text: parsed by `domain/rich-text.ts` into a tiny tree (paragraphs, bold, lists) and
-  rendered as React text elements; there is no HTML and no link path (URLs in text stay text).
-- Embedding: see [embed-integration.md](embed-integration.md).
+See [ADR 007](adr/007-ops-data-source.md). The contract is pinned in `contracts/ops/` from a
+committed API revision (`contracts/ops/source.json`); a unit test checks the pinned hashes and
+that the example parses.
 
-## Adopted from reference repositories (read-only)
+## Legacy chat shells
 
-See [coordination.md](coordination.md) for revisions and decisions.
+`/` and `/embed` (features `assistant` and `embed`) remain until the storefront's native
+assistant reaches verified parity; their design is described in the git history of this file and
+in [embed-integration.md](embed-integration.md).

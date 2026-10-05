@@ -26,6 +26,23 @@ describe("ops summary contract", () => {
     assert.equal(summary.windows[0]?.runs.refused, 1);
     assert.equal(summary.budget?.monthSpend.estimated, "0.005400");
     assert.ok(summary.catalog.activatedAt instanceof Date);
+    assert.equal(summary.pricing?.model, "gpt-6-luna");
+    assert.equal(summary.recent[1]?.outcome, "refused");
+    assert.equal(summary.recent[1]?.modelCall, false);
+  });
+
+  it("rejects recent runs with non-opaque ids or unknown outcomes", () => {
+    const run = pinned.recent[0];
+    for (const bad of [
+      { ...run, id: "run_abc" },
+      { ...run, outcome: "ok" },
+      { ...run, language: "fr" },
+    ])
+      assert.throws(() => parseOpsSummary({ ...pinned, recent: [bad] }), OpsPayloadError);
+    assert.throws(
+      () => parseOpsSummary({ ...pinned, recent: Array.from({ length: 51 }, () => run) }),
+      OpsPayloadError,
+    );
   });
 
   it("parses the local synthetic fixture with the same shape", () => {
@@ -90,7 +107,7 @@ describe("summary derivations", () => {
   });
 
   it("computes budget use from confirmed + estimated + pending", () => {
-    assert.equal(budgetUse(parseOpsSummary(fixture)), 4.4);
+    assert.ok(Math.abs((budgetUse(parseOpsSummary(fixture)) ?? 0) - 4.357) < 1e-9);
   });
 
   it("needs two days for a trend and a positive whole for a percentage", () => {
@@ -134,10 +151,8 @@ describe("ops HTTP source", () => {
     const reading = await source.read();
     assert.equal(reading.status, "ok");
     assert.equal(url, "http://ops.internal:8000/internal/v1/ops/summary");
-    assert.equal(
-      (seen?.headers as Record<string, string>).Authorization,
-      `Bearer ${settings.token}`,
-    );
+    const headers = seen?.headers as Record<string, string> | undefined;
+    assert.equal(headers?.Authorization, `Bearer ${settings.token}`);
     assert.equal(seen?.cache, "no-store");
     assert.equal(seen?.redirect, "error");
   });

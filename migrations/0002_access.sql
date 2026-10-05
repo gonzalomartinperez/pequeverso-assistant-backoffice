@@ -1,4 +1,5 @@
--- Invitations (only a SHA-256 digest of the one-time token is stored) and the access audit trail.
+-- Invitations (only a SHA-256 digest of the one-time token is stored) and the access audit trail
+-- (actor id, action, subject id, time: no e-mails, tokens or provider data).
 create table backoffice_invitation (
   id text primary key,
   email text not null check (email = lower(email)),
@@ -21,7 +22,7 @@ create table backoffice_access_audit (
   action text not null check (action in
     ('invitation_created', 'invitation_revoked', 'invitation_accepted', 'member_removed')),
   actor_id text,
-  target_email text not null,
+  subject_id text not null,
   at timestamptz not null
 );
 create index backoffice_access_audit_at on backoffice_access_audit (at);

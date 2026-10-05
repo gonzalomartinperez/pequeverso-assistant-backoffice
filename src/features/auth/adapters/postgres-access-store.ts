@@ -1,5 +1,5 @@
 import type { Pool, PoolClient } from "pg";
-import type { AccessStore, AuditEntry, Member, NewInvitation } from "../application/ports.ts";
+import type { AccessStore, Member, NewInvitation } from "../application/ports.ts";
 import { type InvitationRecord, isRole, type Role } from "../domain/access.ts";
 
 /**
@@ -82,8 +82,31 @@ export class PostgresAccessStore implements AccessStore {
     }
   }
 
-  async createInvitation(input: NewInvitation): Promise<void> {
-    await this.transaction(async (client) => {
+  /** Locks the actor's row and confirms it is still an owner; part of every owner mutation. */
+  private async lockOwner(client: PoolClient, actorId: string): Promise<boolean> {
+    const { rowCount } = await client.query(
+      "SELECT 1 FROM auth_user WHERE id = $1 AND role = 'owner' FOR UPDATE",
+      [actorId],
+    );
+    return rowCount === 1;
+  }
+
+  private audit(
+    client: PoolClient,
+    action: string,
+    actorId: string | null,
+    subjectId: string,
+    at: Date,
+  ) {
+    return client.query(
+      "INSERT INTO backoffice_access_audit (action, actor_id, subject_id, at) VALUES ($1, $2, $3, $4)",
+      [action, actorId, subjectId, at],
+    );
+  }
+
+  async createInvitation(input: NewInvitation): Promise<boolean> {
+    return this.transaction(async (client) => {
+      if (!(await this.lockOwner(client, input.createdBy))) return false;
       // At most one open invitation per e-mail: a new one supersedes earlier pending ones.
       await client.query(
         "UPDATE backoffice_invitation SET revoked_at = $2 WHERE email = $1 AND accepted_at IS NULL AND revoked_at IS NULL",
@@ -102,6 +125,8 @@ export class PostgresAccessStore implements AccessStore {
           input.expiresAt,
         ],
       );
+      await this.audit(client, "invitation_created", input.createdBy, input.id, input.createdAt);
+      return true;
     });
   }
 
@@ -113,24 +138,37 @@ export class PostgresAccessStore implements AccessStore {
     return rows[0] ? invitation(rows[0]) : null;
   }
 
-  async consumeInvitation(digest: string, email: string, now: Date): Promise<Role | null> {
-    const { rows } = await this.pool.query<{ role: string }>(
-      `UPDATE backoffice_invitation SET accepted_at = $3
-        WHERE token_digest = $1 AND email = $2 AND accepted_at IS NULL AND revoked_at IS NULL
-          AND expires_at > $3
-        RETURNING role`,
-      [digest, email, now],
-    );
-    const role = rows[0]?.role;
-    return isRole(role) ? role : null;
+  async consumeInvitation(
+    digest: string,
+    email: string,
+    now: Date,
+  ): Promise<{ id: string; role: Role } | null> {
+    return this.transaction(async (client) => {
+      const { rows } = await client.query<{ id: string; role: string }>(
+        `UPDATE backoffice_invitation SET accepted_at = $3
+          WHERE token_digest = $1 AND email = $2 AND accepted_at IS NULL AND revoked_at IS NULL
+            AND expires_at > $3
+          RETURNING id, role`,
+        [digest, email, now],
+      );
+      const row = rows[0];
+      if (!row || !isRole(row.role)) return null;
+      await this.audit(client, "invitation_accepted", null, row.id, now);
+      return { id: row.id, role: row.role };
+    });
   }
 
-  async revokeInvitation(id: string, now: Date): Promise<boolean> {
-    const result = await this.pool.query(
-      "UPDATE backoffice_invitation SET revoked_at = $2 WHERE id = $1 AND accepted_at IS NULL AND revoked_at IS NULL",
-      [id, now],
-    );
-    return result.rowCount === 1;
+  async revokeInvitation(id: string, actorId: string, now: Date): Promise<boolean> {
+    return this.transaction(async (client) => {
+      if (!(await this.lockOwner(client, actorId))) return false;
+      const result = await client.query(
+        "UPDATE backoffice_invitation SET revoked_at = $2 WHERE id = $1 AND accepted_at IS NULL AND revoked_at IS NULL",
+        [id, now],
+      );
+      if (result.rowCount !== 1) return false;
+      await this.audit(client, "invitation_revoked", actorId, id, now);
+      return true;
+    });
   }
 
   async listInvitations(): Promise<InvitationRecord[]> {
@@ -164,24 +202,18 @@ export class PostgresAccessStore implements AccessStore {
     return isRole(role) ? role : null;
   }
 
-  async removeMember(userId: string): Promise<Member | null> {
+  async removeMember(userId: string, actorId: string, now: Date): Promise<Member | null> {
     return this.transaction(async (client) => {
+      if (!(await this.lockOwner(client, actorId))) return null;
       const { rows } = await client.query<MemberRow>(
         `${MEMBER_SELECT} WHERE u.id = $1 GROUP BY u.id`,
         [userId],
       );
       if (!rows[0]) return null;
       // Sessions and linked accounts reference the user with ON DELETE CASCADE.
-      await client.query('DELETE FROM auth_session WHERE "userId" = $1', [userId]);
       await client.query("DELETE FROM auth_user WHERE id = $1", [userId]);
+      await this.audit(client, "member_removed", actorId, userId, now);
       return member(rows[0]);
     });
-  }
-
-  async audit(entry: AuditEntry): Promise<void> {
-    await this.pool.query(
-      "INSERT INTO backoffice_access_audit (action, actor_id, target_email, at) VALUES ($1, $2, $3, $4)",
-      [entry.action, entry.actorId, entry.targetEmail, entry.at],
-    );
   }
 }

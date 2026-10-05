@@ -33,16 +33,16 @@ export async function inviteAction(_: InviteState, form: FormData): Promise<Invi
   };
 }
 
-export async function revokeInvitationAction(form: FormData): Promise<void> {
+export async function revokeInvitationAction(id: string): Promise<{ ok: boolean }> {
   const actor = await requireActor("manage_access");
-  const id = form.get("id");
-  if (typeof id === "string") await revokeInvitation(accessDeps(), actor, id);
+  const ok = await revokeInvitation(accessDeps(), actor, id);
   revalidatePath("/panel/accesos");
+  return { ok };
 }
 
-export async function removeMemberAction(form: FormData): Promise<void> {
+export async function removeMemberAction(id: string): Promise<{ ok: boolean }> {
   const actor = await requireActor("manage_access");
-  const id = form.get("id");
-  if (typeof id === "string") await removeMember(accessDeps(), actor, id);
+  const result = await removeMember(accessDeps(), actor, id);
   revalidatePath("/panel/accesos");
+  return { ok: result.ok };
 }

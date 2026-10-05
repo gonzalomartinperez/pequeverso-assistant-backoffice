@@ -16,8 +16,12 @@ import {
   inviteMember,
   removeMember,
 } from "../../src/features/auth/application/access.ts";
+import { assertDisposableDatabase } from "../../src/server/fixture-safety.ts";
 
-const baseUrl = process.env.TEST_DATABASE_URL;
+// TEST_DATABASE_URL (or DATABASE_URL in CI) names a disposable LOOPBACK server; the test creates and
+// drops its own `bo_test_*` database there. A remote or malformed URL fails before connecting.
+const rawUrl = process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL;
+const baseUrl = rawUrl ? assertDisposableDatabase(rawUrl, false) : undefined;
 const ORIGIN = "http://localhost:3299";
 const IDP_PORT = 8298;
 const IDP = `http://127.0.0.1:${IDP_PORT}`;
@@ -40,6 +44,7 @@ describe("backoffice authentication (PostgreSQL, real callback)", {
     url.pathname = `/${database}`;
     await migrate(url.toString(), path.resolve(import.meta.dirname, "../../migrations"));
     pool = new pg.Pool({ connectionString: url.toString() });
+    pool.on("error", () => undefined); // DROP DATABASE … WITH (FORCE) ends idle connections at teardown
     deps = {
       store: new PostgresAccessStore(pool),
       secrets: nodeSecrets,
@@ -246,6 +251,111 @@ describe("backoffice authentication (PostgreSQL, real callback)", {
       `SELECT count(*) AS n FROM auth_account a JOIN auth_user u ON u.id = a."userId" WHERE u.email = 'owner@example.test'`,
     );
     assert.equal(Number(rows[0]?.n), 1);
+  });
+
+  it("rejects a callback whose OAuth state does not match the browser's state cookie", async () => {
+    await fetch(`${IDP}/__identity`, {
+      method: "POST",
+      body: JSON.stringify({ email: "owner@example.test", sub: "owner-3" }),
+    });
+    const jar: Jar = new Map();
+    const start = await auth.handler(
+      new Request(`${ORIGIN}/api/auth/sign-in/social`, {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: ORIGIN },
+        body: JSON.stringify({
+          provider: "test-idp",
+          callbackURL: "/panel",
+          errorCallbackURL: "/ingresar",
+        }),
+      }),
+    );
+    store(jar, start);
+    const { url } = (await start.json()) as { url: string };
+    const authorize = await fetch(url, { redirect: "manual" });
+    const callback = new URL(authorize.headers.get("location") ?? "");
+    callback.searchParams.set("state", "forged-state-value");
+    const done = await auth.handler(
+      new Request(callback, { headers: { cookie: cookieHeader(jar) } }),
+    );
+    store(jar, done);
+    assert.match(done.headers.get("location") ?? "", /error=/);
+    assert.equal(await session(jar), null);
+  });
+
+  it("explicit linking is accepted from an owner and refused for a viewer", async () => {
+    const ownerLogin = await signIn({ email: "owner@example.test", sub: "owner-3" });
+    const ownerSession = await session(ownerLogin.jar);
+    const owner = {
+      id: ownerSession?.user.id ?? "",
+      email: "owner@example.test",
+      role: "owner" as const,
+    };
+    const invite = await inviteMember(deps, owner, "linker@example.test", "viewer");
+    if (!invite.ok) throw new Error("invite failed");
+    const viewer = await signIn(
+      { email: "linker@example.test", sub: "l-1" },
+      new Map([[INVITATION_COOKIE, invite.token]]),
+    );
+    assert.match(viewer.location, /\/panel$/);
+    const link = (jar: Jar) =>
+      auth.handler(
+        new Request(`${ORIGIN}/api/auth/link-social`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            origin: ORIGIN,
+            cookie: cookieHeader(jar),
+          },
+          body: JSON.stringify({ provider: "test-idp", callbackURL: "/panel/cuenta" }),
+        }),
+      );
+    assert.equal((await link(viewer.jar)).status, 403);
+    assert.equal((await link(ownerLogin.jar)).status, 200);
+  });
+
+  it("records access changes by id only (no e-mails or tokens in the audit)", async () => {
+    const { rows } = await pool.query<{ action: string; subject_id: string }>(
+      "SELECT action, subject_id FROM backoffice_access_audit ORDER BY id",
+    );
+    assert.ok(rows.some((row) => row.action === "invitation_created"));
+    assert.ok(rows.some((row) => row.action === "invitation_accepted"));
+    assert.ok(rows.some((row) => row.action === "member_removed"));
+    assert.ok(rows.every((row) => !row.subject_id.includes("@")));
+  });
+
+  it("limits sign-in attempts with database-backed counters", async () => {
+    const limited = createAuth(
+      {
+        origin: ORIGIN,
+        secret: "integration-secret-0000000000000000000000",
+        secureCookies: false,
+        sessionHours: 8,
+        google: null,
+        github: null,
+        testIssuer: IDP,
+      },
+      pool,
+      deps,
+    );
+    const statuses: number[] = [];
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const response = await limited.handler(
+        new Request(`${ORIGIN}/api/auth/sign-in/social`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            origin: ORIGIN,
+            "x-forwarded-for": "203.0.113.7",
+          },
+          body: JSON.stringify({ provider: "test-idp", callbackURL: "/panel" }),
+        }),
+      );
+      statuses.push(response.status);
+    }
+    assert.ok(statuses.includes(429), `statuses: ${statuses.join(",")}`);
+    const { rows } = await pool.query<{ n: string }>("SELECT count(*) AS n FROM auth_rate_limit");
+    assert.ok(Number(rows[0]?.n) > 0, "counters are persisted in PostgreSQL");
   });
 
   it("offers no e-mail/password sign-up or sign-in", async () => {

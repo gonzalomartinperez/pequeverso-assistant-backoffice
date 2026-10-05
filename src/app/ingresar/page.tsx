@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { BackofficeFrame } from "@/features/auth/presentation/backoffice-frame";
 import { SignInPanel } from "@/features/auth/presentation/sign-in-panel";
-import { currentActor, enabledProviders } from "@/server/auth";
+import { authReady, currentActor, enabledProviders } from "@/server/auth";
 import { Callout } from "@/shared/ui/callout";
 
 export const metadata: Metadata = { title: "Ingresar · Backoffice Pequeverso" };
@@ -12,7 +12,7 @@ const ERRORS: Record<string, string> = {
   unable_to_create_user:
     "Esa cuenta no tiene acceso. Entra con el e-mail verificado que recibió la invitación, desde el enlace de la invitación.",
   account_not_linked:
-    "Esa identidad no está vinculada a tu cuenta. Ingresa con la identidad habitual y vincúlala desde «Cuenta».",
+    "Esa identidad no está vinculada a tu cuenta. Ingresa con la identidad habitual; el propietario puede vincular otra desde «Cuenta».",
 };
 
 export default async function SignInPage({
@@ -20,10 +20,20 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  if (await currentActor()) redirect("/panel");
   const params = await searchParams;
+  const ready = await authReady();
+  if (ready) {
+    let signedIn = false;
+    try {
+      signedIn = (await currentActor()) !== null;
+    } catch {
+      signedIn = false;
+    }
+    if (signedIn) redirect("/panel");
+  }
   const error = typeof params.error === "string" ? params.error : null;
   const invited = params.invitacion === "1";
+  const providers = ready ? enabledProviders() : [];
   return (
     <BackofficeFrame>
       <div className="mx-auto flex w-full max-w-md flex-col gap-6 py-10">
@@ -34,7 +44,15 @@ export default async function SignInPage({
             solo el propietario configurado y las personas invitadas.
           </p>
         </header>
-        {invited ? (
+        {!ready || error === "unavailable" ? (
+          <Callout tone="danger" role="alert" data-testid="sign-in-unavailable">
+            <p>
+              El acceso no está disponible en este momento. No es un problema de tu cuenta: vuelve a
+              intentarlo más tarde.
+            </p>
+          </Callout>
+        ) : null}
+        {invited && ready ? (
           <Callout tone="info" role="status">
             <p>
               Tienes una invitación. Ingresa con la cuenta cuyo e-mail verificado recibió la
@@ -42,7 +60,7 @@ export default async function SignInPage({
             </p>
           </Callout>
         ) : null}
-        {error ? (
+        {error && error !== "unavailable" ? (
           <Callout tone="danger" role="alert" data-testid="sign-in-error">
             <p>
               {ERRORS[error] ??
@@ -50,7 +68,7 @@ export default async function SignInPage({
             </p>
           </Callout>
         ) : null}
-        <SignInPanel providers={enabledProviders()} />
+        {ready ? <SignInPanel providers={providers} /> : null}
       </div>
     </BackofficeFrame>
   );

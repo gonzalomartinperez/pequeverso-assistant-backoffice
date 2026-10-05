@@ -20,27 +20,28 @@ export type NewInvitation = {
   expiresAt: Date;
 };
 
-export type AuditEntry = {
-  action: "invitation_created" | "invitation_revoked" | "invitation_accepted" | "member_removed";
-  actorId: string | null;
-  targetEmail: string;
-  at: Date;
-};
-
-/** Persistence of invitations, members and the access audit trail (PostgreSQL adapter). */
+/**
+ * Persistence of invitations, members and the access audit. Every mutation re-verifies inside its
+ * own transaction that the actor is still an owner (locking the actor's row) and writes its audit
+ * entry (actor id, action, subject id, time) in that same transaction.
+ */
 export interface AccessStore {
-  createInvitation(invitation: NewInvitation): Promise<void>;
+  /** Supersedes earlier open invitations for the e-mail. False when the actor is not an owner. */
+  createInvitation(invitation: NewInvitation): Promise<boolean>;
   invitationByDigest(digest: string): Promise<InvitationRecord | null>;
-  /** Atomically marks a pending, unexpired invitation for `email` as accepted; returns its role. */
-  consumeInvitation(digest: string, email: string, now: Date): Promise<Role | null>;
-  revokeInvitation(id: string, now: Date): Promise<boolean>;
+  /** Atomically accepts a pending, unexpired invitation for `email`; audited as the system. */
+  consumeInvitation(
+    digest: string,
+    email: string,
+    now: Date,
+  ): Promise<{ id: string; role: Role } | null>;
+  revokeInvitation(id: string, actorId: string, now: Date): Promise<boolean>;
   listInvitations(): Promise<InvitationRecord[]>;
   listMembers(): Promise<Member[]>;
   memberByEmail(email: string): Promise<Member | null>;
   memberRole(userId: string): Promise<Role | null>;
-  /** Deletes the account; its sessions and linked identities go with it. */
-  removeMember(userId: string): Promise<Member | null>;
-  audit(entry: AuditEntry): Promise<void>;
+  /** Deletes the account (its sessions and linked identities cascade). Null when not allowed. */
+  removeMember(userId: string, actorId: string, now: Date): Promise<Member | null>;
 }
 
 export interface Secrets {

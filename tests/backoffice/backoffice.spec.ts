@@ -232,6 +232,9 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   ).toHaveCount(0);
   await viewer.goto("/panel/accesos");
   await expect(viewer).toHaveURL(/\/panel$/);
+  // Explicit linking is offered to owners only.
+  await viewer.goto("/panel/cuenta");
+  await expect(viewer.getByRole("button", { name: /Vincular/ })).toHaveCount(0);
   // No session material in browser storage.
   expect(
     await viewer.evaluate(() =>
@@ -249,9 +252,22 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   await page.reload();
   const members = page.getByRole("region", { name: "Cuentas con acceso" });
   const row = members.getByRole("row", { name: new RegExp(email) });
-  await row.getByRole("button", { name: "Quitar acceso" }).click();
-  await row.getByRole("button", { name: `Quitar a ${email}` }).click();
+  const trigger = row.getByRole("button", { name: `Quitar acceso ${email}` });
+  // Escape cancels the modal and returns focus to its trigger.
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "¿Quitar el acceso?" });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  await axe(page);
+  if (info.project.name === "chromium")
+    await page.screenshot({ path: `${SHOTS}/desktop-revoke-dialog.png` });
+  await dialog.getByRole("button", { name: "Quitar acceso" }).click();
+  await expect(dialog).toBeHidden();
   await expect(members.getByRole("row", { name: new RegExp(email) })).toHaveCount(0);
+  await expect(page.locator("#members-title")).toBeFocused();
   await expect(
     page
       .getByRole("region", { name: "Invitaciones" })

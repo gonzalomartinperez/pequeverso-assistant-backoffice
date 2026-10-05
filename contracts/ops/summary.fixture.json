@@ -216,5 +216,147 @@
       "refused": 1
     }
   ],
-  "metrics_since": "2026-09-29T09:12:00Z"
+  "metrics_since": "2026-09-29T09:12:00Z",
+  "pricing": {
+    "revision": "fixture-rates",
+    "model": "fixture",
+    "input_per_million": "0.10",
+    "cached_input_per_million": "0.01",
+    "cache_write_per_million": "0.125",
+    "output_per_million": "0.50"
+  },
+  "recent": [
+    {
+      "id": "269e0d37f2a74de4",
+      "started_at": "2026-10-05T11:58:00Z",
+      "outcome": "completed",
+      "code": null,
+      "model_call": true,
+      "replaced": false,
+      "language": "es",
+      "first_delta_ms": 2226,
+      "total_ms": 7460
+    },
+    {
+      "id": "128b2f330c5c7fd0",
+      "started_at": "2026-10-05T11:54:00Z",
+      "outcome": "completed",
+      "code": null,
+      "model_call": true,
+      "replaced": false,
+      "language": "es",
+      "first_delta_ms": 3566,
+      "total_ms": 9955
+    },
+    {
+      "id": "9531985d5d9dc9f8",
+      "started_at": "2026-10-05T11:50:00Z",
+      "outcome": "cancelled",
+      "code": null,
+      "model_call": true,
+      "replaced": false,
+      "language": "en",
+      "first_delta_ms": 1285,
+      "total_ms": 3760
+    },
+    {
+      "id": "099950d836f675cc",
+      "started_at": "2026-10-05T11:46:00Z",
+      "outcome": "completed",
+      "code": null,
+      "model_call": true,
+      "replaced": true,
+      "language": "es",
+      "first_delta_ms": 2978,
+      "total_ms": 5682
+    },
+    {
+      "id": "11e20b8f6b0d549b",
+      "started_at": "2026-10-05T11:42:00Z",
+      "outcome": "completed",
+      "code": null,
+      "model_call": true,
+      "replaced": false,
+      "language": "es",
+      "first_delta_ms": 2676,
+      "total_ms": 6647
+    },
+    {
+      "id": "8d116ece1738f7d9",
+      "started_at": "2026-10-05T11:38:00Z",
+      "outcome": "refused",
+      "code": "budget_exhausted",
+      "model_call": false,
+      "replaced": false,
+      "language": "es",
+      "first_delta_ms": null,
+      "total_ms": 0
+    },
+    {
+      "id": "d3ac94af0f21ddb6",
+      "started_at": "2026-10-05T11:34:00Z",
+      "outcome": "completed",
+      "code": null,
+      "model_call": true,
+      "replaced": false,
+      "language": "es",
+      "first_delta_ms": 2638,
+      "total_ms": 9270
+    },
+    {
+      "id": "39263059f28c105d",
+      "started_at": "2026-10-05T11:30:00Z",
+      "outcome": "failed",
+      "code": "provider_unavailable",
+      "model_call": true,
+      "replaced": false,
+      "language": "es",
+      "first_delta_ms": 1407,
+      "total_ms": 8573
+    },
+    {
+      "id": "f29d0da9953f48f1",
+      "started_at": "2026-10-05T11:26:00Z",
+      "outcome": "completed",
+      "code": null,
+      "model_call": true,
+      "replaced": false,
+      "language": "es",
+      "first_delta_ms": 3469,
+      "total_ms": 5975
+    },
+    {
+      "id": "658cda1495e60af5",
+      "started_at": "2026-10-05T11:22:00Z",
+      "outcome": "completed",
+      "code": null,
+      "model_call": true,
+      "replaced": false,
+      "language": "es",
+      "first_delta_ms": 3263,
+      "total_ms": 5669
+    },
+    {
+      "id": "8e81973e0becd7b0",
+      "started_at": "2026-10-05T11:18:00Z",
+      "outcome": "interrupted",
+      "code": null,
+      "model_call": true,
+      "replaced": false,
+      "language": "es",
+      "first_delta_ms": 1805,
+      "total_ms": 4895
+    },
+    {
+      "id": "24ede6a46b4cb242",
+      "started_at": "2026-10-05T11:14:00Z",
+      "outcome": "completed",
+      "code": null,
+      "model_call": true,
+      "replaced": false,
+      "language": "es",
+      "first_delta_ms": 2086,
+      "total_ms": 8515
+    }
+  ]
 }

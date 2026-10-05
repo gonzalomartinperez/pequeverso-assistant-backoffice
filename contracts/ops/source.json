@@ -1,17 +1,17 @@
 {
   "status": "pinned",
-  "note": "Pinned from the API develop merge commit of PR #21. Only committed revisions are consumed; re-pin with the same procedure when the ops contract changes.",
+  "note": "Pinned from pequeverso-assistant-api develop (ops contract 1.2: pricing and recent runs). Only committed revisions are consumed.",
   "api_repository": "gonzalomartinperez/pequeverso-assistant-api",
-  "api_revision": "07405d2d466e198ecd904ecd049e710cddbb87ed",
+  "api_revision": "87fc10956dbb7506c5efff5f8d45e01857a4f1e2",
   "api_branch": "develop",
   "files": {
     "contracts/ops.schema.json": {
       "local": "contracts/ops/ops.schema.json",
-      "sha256": "a8a6daee6ff9f3e39ab0fb219e2716741e14052dc201540284e756624bfb91f6"
+      "sha256": "42894f370c4f513b10dd6f5f9c3e45f3978ee8cc8b17ad30f6ac32cfe5f20d0f"
     },
     "contracts/examples/ops.summary.json": {
       "local": "contracts/ops/ops.summary.example.json",
-      "sha256": "a97d95ec46e9e249752b75582b3f3d4e8d66b2c6cbc0f877a9ead081438a73b2"
+      "sha256": "1f7ee66bf61575c38614e356af805ffed0eb3d76d16975dcddca62f0cf4cced9"
     }
   }
 }

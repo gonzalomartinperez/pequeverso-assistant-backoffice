@@ -12,7 +12,6 @@ import {
 } from "../../src/features/auth/application/access.ts";
 import type {
   AccessStore,
-  AuditEntry,
   Member,
   NewInvitation,
 } from "../../src/features/auth/application/ports.ts";
@@ -25,30 +24,45 @@ import {
   routeSignUp,
 } from "../../src/features/auth/domain/access.ts";
 
-/** In-memory AccessStore with the same atomic semantics as the PostgreSQL adapter. */
+type Audit = { action: string; actorId: string | null; subjectId: string };
+
+/** In-memory AccessStore with the same transactional semantics as the PostgreSQL adapter. */
 class MemoryStore implements AccessStore {
   invitations: (InvitationRecord & { digest: string })[] = [];
   members: Member[] = [];
-  audits: AuditEntry[] = [];
+  audits: Audit[] = [];
+  private owner(id: string) {
+    return this.members.some((m) => m.id === id && m.role === "owner");
+  }
   async createInvitation(i: NewInvitation) {
+    if (!this.owner(i.createdBy)) return false;
     for (const open of this.invitations)
       if (open.email === i.email && !open.acceptedAt && !open.revokedAt)
         open.revokedAt = i.createdAt;
     this.invitations.push({ ...i, digest: i.tokenDigest, acceptedAt: null, revokedAt: null });
+    this.audits.push({ action: "invitation_created", actorId: i.createdBy, subjectId: i.id });
+    return true;
   }
   async invitationByDigest(digest: string) {
     return this.invitations.find((i) => i.digest === digest) ?? null;
   }
-  async consumeInvitation(digest: string, email: string, now: Date): Promise<Role | null> {
+  async consumeInvitation(
+    digest: string,
+    email: string,
+    now: Date,
+  ): Promise<{ id: string; role: Role } | null> {
     const i = this.invitations.find((x) => x.digest === digest);
     if (!i || i.email !== email || i.acceptedAt || i.revokedAt || i.expiresAt <= now) return null;
     i.acceptedAt = now;
-    return i.role;
+    this.audits.push({ action: "invitation_accepted", actorId: null, subjectId: i.id });
+    return { id: i.id, role: i.role };
   }
-  async revokeInvitation(id: string, now: Date) {
+  async revokeInvitation(id: string, actorId: string, now: Date) {
+    if (!this.owner(actorId)) return false;
     const i = this.invitations.find((x) => x.id === id && !x.acceptedAt && !x.revokedAt);
     if (!i) return false;
     i.revokedAt = now;
+    this.audits.push({ action: "invitation_revoked", actorId, subjectId: id });
     return true;
   }
   async listInvitations() {
@@ -63,13 +77,12 @@ class MemoryStore implements AccessStore {
   async memberRole(id: string) {
     return this.members.find((m) => m.id === id)?.role ?? null;
   }
-  async removeMember(id: string) {
+  async removeMember(id: string, actorId: string) {
+    if (!this.owner(actorId)) return null;
     const m = this.members.find((x) => x.id === id) ?? null;
     this.members = this.members.filter((x) => x.id !== id);
+    if (m) this.audits.push({ action: "member_removed", actorId, subjectId: id });
     return m;
-  }
-  async audit(entry: AuditEntry) {
-    this.audits.push(entry);
   }
 }
 
@@ -198,10 +211,12 @@ describe("access use cases", () => {
         reason: "invitation_invalid",
       },
     );
-    assert.deepEqual(
-      store.audits.map((a) => a.action),
-      ["invitation_created", "invitation_accepted"],
-    );
+    assert.deepEqual(store.audits, [
+      { action: "invitation_created", actorId: "u-owner", subjectId: invite.invitation.id },
+      { action: "invitation_accepted", actorId: null, subjectId: invite.invitation.id },
+    ]);
+    // The audit never holds e-mails or tokens.
+    assert.ok(!JSON.stringify(store.audits).includes("@"));
   });
 
   it("refuses an invitation presented by a different e-mail or after expiry or revocation", async () => {
@@ -218,7 +233,7 @@ describe("access use cases", () => {
 
     const later = {
       ...deps,
-      clock: { now: () => new Date(clock.now().getTime() + 73 * 3_600_000) },
+      clock: { now: () => new Date(clock.now().getTime() + 49 * 3_600_000) },
     };
     assert.equal(
       (await admitSignUp(later, { email: "ana@example.test", emailVerified: true }, invite.token))
@@ -305,26 +320,44 @@ describe("access use cases", () => {
       activeSessions: 0,
     });
     assert.deepEqual(await removeMember(deps, owner, owner.id), { ok: false, reason: "self" });
+    store.members.push({
+      id: "u-other",
+      email: "o3@example.test",
+      role: "owner",
+      createdAt: clock.now(),
+      providers: [],
+      activeSessions: 0,
+    });
     assert.deepEqual(await removeMember(deps, { ...owner, id: "u-other" }, "u-o2"), {
       ok: false,
       reason: "configured_owner",
     });
     const removed = await removeMember(deps, owner, "u-v");
     assert.equal(removed.ok, true);
-    assert.equal(await resolveActor(deps, { userId: "u-v", email: "v@example.test" }), null);
+    assert.equal(
+      await resolveActor(deps, { userId: "u-v", email: "v@example.test", emailVerified: true }),
+      null,
+    );
+  });
+
+  it("re-checks the actor's role inside the store: a demoted owner cannot act on a stale role", async () => {
+    const { deps, store } = setup();
+    store.members[0] = { ...(store.members[0] as Member), role: "viewer" };
+    const stale = { id: "u-owner", email: "owner@example.test", role: "owner" as const };
+    assert.deepEqual(await inviteMember(deps, stale, "x@example.test", "viewer"), {
+      ok: false,
+      reason: "forbidden",
+    });
+    assert.equal(store.invitations.length, 0);
   });
 
   it("re-reads the role on every request", async () => {
     const { deps, store } = setup();
-    assert.equal(
-      (await resolveActor(deps, { userId: "u-owner", email: "owner@example.test" }))?.role,
-      "owner",
-    );
+    const session = { userId: "u-owner", email: "owner@example.test", emailVerified: true };
+    assert.equal((await resolveActor(deps, session))?.role, "owner");
+    assert.equal(await resolveActor(deps, { ...session, emailVerified: false }), null);
     store.members[0] = { ...(store.members[0] as Member), role: "viewer" };
-    assert.equal(
-      (await resolveActor(deps, { userId: "u-owner", email: "owner@example.test" }))?.role,
-      "viewer",
-    );
+    assert.equal((await resolveActor(deps, session))?.role, "viewer");
     assert.equal(await resolveActor(deps, null), null);
   });
 });

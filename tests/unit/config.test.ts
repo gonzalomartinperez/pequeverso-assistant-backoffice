@@ -46,6 +46,7 @@ describe("backoffice configuration", () => {
       BACKOFFICE_ENVIRONMENT: "test",
       BACKOFFICE_ORIGIN: "http://127.0.0.1:3221",
       AUTH_TEST_ISSUER: "http://127.0.0.1:8218",
+      DATABASE_URL: "postgres://u:p@127.0.0.1:5432/bo_test_unit",
       OPS_API_URL: "http://127.0.0.1:8217/",
       OPS_READ_TOKEN: "t".repeat(40),
     });

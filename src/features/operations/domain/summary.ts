@@ -45,6 +45,32 @@ export type DailyRow = {
   reasoningTokens: number | null;
 };
 
+export const RUN_OUTCOMES = ["completed", "failed", "cancelled", "interrupted", "refused"] as const;
+export type RunOutcome = (typeof RUN_OUTCOMES)[number];
+
+/** One recent run, content-free: an opaque id, timing and outcome only. */
+export type RecentRun = {
+  id: string;
+  startedAt: Date;
+  outcome: RunOutcome;
+  code: string | null;
+  modelCall: boolean;
+  replaced: boolean;
+  language: "es" | "en" | null;
+  firstDeltaMs: number | null;
+  totalMs: number;
+};
+
+/** Rates the API uses to estimate spend. An estimate source, not the provider invoice. */
+export type Pricing = {
+  revision: string;
+  model: string;
+  inputPerMillion: Money;
+  cachedInputPerMillion: Money;
+  cacheWritePerMillion: Money;
+  outputPerMillion: Money;
+};
+
 export type OpsSummary = {
   generatedAt: Date;
   service: {
@@ -87,6 +113,8 @@ export type OpsSummary = {
   windows: RunWindow[];
   daily: DailyRow[];
   metricsSince: Date | null;
+  pricing: Pricing | null;
+  recent: RecentRun[];
 };
 
 /** A trend chart needs at least two days with records; one reading is shown as a reading. */
@@ -136,7 +164,7 @@ export function budgetUse(summary: OpsSummary): number | null {
   );
   if (used == null) return null;
   const limit = Number(budget.monthlyLimit);
-  return limit > 0 ? Math.round((Number(used) / limit) * 1000) / 10 : null;
+  return limit > 0 ? (Number(used) / limit) * 100 : null;
 }
 
 export type Freshness = "fresh" | "stale" | "unknown";

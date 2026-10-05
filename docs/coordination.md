@@ -46,3 +46,25 @@ after it had been verified live).
   renderer without the `frame-ancestors 'none'` override for the web service.
 - **Portfolio web (FYI):** its `scripts/check-boundaries.ts` imports the TypeScript JS API, which
   TypeScript 7 no longer ships; an import scanner (as here) avoids that dependency.
+
+## Backoffice milestone (2026-10-05)
+
+| Repository | Revision | Use |
+|---|---|---|
+| `pequeverso-assistant-api` | `develop` `87fc109` (ops contract 1.2; earlier pins `b098d6f`, `07405d2`) | `contracts/ops/` pinned with `git show`; dashboard verified against a `git archive` of `332d3c7` and `87fc109` running the fixture provider |
+| `portfolio-assistant-backoffice` (local clone `portfolio-assistant-web`) | `develop` `f29b6cd`, read with `git show` only | Quality reference for the backoffice. No code or identity copied |
+
+Adopted from the portfolio reference (adapted, own code): 48 h invitations; audit by actor id,
+action, subject id and time (no e-mails); owner re-check inside each mutation's transaction;
+verified e-mail required on every protected request with cookie cache disabled; database-backed
+rate limits; Better Auth logger disabled with app-level redacted events; cross-subdomain cookies
+explicitly off; explicit linking only from an authenticated owner (enforced server-side);
+readiness-gated sign-in with a safe "unavailable" surface and `/readyz`; native modal confirmation
+with Escape and focus restore; copy feedback bound to the current invitation link; fixture-safety
+guards (loopback origin, issuer and database with a test/fixture name; refusal without echoing
+URLs) and their tests; OAuth state-rejection and CSRF integration tests; pg pool error handling.
+
+Kept different on purpose: committed SQL for Better Auth's schema plus `npm run db:check`
+(reviewable diffs; the reference applies the library's plan at deploy time); browser tests sign
+in through a fake OAuth provider instead of minting sessions; role on the user row and removal by
+deleting the account (the reference keeps a member table with `revoked_at`); Spanish-only UI.

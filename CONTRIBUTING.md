@@ -39,8 +39,9 @@ actors**):
 
 - changes arrive only through pull requests, merged with a **merge commit** (squash and rebase are
   disabled) so ancestry between the long-lived branches is preserved;
-- the aggregate **Required checks** job (static checks, the production image and the browser suite
-  against that image) must pass on a branch that is up to date with its base (strict);
+- the aggregate **Required checks** job (workflow lint, history secret scan, static checks, the
+  database suite when `test:db` exists, the production image and the browser suite against that
+  image, in three shards) must pass on a branch that is up to date with its base (strict);
 - force-pushes and deletion of `main`/`develop` are blocked; review threads must be resolved.
 
 Working agreement (not automated, to avoid friction):

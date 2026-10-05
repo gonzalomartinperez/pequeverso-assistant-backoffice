@@ -1,23 +1,72 @@
 name: Quality
+
+# Every pull request into develop/main and every push to develop. Independent jobs run in
+# parallel; `Required checks` (the ruleset's required status) fails unless every job succeeded.
 on:
   pull_request:
     branches: [develop, main]
   push:
     branches: [develop]
   workflow_dispatch:
-permissions:
-  contents: read
+
+permissions: {}
+
 defaults:
   run:
     shell: bash
+
 concurrency:
   group: quality-${{ github.ref }}
-  cancel-in-progress: true
+  # Supersede older runs of the same pull request; never cancel a push to develop.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
 jobs:
+  workflows:
+    name: Lint workflows
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: actionlint
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+        with:
+          version: 1.7.12
+          pyflakes: false
+      - name: zizmor
+        uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+        with:
+          version: 1.30.1
+          advanced-security: false
+          annotations: true
+          min-severity: low
+
+  secrets:
+    name: Secret scan (history)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: gitleaks over the full history (redacted; fails on zero commits scanned)
+        run: .github/scripts/secret-scan.sh
+
   static:
     name: Static checks, unit tests and build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -37,10 +86,58 @@ jobs:
         run: npm test
       - name: Public-file scan, documentation links and skills
         run: npm run security:check && npm run docs:check && npm run skills:check
+
+  database:
+    # Runs the database-backed suite (migrations, IAM, invitations, revocation) when the
+    # repository defines `npm run test:db`; otherwise it records that no such suite exists yet.
+    name: Database suite (PostgreSQL)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Detect the suite
+        id: suite
+        run: |
+          if node -e 'process.exit(require("./package.json").scripts?.["test:db"] ? 0 : 1)'; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No test:db script in package.json; nothing to run." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: steps.suite.outputs.present == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - if: steps.suite.outputs.present == 'true'
+        run: npm ci --no-audit --no-fund
+      - name: Start a disposable PostgreSQL (test-only credentials)
+        if: steps.suite.outputs.present == 'true'
+        run: |
+          docker run -d --name postgres -e POSTGRES_USER=backoffice -e POSTGRES_PASSWORD=ci-only \
+            -e POSTGRES_DB=backoffice_test -p 127.0.0.1:5432:5432 --tmpfs /var/lib/postgresql \
+            postgres:18.4-bookworm@sha256:882236b897e39051d2368c5ccc6cda944904723506b2dfc97f2a8f5bc9afa382
+          for _ in $(seq 1 30); do
+            docker exec postgres pg_isready -U backoffice -d backoffice_test >/dev/null 2>&1 && exit 0
+            sleep 1
+          done
+          docker logs postgres; exit 1
+      - name: Database tests
+        if: steps.suite.outputs.present == 'true'
+        env:
+          DATABASE_URL: postgres://backoffice:ci-only@127.0.0.1:5432/backoffice_test
+        run: npm run test:db
+
   image:
     name: Production image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -54,18 +151,31 @@ jobs:
           cache-from: type=gha,scope=web-node24-amd64
           cache-to: type=gha,mode=max,scope=web-node24-amd64
       - name: Export the verified image
-        run: docker save pequeverso-assistant-web:rc | gzip -1 > /tmp/image.tar.gz
+        run: |
+          docker save pequeverso-assistant-web:rc | gzip -1 > /tmp/image.tar.gz
+          docker image inspect pequeverso-assistant-web:rc --format '{{.Id}}' | tee /tmp/image-id.txt
+          echo "Image id: $(cat /tmp/image-id.txt)" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: production-image
-          path: /tmp/image.tar.gz
+          path: |
+            /tmp/image.tar.gz
+            /tmp/image-id.txt
           retention-days: 7
           compression-level: 0
+
   browser:
-    name: Browser suite against the production image
+    # The exact image built above, run hardened, split into three shards that load the same image.
+    name: Browser suite against the production image (${{ matrix.shard }}/3)
     needs: image
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -80,7 +190,9 @@ jobs:
           name: production-image
           path: /tmp/image
       - name: Load the exact image built above
-        run: gunzip -c /tmp/image/image.tar.gz | docker load
+        run: |
+          gunzip -c /tmp/image/image.tar.gz | docker load
+          test "$(docker image inspect pequeverso-assistant-web:rc --format '{{.Id}}')" = "$(cat /tmp/image/image-id.txt)"
       - name: Run it hardened (read-only root, no capabilities)
         run: >-
           docker run -d --name assistant-web --read-only --tmpfs /tmp
@@ -88,32 +200,51 @@ jobs:
           --cap-drop ALL --security-opt no-new-privileges
           -e EMBED_ALLOWED_ORIGINS=http://localhost:3210 -e STOREFRONT_ORIGIN=http://localhost:3210
           -p 127.0.0.1:3208:3000 pequeverso-assistant-web:rc
-      - run: npx playwright install --with-deps chromium firefox webkit
-      - name: Embedded (harness) and standalone suites, all engines
-        run: npm run test:browser
+      - name: Resolve Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Restore Playwright browsers
+        id: browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-all
+      - name: Install Playwright browsers
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: npx playwright install chromium firefox webkit
+      - name: Install browser system dependencies
+        run: npx playwright install-deps chromium firefox webkit
+      - name: Embedded (harness) and standalone suites, all engines (shard ${{ matrix.shard }}/3)
+        run: npm run test:browser -- --shard="${SHARD}/3"
         env:
+          SHARD: ${{ matrix.shard }}
           WEB_UPSTREAM: http://127.0.0.1:3208
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
-          name: browser-verification
+          name: browser-verification-${{ matrix.shard }}
           path: |
             playwright-report/
             test-results/
           retention-days: 14
+          if-no-files-found: ignore
       - name: Container logs
         if: always()
         run: docker logs assistant-web
       - if: always()
         run: docker rm -f assistant-web
+
   checks:
     name: Required checks
     if: always()
-    needs: [static, image, browser]
-    runs-on: ubuntu-latest
+    needs: [workflows, secrets, static, database, image, browser]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions: {}
     steps:
       - name: Fail unless every job succeeded
         env:
           RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
+          echo "results: $RESULTS"
           for result in $RESULTS; do [ "$result" = success ] || { echo "job result: $result"; exit 1; }; done

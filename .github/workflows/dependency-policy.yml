@@ -4,7 +4,7 @@ name: Dependency policy
 # well; the PR head is never checked out, installed or executed. Its only write action is enabling/disabling native auto-merge (pinned to
 # the evaluated head SHA) and setting informational labels.
 on:
-  pull_request_target:
+  pull_request_target: # zizmor: ignore[dangerous-triggers] -- runs default-branch code only; the PR head is never checked out or executed
     types: [opened, synchronize, reopened, edited, ready_for_review, labeled, unlabeled]
     branches: [develop, main]
 permissions: {}
@@ -15,7 +15,7 @@ jobs:
   policy:
     name: Dependency policy
     if: github.event.pull_request.user.login == 'dependabot[bot]'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: write # required by enablePullRequestAutoMerge

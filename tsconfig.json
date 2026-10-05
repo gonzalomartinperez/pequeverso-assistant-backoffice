@@ -45,6 +45,6 @@
     ".integration",
     "test-results",
     "playwright-report",
-    "playwright-report-backoffice"
+    "playwright-report"
   ]
 }

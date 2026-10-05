@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { parseAllowedOrigins } from "./features/embed/protocol";
 import { backofficeCsp } from "./server/csp";
 
 const BACKOFFICE = /^\/(?:panel|ingresar|invitacion|api\/auth)(?:\/|$)/;
@@ -8,13 +7,11 @@ const BACKOFFICE = /^\/(?:panel|ingresar|invitacion|api\/auth)(?:\/|$)/;
  * Headers per request:
  * - Backoffice routes: nonce-based CSP, `frame-ancestors 'none'`, X-Frame-Options DENY,
  *   `Cache-Control: private, no-store` and `X-Robots-Tag: noindex`.
- * - Legacy `/embed` (to be removed): framable only by EMBED_ALLOWED_ORIGINS.
- * - Everything else refuses framing.
+ * - Everything else (health probes, the home redirect) refuses framing.
  * A proxy in front must not add or override these headers (docs/deployment-contract.md).
  */
 export function proxy(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-  if (BACKOFFICE.test(path)) {
+  if (BACKOFFICE.test(request.nextUrl.pathname)) {
     const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
     const csp = backofficeCsp(nonce, process.env.NODE_ENV === "development");
     const requestHeaders = new Headers(request.headers);
@@ -28,18 +25,12 @@ export function proxy(request: NextRequest) {
     return response;
   }
   const response = NextResponse.next();
-  const common = "base-uri 'self'; form-action 'self'; object-src 'none'";
-  if (path === "/embed") {
-    const origins = parseAllowedOrigins(process.env.EMBED_ALLOWED_ORIGINS);
-    response.headers.set(
-      "Content-Security-Policy",
-      `${common}; frame-ancestors ${origins.length ? origins.join(" ") : "'none'"}`,
-    );
-    response.headers.set("Cache-Control", "private, no-store");
-  } else {
-    response.headers.set("Content-Security-Policy", `${common}; frame-ancestors 'none'`);
-    response.headers.set("X-Frame-Options", "DENY");
-  }
+  response.headers.set(
+    "Content-Security-Policy",
+    "base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'",
+  );
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Robots-Tag", "noindex, nofollow");
   return response;
 }
 

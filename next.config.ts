@@ -4,7 +4,7 @@ import type { NextConfig } from "next";
  * Static response headers for every route and asset. Framing policy (`frame-ancestors`,
  * `X-Frame-Options`) depends on runtime configuration and is set per request in `src/proxy.ts`.
  * `script-src` is deliberately absent: routes render per request and Next.js emits inline
- * hydration scripts; see docs/embed-integration.md for the header ownership split.
+ * hydration scripts; backoffice routes get a nonce-based CSP from src/proxy.ts.
  */
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },

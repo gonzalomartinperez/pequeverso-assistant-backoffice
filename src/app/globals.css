@@ -348,13 +348,6 @@
  * they need no !important to override utilities such as motion-safe:animate-*.
  */
 
-/* Hidden panel (host minimized the iframe): nothing animates while nobody can see it. */
-[data-panel-visible="false"] *,
-[data-panel-visible="false"] *::before,
-[data-panel-visible="false"] *::after {
-  animation-play-state: paused;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

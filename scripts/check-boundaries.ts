@@ -9,9 +9,7 @@
 // A feature's inner layers never import another feature (presentation may reuse shared UI only).
 // Other areas:
 //   src/server    → server-only composition: features (any layer), shared, server
-//   src/app       → routes: feature domain/application/presentation, server, shared, embed (legacy)
-//   embed/protocol→ pure (domain types only; no window)
-//   assistant/entry.tsx → the only assistant module that imports its adapters (legacy chat)
+//   src/app       → routes: feature domain/application/presentation, server, shared
 // Everywhere: no sibling-repository or absolute imports, no NEXT_PUBLIC_* configuration.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
@@ -25,7 +23,7 @@ const IMPURE =
 
 const FEATURE_LAYERS = ["domain", "application", "adapters", "presentation"] as const;
 type FeatureLayer = (typeof FEATURE_LAYERS)[number];
-type Area = "protocol" | "embed" | "shared" | "entry" | "server" | "app" | "other";
+type Area = "shared" | "server" | "app" | "other";
 type Place = { layer: FeatureLayer | Area; feature: string | null };
 
 function walk(dir: string): string[] {
@@ -37,12 +35,9 @@ function walk(dir: string): string[] {
 
 function place(file: string): Place {
   const rel = path.relative(src, file).split(path.sep).join("/");
-  if (rel === "features/assistant/entry.tsx") return { layer: "entry", feature: "assistant" };
-  if (rel === "features/embed/protocol.ts") return { layer: "protocol", feature: null };
   const match = rel.match(/^features\/([a-z-]+)\/(domain|application|adapters|presentation)\//);
   const layer = FEATURE_LAYERS.find((name) => name === match?.[2]);
   if (layer && match?.[1]) return { layer, feature: match[1] };
-  if (rel.startsWith("features/embed/")) return { layer: "embed", feature: null };
   if (rel.startsWith("shared/")) return { layer: "shared", feature: null };
   if (rel.startsWith("server/")) return { layer: "server", feature: null };
   if (rel.startsWith("app/")) return { layer: "app", feature: null };
@@ -59,36 +54,11 @@ const ALLOWED: Record<Place["layer"], Place["layer"][]> = {
   domain: ["domain"],
   application: ["domain", "application"],
   adapters: ["domain", "application", "adapters"],
-  presentation: ["domain", "application", "presentation", "shared", "entry"],
-  protocol: ["domain"],
-  embed: ["domain", "application", "presentation", "protocol", "embed", "shared", "entry"],
-  shared: ["domain", "shared", "protocol"],
-  entry: ["domain", "application", "adapters"],
+  presentation: ["domain", "application", "presentation", "shared"],
+  shared: ["domain", "shared"],
   server: ["domain", "application", "adapters", "server", "shared"],
-  app: [
-    "domain",
-    "application",
-    "presentation",
-    "embed",
-    "shared",
-    "protocol",
-    "entry",
-    "server",
-    "app",
-  ],
-  other: [
-    "domain",
-    "application",
-    "adapters",
-    "presentation",
-    "protocol",
-    "embed",
-    "shared",
-    "entry",
-    "server",
-    "app",
-    "other",
-  ],
+  app: ["domain", "application", "presentation", "shared", "server", "app"],
+  other: ["domain", "application", "adapters", "presentation", "shared", "server", "app", "other"],
 };
 
 const problems: string[] = [];
@@ -99,10 +69,7 @@ for (const file of files) {
   const rel = path.relative(root, file);
   if (/NEXT_PUBLIC_/.test(text))
     problems.push(`${rel}: NEXT_PUBLIC_* configuration is not used by this app`);
-  if (
-    (from.layer === "domain" || from.layer === "protocol") &&
-    IMPURE.test(text.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, ""))
-  )
+  if (from.layer === "domain" && IMPURE.test(text.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "")))
     problems.push(`${rel}: ${from.layer} must stay pure (${text.match(IMPURE)?.[1]})`);
   for (const match of text.matchAll(IMPORT)) {
     const specifier = match[1] ?? match[2] ?? match[3];
@@ -111,10 +78,7 @@ for (const file of files) {
       problems.push(`${rel}: suspicious import ${specifier}`);
     const target = resolve(file, specifier);
     if (!target) {
-      if (
-        (from.layer === "domain" || from.layer === "protocol" || from.layer === "application") &&
-        specifier !== "server-only"
-      )
+      if ((from.layer === "domain" || from.layer === "application") && specifier !== "server-only")
         problems.push(`${rel}: ${from.layer} may not import package ${specifier}`);
       if (
         from.layer === "presentation" &&

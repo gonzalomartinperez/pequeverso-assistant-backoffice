@@ -80,7 +80,7 @@ configuration and committed for review; `npm run db:check` fails if the two ever
   PostgreSQL: owner admission, verified e-mail, one-use invitation bound to its e-mail, OAuth state
   rejection, no implicit linking, owner-only explicit linking, revocation, foreign Origin and
   callback refusal, database rate limiting, id-only audit, no password endpoints.
-- `npm run test:backoffice`: the same flows in Chromium, Firefox and WebKit against the production
+- `npm run test:browser`: the same flows in Chromium, Firefox and WebKit against the production
   build, signing in through the fake provider (no session minting or bypass).
 - Test-only switches (`AUTH_TEST_ISSUER`, `AUTH_DISABLE_RATE_LIMIT`) are refused in production and
   outside a loopback origin and a loopback database named `*test*`/`*fixture*`; scripts that create

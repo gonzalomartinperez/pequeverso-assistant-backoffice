@@ -22,6 +22,4 @@ This repository is public; the application it builds is a **private** backoffice
 - **Secrets:** only in the runtime environment (`BETTER_AUTH_SECRET`, `DATABASE_URL`, provider
   client secrets, `OPS_READ_TOKEN`). Production refuses weak or test settings
   (`src/server/parse-config.ts`). CI scans files and history for secrets.
-- **Legacy chat** (`/`, `/embed`), until removed: the browser holds no API keys, answer text is
-  rendered as React text nodes only, links pass an allowlist, postMessage is origin-checked.
 - No analytics, session replay or third-party scripts are loaded.

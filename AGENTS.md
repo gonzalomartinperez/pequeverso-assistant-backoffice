@@ -2,8 +2,8 @@
 
 Private operations backoffice of the Pequeverso assistant (target repository name
 `pequeverso-assistant-backoffice`): OAuth sign-in, access management and an operations dashboard.
-The public conversation lives only in the storefront; the legacy chat shells here (`/`, `/embed`)
-are being removed. Public repository; all rights reserved (see `LICENSE`). Never commit secrets,
+The public conversation lives only in the storefront; this repository serves no public chat.
+Public repository; all rights reserved (see `LICENSE`). Never commit secrets,
 private operations details or other repositories' internals.
 
 - English for code, docs and commits. UI copy is neutral Spanish with "tú".
@@ -26,18 +26,10 @@ private operations details or other repositories' internals.
 
 ## Non-negotiables
 
-- The assistant is advisory and read-only: no checkout, payment, order or cart features without a
-  separately approved capability. Purchase actions link to the storefront's purchase section.
-- Never display invented prices, ratings, discounts, stock, urgency or testimonials. Prices appear
-  only when the API sends `price` (it omits unverified prices), always with its note and date.
-- Treat API payloads, answer text, URLs and postMessage data as untrusted: validate at the adapter
-  or protocol boundary; render answer text only through `RichTextView` (no HTML, no auto-linking);
-  every URL passes `domain/links.ts`.
-- No credentials, CSRF tokens or conversation text in URLs, storage, logs or postMessage. Never use
-  `"*"` as a postMessage target.
+- Treat API payloads and anything from the network as untrusted: validate at the adapter boundary.
 - No tracking, analytics, session replay or third-party feedback services.
-- Consume the pinned API contract (`contracts/api/`, `contracts/source.json`); do not invent
-  endpoints, events or auth behavior. Mocks must say they are mocks.
+- Consume only pinned, committed contracts (`contracts/ops/`, `contracts/ops/source.json`); do not
+  invent endpoints, fields or auth behavior. Mocks and fixtures must say they are synthetic.
 - Architecture boundaries are enforced by `scripts/check-boundaries.ts` (run in `npm test`).
 - Other repositories (storefront, API, portfolio, vps-ops) are read-only references. Never import
   from them at runtime or edit their working trees.
@@ -50,10 +42,9 @@ private operations details or other repositories' internals.
   working agreement (no branch-policy automation); rulesets enforce PRs and Required checks.
   Nothing is deployed without explicit owner authorization. Preserve
   other agents' uncommitted work; never reset or stash it.
-- Before a PR: `npm run check`, `npm run test:db` and `npm run test:backoffice` (plus
-  `npm run test:browser` while the legacy chat exists). Inspect real screenshots for UI changes, at embedded
-  panel sizes through the harness — not only full-page `/embed`.
-- Ports: legacy suite 3207, 3208, 3210, 8207; backoffice suite 3241 (web), 8237 (mock ops), 8238 (fake IdP).
+- Before a PR: `npm run check`, `npm run test:db` and `npm run test:browser`. Inspect the real
+  screenshots in `docs/verification/backoffice/` for UI changes (desktop, dark, mobile).
+- Browser suite ports: 3241 (web), 8237 (mock ops), 8238 (fake IdP).
 - Paid model calls, production actions, DNS and storefront changes need separate explicit authority.
 - Skills live in `.agents/skills/` (canonical); `.claude/skills/` adapters point to them. A skill is
   a procedure, never an authorization.

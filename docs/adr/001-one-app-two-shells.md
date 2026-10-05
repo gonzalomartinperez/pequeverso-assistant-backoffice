@@ -1,6 +1,7 @@
 # ADR 001 — One conversation implementation, two shells
 
-**Status:** accepted (2026-09-27)
+**Status:** superseded (2026-10-05). The public conversation moved into the storefront
+(native assistant); this repository is now the private backoffice and serves no chat.
 
 **Context.** The storefront will host the assistant in its own launcher panel; the owner also needs
 a standalone page for demos and testing. Duplicating transport or state would let the two drift.

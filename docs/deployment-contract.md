@@ -101,8 +101,3 @@ as uid 1000: migrations applied, health and headers checked. Browser suite again
 build with real PostgreSQL and a fake IdP: [verification.md](verification.md#backoffice).
 Not verified: real Google/GitHub OAuth, TLS/cookie prefixes through the proxy, the real API ops
 endpoint over the private network.
-
-## Legacy chat shells
-
-Until their removal the image still serves `/` and `/embed`; they are no longer the public chat
-(the storefront hosts the native assistant). Do not route them publicly.

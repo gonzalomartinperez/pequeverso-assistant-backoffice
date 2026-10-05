@@ -3,12 +3,12 @@ import { defineConfig, devices } from "@playwright/test";
 const ci = Boolean(process.env.CI);
 
 /**
- * Deterministic suite against the mock API and the storefront harness (scripts/test-server.ts).
- * The embedded experience is primary: most specs drive /embed through the cross-origin harness at
- * realistic panel sizes rather than opening /embed as a page.
+ * Backoffice suite: the production build with a real PostgreSQL, the real Better Auth callback
+ * flow against a local fake identity provider, and SYNTHETIC ops data from the mock ops API.
+ * Proves access rules, rendering and accessibility; it does not prove Google/GitHub OAuth.
  */
 export default defineConfig({
-  testDir: "./tests/browser",
+  testDir: "./tests/backoffice",
   timeout: 45_000,
   expect: { timeout: 7_000 },
   fullyParallel: false,
@@ -17,7 +17,7 @@ export default defineConfig({
   retries: ci ? 1 : 0,
   reporter: ci ? [["list"], ["html", { open: "never" }]] : [["list"]],
   use: {
-    baseURL: "http://localhost:3207",
+    baseURL: "http://localhost:3241",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -26,12 +26,11 @@ export default defineConfig({
     { name: "firefox", use: { ...devices["Desktop Firefox"] } },
     { name: "webkit", use: { ...devices["Desktop Safari"] } },
     { name: "mobile-chromium", use: { ...devices["Pixel 7"] }, grep: /@mobile/ },
-    { name: "mobile-webkit", use: { ...devices["iPhone 15"] }, grep: /@mobile/ },
   ],
   webServer: {
-    command: "node scripts/test-server.ts",
-    url: "http://localhost:3207/healthz",
-    reuseExistingServer: !ci,
+    command: "node scripts/backoffice-stack.ts",
+    url: "http://localhost:3241/healthz",
+    reuseExistingServer: false,
     timeout: 90_000,
   },
 });

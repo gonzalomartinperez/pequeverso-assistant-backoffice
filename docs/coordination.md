@@ -8,7 +8,7 @@ what was adopted. Inspections happen at milestones, not continuously.
 | Repository | Revision inspected | State | Adopted / decided |
 |---|---|---|---|
 | `pequeverso` (storefront) | `develop` `7ae5987` (clean) | Next 16 static/standalone, Tailwind 4, shadcn base-vega, TS 7.0.2, Spanish only, light theme, Hotmart checkout | Brand tokens, fonts, isotipo, copy tone ("tú", neutral LATAM), coral-for-purchase rule, "no invented claims" rule, verified origin `https://pequeverso.com`. TS config strictness flags. **No chat/assistant code exists** there: nothing to transfer. |
-| `pequeverso-assistant-api` | `8428fce` (bootstrap) + uncommitted working tree | Domain, application, HTTP presentation and generated contracts present but **not committed** | Pinned snapshot of generated `contracts/` (see [api-contract.md](api-contract.md)). Cookie name `__Host-pv_assistant`, CSRF in memory, single conversation per session, `page` context, product `url`/`purchase_url`/nullable `price`. |
+| `pequeverso-assistant-api` | `8428fce` (bootstrap) + uncommitted working tree | Domain, application, HTTP presentation and generated contracts present but **not committed** | Pinned snapshot of generated `contracts/` (see `api-contract.md` (removed; see git history)). Cookie name `__Host-pv_assistant`, CSRF in memory, single conversation per session, `page` context, product `url`/`purchase_url`/nullable `price`. |
 | `portfolio-assistant-web` | `develop` `f460fc4` + uncommitted `feat/embedded-assistant` | Closure external-store controller, fetch-SSE reader, node:test, harness | Adopted: controller pattern (lifetime AbortController, single-flight generation, bounded cancel, no auto-regeneration), SSE bounds, exact-key protocol validation, first-origin pinning, per-origin `assistant.ready`, host harness idea, contract manifest check, skills layout. **Not adopted:** plain CSS modules (this repo uses Tailwind), react-markdown (the API promises plain text), multi-conversation UI, the `typescript` JS-API boundary checker (TS 7 has no JS API). |
 | `portfolio` (site) | `main` `45d8a42` (clean) | Tailwind 4 + shadcn radix-nova, TS 7.0.2, `next typegen && tsc --noEmit` | `@theme inline` over semantic tokens, `cn()` + CVA primitives with `data-slot`, 44 px targets, canonical skills in `.agents/skills` with Claude adapters, Biome config shape. |
 | `vps-ops` | `feat/pequeverso-planning` `74d4fa5` | Planning only: no domain, routes or services for Pequeverso yet | Same-origin `/api/*` routing, no prefix stripping, digest-pinned images, read-only root + tmpfs, header conflict raised in [deployment-contract.md](deployment-contract.md). |
@@ -40,7 +40,7 @@ after it had been verified live).
   `develop` after the handoff-alignment PR, against API `dc4e4c6`. Open points: a retry of a failed
   run stores the question twice (visible after reload) — consider an explicit retry semantic; keep
   the idle heartbeat ≤ 15 s (the client treats 45 s of silence as a dead stream).
-- **Storefront owner (deferred integration):** see [embed-integration.md](embed-integration.md) —
+- **Storefront owner (deferred integration):** see `embed-integration.md` (removed; see git history) —
   `frame-src` addition, launcher/panel port of `tests/fixtures/host/host.ts`, page context values.
 - **vps-ops:** see [deployment-contract.md](deployment-contract.md) — domain approval, Pequeverso
   renderer without the `frame-ancestors 'none'` override for the web service.

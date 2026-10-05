@@ -53,4 +53,80 @@ describe("backoffice configuration", () => {
     assert.equal(config.testIssuer, "http://127.0.0.1:8218");
     assert.equal(config.ops?.url, "http://127.0.0.1:8217");
   });
+
+  it("treats NODE_ENV=production as production unless explicitly a loopback test", () => {
+    const { BACKOFFICE_ENVIRONMENT: _, ...implicit } = production;
+    assert.equal(parseConfig({ ...implicit, NODE_ENV: "production" }).environment, "production");
+    assert.throws(
+      () => parseConfig({ NODE_ENV: "production" }),
+      /BACKOFFICE_ORIGIN|BETTER_AUTH_SECRET|OWNER_EMAIL|DATABASE_URL/,
+    );
+    assert.throws(
+      () =>
+        parseConfig({ ...implicit, NODE_ENV: "production", BACKOFFICE_ENVIRONMENT: "development" }),
+      /refused/,
+    );
+    assert.throws(() =>
+      parseConfig({
+        NODE_ENV: "production",
+        BACKOFFICE_ENVIRONMENT: "test",
+        BACKOFFICE_ORIGIN: "https://bo.example.test",
+      }),
+    );
+    assert.equal(
+      parseConfig({ NODE_ENV: "production", BACKOFFICE_ENVIRONMENT: "test" }).environment,
+      "test",
+    );
+  });
+
+  it("never uses a fixed secret outside test", () => {
+    assert.throws(
+      () => parseConfig({ BACKOFFICE_ENVIRONMENT: "development" }),
+      /BETTER_AUTH_SECRET/,
+    );
+    assert.throws(() => parseConfig({}), /BETTER_AUTH_SECRET/);
+    const test = parseConfig({ BACKOFFICE_ENVIRONMENT: "test" });
+    assert.match(test.authSecret, /test-only/);
+  });
+
+  it("allows http for the ops API only to a private-network service name or an allowlisted host", () => {
+    const token = "t".repeat(40);
+    const ok = (url: string, extra: Record<string, string> = {}) =>
+      parseConfig({ ...production, OPS_API_URL: url, OPS_READ_TOKEN: token, ...extra }).ops?.url;
+    assert.equal(
+      ok("http://pequeverso-assistant-api:8000"),
+      "http://pequeverso-assistant-api:8000",
+    );
+    assert.equal(ok("https://ops.example.test"), "https://ops.example.test");
+    assert.throws(() => ok("http://ops.example.test"));
+    assert.throws(() => ok("http://203.0.113.5:8000"));
+    assert.throws(() => ok("http://localhost:8000"));
+    assert.equal(
+      ok("http://api.internal:8000", { OPS_API_INSECURE_INTERNAL_HOSTS: "api.internal" }),
+      "http://api.internal:8000",
+    );
+  });
+
+  it("parses TRUSTED_PROXY_IPS strictly", () => {
+    assert.deepEqual(
+      parseConfig({ ...production, TRUSTED_PROXY_IPS: "10.0.1.5, 172.18.0.0/16" }).trustedProxies,
+      ["10.0.1.5", "172.18.0.0/16"],
+    );
+    assert.deepEqual(parseConfig(production).trustedProxies, []);
+    for (const bad of ["0.0.0.0/0", "proxy.local", "10.0.0.1/33", "10.0.0.0/4"])
+      assert.throws(() => parseConfig({ ...production, TRUSTED_PROXY_IPS: bad }));
+  });
+
+  it("error messages never echo configured values", () => {
+    try {
+      parseConfig({
+        ...production,
+        OPS_API_URL: "http://u:SECRETVALUE@x.example/",
+        OPS_READ_TOKEN: "t".repeat(40),
+      });
+      assert.fail("expected a refusal");
+    } catch (error) {
+      assert.doesNotMatch(String(error), /SECRETVALUE/);
+    }
+  });
 });

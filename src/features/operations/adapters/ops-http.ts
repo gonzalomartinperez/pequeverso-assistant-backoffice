@@ -33,14 +33,48 @@ export function httpOpsSource(
         return { status: "unavailable", reason: "rejected", fetchedAt };
       }
       try {
-        const declared = Number(response.headers.get("content-length") ?? "0");
-        if (declared > MAX_BYTES) throw new OpsPayloadError("too large");
-        const body = await response.text();
-        if (body.length > MAX_BYTES) throw new OpsPayloadError("too large");
+        const body = await readBounded(response, MAX_BYTES);
         return { status: "ok", summary: parseOpsSummary(JSON.parse(body)), fetchedAt };
       } catch {
         return { status: "unavailable", reason: "invalid", fetchedAt };
       }
     },
   };
+}
+
+/**
+ * Reads the body incrementally and aborts as soon as it exceeds `maxBytes` bytes, whatever
+ * Content-Length claims (chunked or lying responses included). Decodes UTF-8 strictly.
+ */
+export async function readBounded(response: Response, maxBytes: number): Promise<string> {
+  const declared = Number(response.headers.get("content-length") ?? "0");
+  if (declared > maxBytes) {
+    await response.body?.cancel().catch(() => undefined);
+    throw new OpsPayloadError("too large");
+  }
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => undefined);
+        throw new OpsPayloadError("too large");
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
 }

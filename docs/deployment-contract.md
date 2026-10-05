@@ -39,18 +39,21 @@ route, database or Coolify resource exists for the backoffice.
 
 | Variable | Secret | Required | Purpose |
 |---|---|---|---|
-| `BACKOFFICE_ENVIRONMENT` | no | yes (`production`) | Enables fail-closed checks |
+| `BACKOFFICE_ENVIRONMENT` | no | set to `production` by the image | Fail-closed checks; also implied by `NODE_ENV=production`, which refuses `development` |
 | `BACKOFFICE_ORIGIN` | no | yes | Exact https origin of the backoffice (trusted origin, OAuth callbacks, invitation links) |
 | `BETTER_AUTH_SECRET` | **yes** | yes | ≥ 32 random characters; rotating it signs everyone out |
 | `DATABASE_URL` | **yes** | yes | Backoffice PostgreSQL |
 | `OWNER_EMAIL` | no | yes | The only identity admitted without invitation |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | secret: yes | at least one provider | Google OAuth app (owner-created) |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | secret: yes | at least one provider | GitHub OAuth app (owner-created) |
-| `OPS_API_URL` | no | for the dashboard | API base URL on the **internal** network (e.g. `http://pequeverso-assistant-api:8000`) |
+| `OPS_API_URL` | no | for the dashboard | API base URL on the **internal** network. https, or plain http only to a single-label Docker service name (e.g. `http://pequeverso-assistant-api:8000`) or a host in `OPS_API_INSECURE_INTERNAL_HOSTS`: the bearer token then travels only on the private Docker network, which must not be shared with untrusted services |
+| `OPS_API_INSECURE_INTERNAL_HOSTS` | no | no | Extra internal host names allowed over http |
+| `TRUSTED_PROXY_IPS` | no | yes in production | Exact address(es)/narrow CIDR of the Traefik container(s) that forward requests; Better Auth then reads the client IP from `X-Forwarded-For` for per-IP sign-in limits. Empty: forwarded chains are ignored (a startup warning is logged) and limits may group clients. vps-ops must supply the proxy's stable address on the backoffice network |
 | `OPS_READ_TOKEN` | **yes** | with `OPS_API_URL` | Same value as the API's `OPS_READ_TOKEN` (≥ 32 chars) |
 | `AUTH_TEST_ISSUER`, `AUTH_DISABLE_RATE_LIMIT` | — | never | Test only; production refuses them |
 
-No `NEXT_PUBLIC_*` variables exist; all values are read on the server at runtime (restart, not
+The server validates this configuration at startup (`src/instrumentation.ts`) and exits with a
+redacted `configuration_invalid` log when a production requirement is missing. No `NEXT_PUBLIC_*` variables exist; all values are read on the server at runtime (restart, not
 rebuild, to change them). Secret names proposed for vps-ops: `pequeverso-backoffice-auth-secret`,
 `pequeverso-backoffice-database-url`, `pequeverso-backoffice-google-oauth`,
 `pequeverso-backoffice-github-oauth`, `pequeverso-assistant-ops-read-token` (shared with the API).
@@ -84,7 +87,9 @@ and `<BACKOFFICE_ORIGIN>/api/auth/callback/github`.
 
 The application sets `Content-Security-Policy` (nonce-based, per request), `X-Frame-Options`,
 `Cache-Control: private, no-store` and `X-Robots-Tag` on backoffice routes; the proxy must not
-override or cache them. `Strict-Transport-Security` belongs to the proxy/edge.
+override or cache them. The application also sends `Strict-Transport-Security: max-age=31536000` on backoffice routes when
+`BACKOFFICE_ORIGIN` is https; the proxy/edge must send HSTS on every response of the host (same or
+stronger value) because TLS terminates there.
 
 ## Smoke test for an authorized deployment
 

@@ -22,6 +22,8 @@ const web = process.env.WEB_UPSTREAM
         EMBED_ALLOWED_ORIGINS: HARNESS,
         STOREFRONT_ORIGIN: HARNESS,
         ASSISTANT_LINK_HOSTS: "consumer.hotmart.com,refund.hotmart.com",
+        // The backoffice config is validated at startup; the chat suite runs it as a loopback test.
+        BACKOFFICE_ENVIRONMENT: "test",
       },
     });
 const proxy = await startTestProxy(

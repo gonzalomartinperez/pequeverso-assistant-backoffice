@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
-import { httpOpsSource } from "../../src/features/operations/adapters/ops-http.ts";
+import { httpOpsSource, readBounded } from "../../src/features/operations/adapters/ops-http.ts";
 import {
   OpsPayloadError,
   parseOpsSummary,
@@ -183,5 +183,43 @@ describe("ops HTTP source", () => {
       )) as typeof fetch;
     const reading = await httpOpsSource(settings, hanging, 50).read();
     assert.equal(reading.status === "unavailable" && reading.reason, "unreachable");
+  });
+
+  it("aborts a chunked body over the byte limit without trusting Content-Length", async () => {
+    let pulled = 0;
+    let cancelled = false;
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulled++;
+        controller.enqueue(new Uint8Array(64 * 1024).fill(0x61));
+        if (pulled > 100) controller.close();
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    const response = new Response(stream, { headers: { "content-length": "10" } });
+    await assert.rejects(readBounded(response, 256 * 1024));
+    assert.equal(cancelled, true);
+    assert.ok(pulled <= 6, `read ${pulled} chunks before aborting`);
+  });
+
+  it("counts bytes, not UTF-16 characters", async () => {
+    const text = "ñ".repeat(150_000); // 150 000 chars, 300 000 bytes
+    await assert.rejects(readBounded(new Response(text), 256 * 1024));
+    assert.equal(await readBounded(new Response("ñ".repeat(10)), 256 * 1024), "ñ".repeat(10));
+  });
+
+  it("collapses an oversized streamed ops response into an unavailable reading", async () => {
+    const big = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.enqueue(new Uint8Array(128 * 1024).fill(0x20));
+      },
+    });
+    const reading = await httpOpsSource(
+      { url: "http://ops.internal:8000", token: "t".repeat(40) },
+      (async () => new Response(big)) as typeof fetch,
+    ).read();
+    assert.equal(reading.status === "unavailable" && reading.reason, "invalid");
   });
 });

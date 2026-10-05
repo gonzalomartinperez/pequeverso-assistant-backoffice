@@ -20,6 +20,7 @@ export async function inviteAction(_: InviteState, form: FormData): Promise<Invi
       invalid_email: "Escribe un e-mail válido.",
       already_member: "Esa persona ya tiene acceso.",
       is_owner: "Ese e-mail es el del propietario configurado.",
+      conflict: "Se acaba de crear otra invitación para ese e-mail. Recarga la página.",
     } as const;
     return { status: "error", message: messages[result.reason] };
   }

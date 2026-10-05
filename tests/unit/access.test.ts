@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { nodeSecrets } from "../../src/features/auth/adapters/node-secrets.ts";
 import {
   type AccessDeps,
+  type AdmissionDeps,
   admitSignUp,
   inspectInvitation,
   inviteMember,
@@ -35,13 +36,13 @@ class MemoryStore implements AccessStore {
     return this.members.some((m) => m.id === id && m.role === "owner");
   }
   async createInvitation(i: NewInvitation) {
-    if (!this.owner(i.createdBy)) return false;
+    if (!this.owner(i.createdBy)) return "forbidden" as const;
     for (const open of this.invitations)
       if (open.email === i.email && !open.acceptedAt && !open.revokedAt)
         open.revokedAt = i.createdAt;
     this.invitations.push({ ...i, digest: i.tokenDigest, acceptedAt: null, revokedAt: null });
     this.audits.push({ action: "invitation_created", actorId: i.createdBy, subjectId: i.id });
-    return true;
+    return "created" as const;
   }
   async invitationByDigest(digest: string) {
     return this.invitations.find((i) => i.digest === digest) ?? null;
@@ -89,7 +90,13 @@ class MemoryStore implements AccessStore {
 function setup(now = new Date("2026-10-05T12:00:00Z")) {
   const store = new MemoryStore();
   const clock = { now: () => now };
-  const deps: AccessDeps = { store, secrets: nodeSecrets, clock, ownerEmail: "Owner@Example.test" };
+  const deps: AccessDeps & AdmissionDeps = {
+    store,
+    invitations: store,
+    secrets: nodeSecrets,
+    clock,
+    ownerEmail: "Owner@Example.test",
+  };
   const owner = { id: "u-owner", email: "owner@example.test", role: "owner" as const };
   store.members.push({ ...owner, createdAt: now, providers: ["google"], activeSessions: 1 });
   return { store, deps, owner, clock };

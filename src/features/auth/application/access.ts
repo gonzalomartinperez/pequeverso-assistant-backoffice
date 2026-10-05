@@ -8,7 +8,7 @@ import {
   type Role,
   routeSignUp,
 } from "../domain/access.ts";
-import type { AccessStore, Clock, Member, Secrets } from "./ports.ts";
+import type { AccessStore, Clock, InvitationConsumer, Member, Secrets } from "./ports.ts";
 
 export type Actor = { id: string; email: string; role: Role };
 
@@ -17,6 +17,10 @@ export type AccessDeps = {
   secrets: Secrets;
   clock: Clock;
   ownerEmail: string | null;
+};
+
+export type AdmissionDeps = Pick<AccessDeps, "secrets" | "clock" | "ownerEmail"> & {
+  invitations: InvitationConsumer;
 };
 
 export type Admission =
@@ -31,7 +35,7 @@ export type Admission =
  * atomically here, so one invitation admits at most one account.
  */
 export async function admitSignUp(
-  deps: AccessDeps,
+  deps: AdmissionDeps,
   identity: { email: string | null | undefined; emailVerified: boolean },
   invitationToken: string | null,
 ): Promise<Admission> {
@@ -40,7 +44,7 @@ export async function admitSignUp(
   if (route.kind === "denied") return { allowed: false, reason: route.reason };
   if (route.kind === "owner") return { allowed: true, role: "owner", via: "owner" };
   const now = deps.clock.now();
-  const accepted = await deps.store.consumeInvitation(
+  const accepted = await deps.invitations.consumeInvitation(
     deps.secrets.digest(token ?? ""),
     route.email,
     now,
@@ -69,7 +73,10 @@ export async function inspectInvitation(deps: AccessDeps, token: string): Promis
 
 export type InviteResult =
   | { ok: true; token: string; invitation: InvitationRecord }
-  | { ok: false; reason: "forbidden" | "invalid_email" | "already_member" | "is_owner" };
+  | {
+      ok: false;
+      reason: "forbidden" | "invalid_email" | "already_member" | "is_owner" | "conflict";
+    };
 
 export async function inviteMember(
   deps: AccessDeps,
@@ -102,7 +109,7 @@ export async function inviteMember(
     createdAt: now,
     expiresAt: invitation.expiresAt,
   });
-  if (!created) return { ok: false, reason: "forbidden" };
+  if (created !== "created") return { ok: false, reason: created };
   return { ok: true, token, invitation };
 }
 

@@ -13,6 +13,7 @@ import { nodeSecrets } from "../../src/features/auth/adapters/node-secrets.ts";
 import { PostgresAccessStore } from "../../src/features/auth/adapters/postgres-access-store.ts";
 import {
   type AccessDeps,
+  inspectInvitation,
   inviteMember,
   removeMember,
 } from "../../src/features/auth/application/access.ts";
@@ -356,6 +357,163 @@ describe("backoffice authentication (PostgreSQL, real callback)", {
     assert.ok(statuses.includes(429), `statuses: ${statuses.join(",")}`);
     const { rows } = await pool.query<{ n: string }>("SELECT count(*) AS n FROM auth_rate_limit");
     assert.ok(Number(rows[0]?.n) > 0, "counters are persisted in PostgreSQL");
+  });
+
+  async function ownerActor() {
+    const { rows } = await pool.query<{ id: string }>(
+      "SELECT id FROM auth_user WHERE email = 'owner@example.test'",
+    );
+    if (!rows[0]) {
+      await signIn({ email: "owner@example.test", sub: "owner-3" });
+      return ownerActor();
+    }
+    return { id: rows[0].id, email: "owner@example.test", role: "owner" as const };
+  }
+
+  it("does not spend an invitation when the sign-up transaction rolls back", async () => {
+    const owner = await ownerActor();
+    const invite = await inviteMember(deps, owner, "rollback@example.test", "viewer");
+    if (!invite.ok) throw new Error("invite failed");
+    await pool.query(`CREATE FUNCTION fail_rollback_account() RETURNS trigger AS $$
+      BEGIN
+        IF EXISTS (SELECT 1 FROM auth_user WHERE id = NEW."userId" AND email = 'rollback@example.test') THEN
+          RAISE EXCEPTION 'simulated failure after user insert';
+        END IF;
+        RETURN NEW;
+      END $$ LANGUAGE plpgsql`);
+    await pool.query(
+      "CREATE TRIGGER fail_rollback_account BEFORE INSERT ON auth_account FOR EACH ROW EXECUTE FUNCTION fail_rollback_account()",
+    );
+    try {
+      const failed = await signIn(
+        { email: "rollback@example.test", sub: "rb-1" },
+        new Map([[INVITATION_COOKIE, invite.token]]),
+      );
+      assert.doesNotMatch(failed.location, /\/panel$/);
+      assert.equal(await userCount("rollback@example.test"), 0, "the user insert was rolled back");
+      assert.equal(
+        (await inspectInvitation(deps, invite.token)).state,
+        "pending",
+        "invitation not spent",
+      );
+    } finally {
+      await pool.query("DROP TRIGGER fail_rollback_account ON auth_account");
+      await pool.query("DROP FUNCTION fail_rollback_account()");
+    }
+    const ok = await signIn(
+      { email: "rollback@example.test", sub: "rb-1" },
+      new Map([[INVITATION_COOKIE, invite.token]]),
+    );
+    assert.match(ok.location, /\/panel$/);
+  });
+
+  it("admits more concurrent first sign-ups than the pool has connections", async () => {
+    const small = new pg.Pool({
+      connectionString: (pool as unknown as { options: { connectionString: string } }).options
+        .connectionString,
+      max: 5,
+      connectionTimeoutMillis: 5_000,
+    });
+    small.on("error", () => undefined);
+    const smallAuth = createAuth(
+      {
+        origin: ORIGIN,
+        secret: "integration-secret-0000000000000000000000",
+        secureCookies: false,
+        sessionHours: 8,
+        google: null,
+        github: null,
+        testIssuer: IDP,
+        rateLimit: false,
+      },
+      small,
+      { ...deps, store: new PostgresAccessStore(small) },
+    );
+    try {
+      const owner = await ownerActor();
+      const callbacks: { url: string; jar: Jar }[] = [];
+      for (let i = 0; i < 8; i++) {
+        const email = `burst-${i}@example.test`;
+        const invite = await inviteMember(deps, owner, email, "viewer");
+        if (!invite.ok) throw new Error("invite failed");
+        await fetch(`${IDP}/__identity`, {
+          method: "POST",
+          body: JSON.stringify({ email, sub: `burst-${i}` }),
+        });
+        const jar: Jar = new Map([[INVITATION_COOKIE, invite.token]]);
+        const start = await smallAuth.handler(
+          new Request(`${ORIGIN}/api/auth/sign-in/social`, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              origin: ORIGIN,
+              cookie: cookieHeader(jar),
+            },
+            body: JSON.stringify({
+              provider: "test-idp",
+              callbackURL: "/panel",
+              errorCallbackURL: "/ingresar",
+            }),
+          }),
+        );
+        store(jar, start);
+        const { url } = (await start.json()) as { url: string };
+        const authorize = await fetch(url, { redirect: "manual" });
+        callbacks.push({ url: authorize.headers.get("location") ?? "", jar });
+      }
+      const results = await Promise.all(
+        callbacks.map(({ url, jar }) =>
+          smallAuth.handler(new Request(url, { headers: { cookie: cookieHeader(jar) } })),
+        ),
+      );
+      assert.deepEqual(
+        results.map((response) => response.headers.get("location")?.endsWith("/panel")),
+        Array(8).fill(true),
+      );
+    } finally {
+      await small.end();
+    }
+  });
+
+  it("refuses every account-linking endpoint for viewers", async () => {
+    const owner = await ownerActor();
+    const invite = await inviteMember(deps, owner, "oauth2-link@example.test", "viewer");
+    if (!invite.ok) throw new Error("invite failed");
+    const viewer = await signIn(
+      { email: "oauth2-link@example.test", sub: "ol-1" },
+      new Map([[INVITATION_COOKIE, invite.token]]),
+    );
+    const call = (path: string, body: unknown) =>
+      auth.handler(
+        new Request(`${ORIGIN}/api/auth/${path}`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            origin: ORIGIN,
+            cookie: cookieHeader(viewer.jar),
+          },
+          body: JSON.stringify(body),
+        }),
+      );
+    // Generic OAuth links through /link-social in 1.7.7; /oauth2/link is not served at all.
+    assert.equal(
+      (await call("link-social", { provider: "test-idp", callbackURL: "/panel/cuenta" })).status,
+      403,
+    );
+    assert.ok([403, 404].includes((await call("oauth2/link", { providerId: "test-idp" })).status));
+    assert.equal((await call("unlink-account", { accountId: "any" })).status, 403);
+  });
+
+  it("concurrent invitations for one e-mail leave exactly one open invitation and fail politely", async () => {
+    const owner = await ownerActor();
+    const results = await Promise.all(
+      Array.from({ length: 6 }, () => inviteMember(deps, owner, "race@example.test", "viewer")),
+    );
+    for (const result of results) assert.ok(result.ok || result.reason === "conflict");
+    const { rows } = await pool.query<{ n: string }>(
+      "SELECT count(*) AS n FROM backoffice_invitation WHERE email = 'race@example.test' AND accepted_at IS NULL AND revoked_at IS NULL",
+    );
+    assert.equal(Number(rows[0]?.n), 1);
   });
 
   it("offers no e-mail/password sign-up or sign-in", async () => {

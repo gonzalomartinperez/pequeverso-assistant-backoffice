@@ -18,7 +18,7 @@ create unique index backoffice_invitation_one_open
   on backoffice_invitation (email) where accepted_at is null and revoked_at is null;
 
 create table backoffice_access_audit (
-  id bigint generated always as identity primary key,
+  id text primary key default gen_random_uuid()::text,
   action text not null check (action in
     ('invitation_created', 'invitation_revoked', 'invitation_accepted', 'member_removed')),
   actor_id text,

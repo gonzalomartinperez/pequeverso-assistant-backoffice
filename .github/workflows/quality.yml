@@ -199,6 +199,7 @@ jobs:
           --tmpfs /app/.next/cache:uid=1000,gid=1000,mode=0700,size=32m
           --cap-drop ALL --security-opt no-new-privileges
           -e EMBED_ALLOWED_ORIGINS=http://localhost:3210 -e STOREFRONT_ORIGIN=http://localhost:3210
+          -e BACKOFFICE_ENVIRONMENT=test
           -p 127.0.0.1:3208:3000 pequeverso-assistant-web:rc
       - name: Resolve Playwright version
         id: playwright
@@ -234,10 +235,67 @@ jobs:
       - if: always()
         run: docker rm -f assistant-web
 
+  backoffice:
+    # Production build + real PostgreSQL + the real Better Auth callback against the local fake
+    # identity provider + SYNTHETIC ops data. Proves access rules, rendering and accessibility in
+    # all engines; it does not prove Google/GitHub OAuth.
+    name: Backoffice browser suite (PostgreSQL, fake IdP)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Start a disposable PostgreSQL (test-only credentials)
+        run: |
+          docker run -d --name postgres -e POSTGRES_USER=backoffice -e POSTGRES_PASSWORD=ci-only \
+            -e POSTGRES_DB=backoffice_test -p 127.0.0.1:5432:5432 --tmpfs /var/lib/postgresql \
+            postgres:18.4-bookworm@sha256:882236b897e39051d2368c5ccc6cda944904723506b2dfc97f2a8f5bc9afa382
+          for _ in $(seq 1 30); do
+            docker exec postgres pg_isready -U backoffice -d backoffice_test >/dev/null 2>&1 && exit 0
+            sleep 1
+          done
+          docker logs postgres; exit 1
+      - name: Production build
+        run: npm run build
+      - name: Resolve Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Restore Playwright browsers
+        id: browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-all
+      - name: Install Playwright browsers
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: npx playwright install chromium firefox webkit
+      - name: Install browser system dependencies
+        run: npx playwright install-deps chromium firefox webkit
+      - name: Backoffice suite, all engines
+        run: npm run test:backoffice
+        env:
+          TEST_DATABASE_URL: postgres://backoffice:ci-only@127.0.0.1:5432/backoffice_test
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          # Report only: traces would hold the disposable test sessions' cookies.
+          name: backoffice-verification
+          path: playwright-report-backoffice/
+          retention-days: 14
+          if-no-files-found: ignore
+
   checks:
     name: Required checks
     if: always()
-    needs: [workflows, secrets, static, database, image, browser]
+    needs: [workflows, secrets, static, database, image, browser, backoffice]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     permissions: {}

@@ -20,7 +20,8 @@ export default defineConfig({
     : [["list"]],
   use: {
     baseURL: "http://localhost:3241",
-    trace: "retain-on-failure",
+    // No traces in CI: they would capture the disposable test sessions' cookies.
+    trace: ci ? "off" : "retain-on-failure",
     screenshot: "only-on-failure",
   },
   projects: [

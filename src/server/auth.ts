@@ -50,6 +50,7 @@ function compose(): Composition {
       github: settings.github,
       testIssuer: settings.testIssuer,
       rateLimit: settings.rateLimit,
+      trustedProxies: settings.trustedProxies,
     },
     pool,
     access,

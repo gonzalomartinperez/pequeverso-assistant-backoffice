@@ -8,8 +8,8 @@ Decision record: [ADR 005](adr/005-backoffice-auth-better-auth.md). Storage: [AD
 
 Server-only variables (see `.env.example` and [deployment-contract.md](deployment-contract.md)):
 `BACKOFFICE_ORIGIN` (exact https origin; http only on loopback outside production),
-`BETTER_AUTH_SECRET` (≥ 32 chars; also encrypts stored OAuth tokens, so keep it stable and backed
-up), `DATABASE_URL`, `OWNER_EMAIL`, and the Google and/or GitHub client id + secret. Production
+`BETTER_AUTH_SECRET` (≥ 32 chars, required except in `test`; also encrypts stored OAuth tokens, so
+keep it stable and backed up), `DATABASE_URL`, `OWNER_EMAIL`, and the Google and/or GitHub client id + secret. Production
 fails closed when any is missing or weak (`src/server/parse-config.ts`). Register the callbacks
 `<origin>/api/auth/callback/google` and `<origin>/api/auth/callback/github` in owner-managed OAuth
 apps, separate for development and production.
@@ -55,7 +55,15 @@ the address bar. Proxy access logs must redact `/invitacion/*` paths and OAuth c
 - CSRF: Better Auth checks `Origin` against the single trusted origin on cookie-bearing requests
   and validates callback URLs; server actions are Origin-checked by Next.js.
 - Rate limits: Better Auth's limiter (sign-in 3 per 10 s per IP, others 30 per minute) with
-  counters in PostgreSQL, so they survive restarts.
+  counters in PostgreSQL, so they survive restarts. The client IP comes from `X-Forwarded-For` only
+  through the proxies in `TRUSTED_PROXY_IPS`; without it a startup warning is logged.
+- Admission runs inside Better Auth's own sign-up transaction: the invitation is consumed with one
+  guarded `UPDATE` on that transaction's adapter (the invitation and audit tables are registered as
+  Better Auth models), so a failed sign-up never spends it and no second pool connection is taken
+  (no pool exhaustion under concurrent first sign-ups). Concurrent invitations for one e-mail end
+  with exactly one open invitation; a losing request gets a friendly retry message.
+- Disabled endpoints: user update/delete, e-mail change, account listing, provider access/refresh
+  tokens and account info. Linking and unlinking are owner-only.
 
 ## Availability
 
@@ -75,11 +83,13 @@ configuration and committed for review; `npm run db:check` fails if the two ever
 
 ## Tests and their limits
 
-- `npm run test:db`: schema drift + 13 integration tests through the real Better Auth OAuth
+- `npm run test:db`: schema drift + 17 integration tests through the real Better Auth OAuth
   callback against a loopback fake identity provider (`scripts/fake-idp.ts`) and a real
   PostgreSQL: owner admission, verified e-mail, one-use invitation bound to its e-mail, OAuth state
   rejection, no implicit linking, owner-only explicit linking, revocation, foreign Origin and
-  callback refusal, database rate limiting, id-only audit, no password endpoints.
+  callback refusal, database rate limiting, id-only audit, no password endpoints, invitation not
+  spent when the sign-up transaction rolls back, 8 concurrent first sign-ups on a 5-connection
+  pool, viewer refused on every linking endpoint, concurrent invitations for one e-mail.
 - `npm run test:browser`: the same flows in Chromium, Firefox and WebKit against the production
   build, signing in through the fake provider (no session minting or bypass).
 - Test-only switches (`AUTH_TEST_ISSUER`, `AUTH_DISABLE_RATE_LIMIT`) are refused in production and

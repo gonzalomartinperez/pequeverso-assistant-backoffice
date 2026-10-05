@@ -22,6 +22,9 @@ export function proxy(request: NextRequest) {
     response.headers.set("X-Frame-Options", "DENY");
     response.headers.set("Cache-Control", "private, no-store");
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    // HSTS when the configured origin is https (the edge may send the same value; never weaker).
+    if (process.env.BACKOFFICE_ORIGIN?.startsWith("https://"))
+      response.headers.set("Strict-Transport-Security", "max-age=31536000");
     return response;
   }
   const response = NextResponse.next();

@@ -7,8 +7,8 @@ Recharts 3.10.1, Playwright 1.63.0, Docker 29.1.3, PostgreSQL 17.6 and 18.4 in c
 
 | Suite | Command | Result |
 |---|---|---|
-| Types, lint, boundaries | `npm run typecheck`, `npm run lint`, `npm test` | 0 errors; 108 unit tests (access, ops contract 1.2, config, CSP, fixture safety); 0 boundary violations |
-| Schema drift + DB suite | `npm run test:db` (`DATABASE_URL` = disposable server) | 0 differences between `migrations/` and Better Auth; re-apply is a no-op; 13/13 integration tests on 17.6 (repeated 4×, stable) and on 18.4 (the CI image digest) |
+| Types, lint, boundaries | `npm run typecheck`, `npm run lint`, `npm test` | 0 errors; 116 unit tests (access, ops contract 1.2, bounded body reading, config, CSP, fixture safety); 0 boundary violations |
+| Schema drift + DB suite | `npm run test:db` (`DATABASE_URL` = disposable server) | 0 differences between `migrations/` and Better Auth; re-apply is a no-op; 17/17 integration tests on 17.6 (repeated 3×, stable) and on 18.4 (the CI image digest) |
 | Browser | `TEST_DATABASE_URL=… npm run test:browser` | 31 passed, 3 skipped (the live-API spec without `LIVE_OPS_URL`) in Chromium, Firefox, WebKit, mobile Chromium; axe WCAG 2.2 AA scans, CSP-violation listener |
 | Real API | `LIVE_OPS_URL=… npm run test:browser -- live-ops.spec.ts` | 3/3 engines against committed API `87fc109` (ops contract 1.2; `git archive`, fixture provider, 3 generated fixture answers incl. one in English); earlier also against `332d3c7` |
 | Image | `docker build`, run `--read-only --cap-drop ALL` | migrations applied as one-shot; `/healthz` 200; `/readyz` 200 with the database and 503 without it (then `/panel` → `/ingresar?error=unavailable` and the sign-in page shows the unavailable notice); uid 1000; ~66 MiB idle; ~97 MB image |

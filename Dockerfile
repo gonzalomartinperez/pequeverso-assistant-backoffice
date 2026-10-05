@@ -19,7 +19,7 @@ LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/peq
 LABEL org.opencontainers.image.description="Pequeverso assistant private backoffice (operations dashboard and access)"
 LABEL org.opencontainers.image.licenses="LicenseRef-Proprietary"
 WORKDIR /app
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
+ENV NODE_ENV=production BACKOFFICE_ENVIRONMENT=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
 COPY --chown=node:node LICENSE THIRD_PARTY_NOTICES.md ./
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static

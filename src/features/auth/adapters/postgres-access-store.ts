@@ -104,30 +104,41 @@ export class PostgresAccessStore implements AccessStore {
     );
   }
 
-  async createInvitation(input: NewInvitation): Promise<boolean> {
-    return this.transaction(async (client) => {
-      if (!(await this.lockOwner(client, input.createdBy))) return false;
-      // At most one open invitation per e-mail: a new one supersedes earlier pending ones.
-      await client.query(
-        "UPDATE backoffice_invitation SET revoked_at = $2 WHERE email = $1 AND accepted_at IS NULL AND revoked_at IS NULL",
-        [input.email, input.createdAt],
-      );
-      await client.query(
-        `INSERT INTO backoffice_invitation (id, email, role, token_digest, created_by, created_at, expires_at)
+  async createInvitation(input: NewInvitation): Promise<"created" | "forbidden" | "conflict"> {
+    try {
+      return await this.transaction(async (client) => this.insertInvitation(client, input));
+    } catch (error) {
+      // Two owners inviting the same e-mail at once: the one-open-invitation index rejects one.
+      if ((error as { code?: unknown } | null)?.code === "23505") return "conflict";
+      throw error;
+    }
+  }
+
+  private async insertInvitation(
+    client: PoolClient,
+    input: NewInvitation,
+  ): Promise<"created" | "forbidden"> {
+    if (!(await this.lockOwner(client, input.createdBy))) return "forbidden";
+    // At most one open invitation per e-mail: a new one supersedes earlier pending ones.
+    await client.query(
+      "UPDATE backoffice_invitation SET revoked_at = $2 WHERE email = $1 AND accepted_at IS NULL AND revoked_at IS NULL",
+      [input.email, input.createdAt],
+    );
+    await client.query(
+      `INSERT INTO backoffice_invitation (id, email, role, token_digest, created_by, created_at, expires_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [
-          input.id,
-          input.email,
-          input.role,
-          input.tokenDigest,
-          input.createdBy,
-          input.createdAt,
-          input.expiresAt,
-        ],
-      );
-      await this.audit(client, "invitation_created", input.createdBy, input.id, input.createdAt);
-      return true;
-    });
+      [
+        input.id,
+        input.email,
+        input.role,
+        input.tokenDigest,
+        input.createdBy,
+        input.createdAt,
+        input.expiresAt,
+      ],
+    );
+    await this.audit(client, "invitation_created", input.createdBy, input.id, input.createdAt);
+    return "created";
   }
 
   async invitationByDigest(digest: string): Promise<InvitationRecord | null> {
@@ -136,26 +147,6 @@ export class PostgresAccessStore implements AccessStore {
       [digest],
     );
     return rows[0] ? invitation(rows[0]) : null;
-  }
-
-  async consumeInvitation(
-    digest: string,
-    email: string,
-    now: Date,
-  ): Promise<{ id: string; role: Role } | null> {
-    return this.transaction(async (client) => {
-      const { rows } = await client.query<{ id: string; role: string }>(
-        `UPDATE backoffice_invitation SET accepted_at = $3
-          WHERE token_digest = $1 AND email = $2 AND accepted_at IS NULL AND revoked_at IS NULL
-            AND expires_at > $3
-          RETURNING id, role`,
-        [digest, email, now],
-      );
-      const row = rows[0];
-      if (!row || !isRole(row.role)) return null;
-      await this.audit(client, "invitation_accepted", null, row.id, now);
-      return { id: row.id, role: row.role };
-    });
   }
 
   async revokeInvitation(id: string, actorId: string, now: Date): Promise<boolean> {

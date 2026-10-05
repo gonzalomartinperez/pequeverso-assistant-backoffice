@@ -1,6 +1,6 @@
 ---
 name: web-review-delivery
-description: "Review a pequeverso-assistant-web change or prepare its pull request into develop: scope, security, accessibility, contracts, docs and verification evidence. Not for merging into main or deploying."
+description: "Review a pequeverso-assistant-backoffice change or prepare its pull request into develop: scope, security, accessibility, contracts, docs and verification evidence. Not for merging into main or deploying."
 ---
 
 # Review and deliver

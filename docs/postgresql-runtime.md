@@ -76,7 +76,9 @@ on the intended host. See PostgreSQL's [resource guidance](https://www.postgresq
 ## Reproducible local drill
 
 The helper creates its own internal network, two new persistent volumes and disposable
-containers, then removes only those resources through its trap. No host ports, production
+containers, then removes only those resources through its trap. The reviewed PostgreSQL image argument is mandatory; its vulnerable upstream image is never
+an implicit default. Receipts record both immutable image ids and OCI labels/revisions, and
+execution uses those ids. No host ports, production
 credentials, model calls or remote actions. Dumps contain synthetic IAM and are deleted after
 content-free hashes/counts are recorded. Keep the receipt directory private.
 
@@ -101,8 +103,12 @@ WSL contention and filesystem/cache state can change latency; no production SLA 
 - Recover BETTER_AUTH_SECRET and OAuth provider app configuration from independent encrypted
   secret backup. SQL alone cannot recover encrypted OAuth tokens or provider credentials.
 - Restore into a **new isolated database** on the same supported major: pg_restore
-  --exit-on-error; compare schema/data hashes and counts; exact-app db:check, migration
-  idempotency and readiness; test owner admission, invitations, revocation and audit semantics.
+  --exit-on-error; compare schema/data hashes and counts; run shipped migration idempotency
+  and readiness from the exact app image against the restored database. Run `npm run db:check`
+  separately from a clean checkout of that app revision on the isolated PostgreSQL server:
+  this development/CI tool is not packaged in the standalone image and creates its own
+  throwaway database to detect schema drift. It does not inspect restored IAM rows. Test owner
+  admission, invitations, revocation and audit semantics against the actual restored data.
   Verify off-server read/integrity and independent key recovery separately; local restore does
   not prove either. Record backup age and measured RTO.
 - Roll back app digest on current additive schema; database/image rollback does not reverse

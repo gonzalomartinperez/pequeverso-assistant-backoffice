@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 # Isolated synthetic IAM benchmark/restore, never production and never paid model calls.
 set -euo pipefail
-image=${1:?Usage: scripts/smoke-postgres.sh exact-backoffice-image [receipt-directory] [postgres-image]}
+image=${1:?Usage: scripts/smoke-postgres.sh exact-backoffice-image receipt-directory reviewed-postgres-image}
 receipt=${2:-/tmp/pequeverso-pg-smoke-$(date +%s)}
-pg_image=${3:-postgres:18.4-bookworm@sha256:882236b897e39051d2368c5ccc6cda944904723506b2dfc97f2a8f5bc9afa382}
+pg_image=${3:?A reviewed PostgreSQL artifact is required; the vulnerable upstream baseline is not a default}
 prefix=pv-pg-smoke-$$
 mkdir -p "$receipt"
 chmod 700 "$receipt"
+# Persist only content-free identity/labels, then execute immutable local ids (not mutable tags).
+docker image inspect "$image" --format '{"id":{{json .Id}},"oci_labels":{{json (index .Config "Labels")}},"architecture":{{json .Architecture}}}' > "$receipt/backoffice-artifact.json"
+docker image inspect "$pg_image" --format '{"id":{{json .Id}},"oci_labels":{{json (index .Config "Labels")}},"architecture":{{json .Architecture}}}' > "$receipt/postgres-artifact.json"
+image=$(docker image inspect --format '{{.Id}}' "$image")
+pg_image=$(docker image inspect --format '{{.Id}}' "$pg_image")
 network=$prefix-net
 containers=()
 volumes=()

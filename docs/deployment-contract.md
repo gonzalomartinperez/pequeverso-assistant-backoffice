@@ -9,7 +9,7 @@ route, database or Coolify resource exists for the backoffice.
 | Item | Value |
 |---|---|
 | Image | Built from `Dockerfile` at a reviewed `develop` commit; publish to a private registry and deploy **by digest** only. Not published yet. |
-| Base | `node:24.21.0-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6`, `linux/amd64` (built and run locally; other architectures untested) |
+| Base | `node:24.21.0-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20`, `linux/amd64` (built and run locally; other architectures untested) |
 | Commands | default `node server.js` (Next.js 16.3.8 standalone); one-shot `node scripts/db-migrate.ts` (migrations) |
 | User | `node` (UID/GID 1000:1000), no capabilities |
 | Port | `3000/tcp` on `0.0.0.0` (`PORT`, `HOSTNAME`) |
@@ -18,6 +18,14 @@ route, database or Coolify resource exists for the backoffice.
 | Shutdown | SIGTERM ends the process (no long-lived streams); a 20 s stop grace period is ample |
 | Resources | Measured locally: ~64 MiB right after start (read-only, production config). Proposal: request 0.1 CPU / 128 MB, limit 1 CPU / 384 MB; confirm under real use |
 | Size | ~97 MB uncompressed (local build, 2026-10-05) |
+
+The immutable official base keeps Node 24.21.0. Its refreshed Debian PCRE2 package is
+`10.42-1+deb12u2`; runtime installs the available signed Debian security package
+`perl-base=5.36.0-7+deb12u4`. Global npm, npx, Corepack and Yarn are removed from runtime;
+application dependencies remain the traced `/app/node_modules`, and migrations use Node/pg.
+Build-stage installers remain isolated from the final artifact. OS advisories without an
+available fix stay visible in exact-image scan evidence; this change does not imply acceptance
+or make the production environment ready.
 
 ## PostgreSQL (required)
 

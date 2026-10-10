@@ -18,8 +18,14 @@ registry manifest digest; a local image id is not that digest.
 The official entrypoint is preserved. It calls `gosu` only when starting as uid0; the derived
 artifact removes that unused helper and mandates `USER 999:999` (`postgres`). Overriding the
 runtime user to root is unsupported. Keep psql, pg_dump, pg_restore, pgbench and the PostgreSQL
-server intact. Installer/file removal adds whiteouts to inherited layers: no physical image
-size saving is claimed. Security changes do not certify a production environment.
+server intact. SQLite is not linked by PostgreSQL or its required tools: the inherited gpg
+package was its only reverse dependency. Remove gpg/libsqlite3-0 (and their resulting gnupg,
+gpg-wks-client/server reverse dependencies) explicitly, without autoremove or forced dependency
+removal; keep gpgv for signed APT verification. Runtime GPG/encrypted initialization scripts are
+unsupported; encrypt backups outside this database artifact under infrastructure ownership.
+libxml2 and zlib remain because PostgreSQL core links them; their unresolved advisories remain
+visible activation risks, not implicitly accepted. Installer/file removal adds whiteouts to
+inherited layers: no physical image size saving is claimed. Security changes do not certify a production environment.
 
 ## Storage and isolation
 

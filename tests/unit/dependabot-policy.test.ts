@@ -3,12 +3,29 @@ import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import { classify, decide, type PullRequestFacts } from "../../scripts/dependabot/policy.ts";
 
-const baseManifest = JSON.parse(
-  readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
-) as {
+// Deliberately independent of the installed manifest: package upgrades must not turn
+// these hypothetical patch/minor updates into downgrades and fail policy coverage.
+const baseManifest: {
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
   scripts: Record<string, string>;
+  engines: Record<string, string>;
+} = {
+  dependencies: {
+    "lucide-react": "1.48.0",
+    "tailwind-merge": "3.7.0",
+    "class-variance-authority": "0.7.1",
+    next: "16.3.6",
+    react: "19.3.0",
+    clsx: "2.1.1",
+  },
+  devDependencies: {
+    typescript: "7.0.2",
+    tailwindcss: "4.3.3",
+    "@playwright/test": "1.63.0",
+  },
+  scripts: { test: "node --test" },
+  engines: { node: ">=24 <25" },
 };
 
 function manifest(mutate: (m: typeof baseManifest) => void = () => {}): string {

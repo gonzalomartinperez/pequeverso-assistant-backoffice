@@ -44,6 +44,6 @@ provider signs you in as `owner@example.test`; the dashboard shows the **synthet
 
 ## Stack
 
-Next.js 16.3.6 (App Router, standalone), React 19.3, TypeScript 7.0.2, Better Auth 1.7.7,
+Next.js 16.3.8 (App Router, standalone), React 19.3, TypeScript 7.0.2, Better Auth 1.7.7,
 PostgreSQL (`pg` 8.23), Recharts 3.10, Tailwind CSS 4.3 with owned primitives, lucide icons,
 Biome 2.5, Playwright 1.63 + axe-core. Node 24.21.0.

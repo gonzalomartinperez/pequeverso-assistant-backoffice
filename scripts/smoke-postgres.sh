@@ -95,6 +95,9 @@ COMMIT;
 SQL
   docker exec "$container" pgbench -U synthetic -d backoffice -n -c 8 -j 2 -t 250 --random-seed=20261010 \
     -f /tmp/iam-load.sql > "$receipt/$mode-load.txt"
+  # pgbench may exit successfully despite failed transactions; require the whole workload.
+  rg -q '^number of transactions actually processed: 2000/2000$' "$receipt/$mode-load.txt"
+  rg -q '^number of failed transactions: 0 \(0\.000%\)$' "$receipt/$mode-load.txt"
   docker exec "$container" sh -c 'printf "peak_memory_bytes="; cat /sys/fs/cgroup/memory.peak; printf "data_bytes="; du -sb "$PGDATA" | cut -f1; printf "wal_bytes="; du -sb "$PGDATA/pg_wal" | cut -f1' >> "$receipt/$mode-metrics.txt"
   hash_sql='SELECT md5(string_agg(row_to_json(t)::text,E'"'"'\n'"'"' ORDER BY id)) FROM auth_user t; SELECT md5(string_agg(row_to_json(t)::text,E'"'"'\n'"'"' ORDER BY id)) FROM auth_session t; SELECT md5(string_agg(row_to_json(t)::text,E'"'"'\n'"'"' ORDER BY id)) FROM backoffice_invitation t; SELECT md5(string_agg(row_to_json(t)::text,E'"'"'\n'"'"' ORDER BY id)) FROM backoffice_access_audit t; SELECT count(*) FROM backoffice_schema_migrations;'
   docker exec "$container" psql -X -U synthetic -d backoffice -Atc "$hash_sql" > "$receipt/$mode-before-hashes.txt"

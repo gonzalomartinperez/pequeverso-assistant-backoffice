@@ -81,3 +81,14 @@ Limits remain: no deployment, real Google/GitHub credentials, TLS/proxy cookies,
 or private-network integration was exercised here. The local baseline image is explicitly the
 pre-patch image; the security-patched exact image is verified by the linked CI run. Release and
 activation decisions require their own current checks and the deployment-contract smoke steps.
+
+### Trusted-proxy configuration regression
+
+The continuation review reproduced a production-config gap: the character-only IPv6 validator
+accepted `::::/32`, and numeric conversion accepted scientific notation such as `::1/1e2`.
+The parser now uses Node's `net.isIP` and decimal CIDR notation. It keeps the existing IPv4
+`/8`–`/32` and IPv6 `/16`–`/128` bounds; valid IPv4, IPv6 and mapped IPv6 literals are accepted.
+Ten focused configuration tests pass, covering malformed literals, notation and both width
+boundaries. The earlier 69-unit total above describes the security-patch revision; this change
+adds two configuration cases. Final runtime verification is recorded separately against the exact
+candidate commit and image, and required CI exercises the updated parser before merging.

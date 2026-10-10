@@ -116,3 +116,30 @@ WSL contention and filesystem/cache state can change latency; no production SLA 
   logs + current/rollback images/build cache. Do not sum requests as reservations or assume
   vps-ops' proposed6CPU/8GiB ceiling describes purchased hardware (capacity is currently null).
   Do not purge IAM history, delete the last usable backup or prune unrelated project artifacts.
+
+## Local calibration (2026-10-10)
+
+One frozen-seed comparison of the patched PG18.4 artifact under the same .5CPU/256MiB
+ceilings and synthetic IAM workload gave:
+
+| Metric | Default PostgreSQL settings | Proposed settings |
+|---|---|---|
+| Idle Docker memory | 41.24 MiB | 32.47 MiB |
+| cgroup peak after workload | 96,542,720 B | 83,378,176 B |
+| Final peak through restore/app-readiness | 126,185,472 B | 113,123,328 B |
+| Initialized TCP startup | 12.10 s | 11.67 s |
+| Logical restore | 1.24 s | 1.00 s |
+| PostgreSQL stop (exit0, OOMfalse) | 1.15 s | .75 s |
+
+Both completed2,000/2,000 transactions with no failures. Restored table hashes matched,
+1,000 rows remained in each seeded table, migrations were a no-op after restore, the exact
+backoffice image returned health/readiness200, and persisted data matched after restart.
+The restored backoffice stopped normally with143/OOMfalse. PostgreSQL data occupied about
+50.3MB and WAL16.8MB in this small fixture. Source schema/IAM integration tests also passed
+17/17 against the patched proposed runtime. Initial upstream-image and first patched-image
+comparisons are historical diagnostics, not the final receipt.
+
+This is a single local WSL sample with shared host contention, not a statistically controlled
+performance benchmark. It supports the smaller memory starting recipe while retaining
+correctness/durability settings; it does not establish sustained traffic capacity, actual
+hardware disk durability, real OAuth or an off-server encrypted restore/key-recovery result.

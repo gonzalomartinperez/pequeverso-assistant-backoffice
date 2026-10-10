@@ -24,19 +24,19 @@ browser suite (axe and screenshots).
 
 | Role (utility) | Light | Dark | Use |
 |---|---|---|---|
-| `surface` | cream `#fffaf2` | navy night | Page and transcript ground |
-| `surface-raised` | white | raised navy | Cards, composer, disclosures |
+| `surface` | cream `#fffaf2` | navy night | Page and dashboard ground |
+| `surface-raised` | white | raised navy | Cards, access forms, disclosures |
 | `surface-sunken` | sky `#e8f3ff` | sunken navy | Wells, table headers, image placeholders |
-| `surface-user` / `on-user` | navy / white | turquoise / ink | Visitor message bubble |
+| `surface-user` / `on-user` | navy / white | turquoise / ink | Retained storefront token; unused by the backoffice |
 | `ink` | `#0b1f3a` | white | Headings, strong text |
 | `copy` | `#425267` (7.7:1 on cream) | white 86 % | Reading text |
 | `muted` | `#5d6b80` (5.2:1 on cream) | white 68 % | Notes, hints |
-| `action` / `on-action` | navy / white | turquoise / ink | Send, retry, primary non-purchase actions |
-| `purchase` / `on-purchase` | coral `#c64035` / white (5.0:1) | same | **Only** the "Cómo comprar" action |
-| `amount` | coral | soft coral | **Only** verified prices |
+| `action` / `on-action` | navy / white | turquoise / ink | Sign-in, invitations, primary operations actions |
+| `purchase` / `on-purchase` | coral `#c64035` / white (5.0:1) | same | Retained commerce token; unused by the backoffice |
+| `amount` | coral | soft coral | Retained commerce token; unused by the backoffice |
 | `link` | teal text `#005e5b` | turquoise | Inline links |
 | `icon` | teal `#007d79` | turquoise | Decorative icons |
-| `chip` / `on-chip` | mint / navy | white 9 % / white | Starters and follow-ups |
+| `chip` / `on-chip` | mint / navy | white 9 % / white | Role and status badges |
 | `notice` / `danger-surface` / `danger` | lemon; rose / coral-hover | tinted | Notices; failures |
 | `line`, `line-strong` | navy 14 % / 28 % | white 12 % / 26 % | Borders |
 | `ring` | navy | turquoise | Focus outline (3 px, offset 2 px) |
@@ -49,15 +49,15 @@ that is not a full contrast audit of every state. Chart series use `--chart-*` r
 | Utility | Size / line height | Family and weight | Use |
 |---|---|---|---|
 | `text-display` | 26→36 px / 1.1 | Fraunces 700 | Reserved (not used in the panel) |
-| `text-heading` | 22 px / 1.2 | Fraunces 700 | Greeting |
-| `text-title` | 17 px / 1.3 | Fraunces 700 | Panel title, product names |
-| `text-price` | 22 px / 1.1 | Fraunces 700, `amount` colour | Verified price |
-| `text-body` | 16 px / 1.6 | Nunito Sans 500 | Answers, composer (16 px avoids iOS zoom on focus) |
+| `text-heading` | 22 px / 1.2 | Fraunces 700 | Page headings |
+| `text-title` | 17 px / 1.3 | Fraunces 700 | Section titles |
+| `text-price` | 22 px / 1.1 | Fraunces 700, `amount` colour | Retained storefront size; unused by the backoffice |
+| `text-body` | 16 px / 1.6 | Nunito Sans 500 | Reading text and inputs (16 px avoids iOS zoom on focus) |
 | `text-small` | 14 px / 1.5 | Nunito Sans | Buttons, summaries |
 | `text-tiny` | 13 px / 1.45 | Nunito Sans | Labels (uppercase + tracking for section labels), hints |
 
 Fonts are self-hosted variable woff2 (OFL) with metric-matched fallbacks and preloaded; there is no
-request to Google Fonts. Answer width is capped at `max-w-measure` (42 rem).
+request to Google Fonts. Reading width is capped at `max-w-measure` (42 rem).
 
 **Naming rule:** font-size and colour token names must never collide (`text-body` is a size, the
 reading colour is `text-copy`; `text-price` is a size, the price colour is `text-amount`), and every
@@ -65,12 +65,11 @@ custom size is registered in `src/shared/ui/cn.ts` so `tailwind-merge` does not 
 
 ## Spacing, radius, elevation, icons
 
-- Spacing: Tailwind's 4 px scale. Transcript gap 24 px between turns, 16 px inside an answer;
-  panel gutters 16 px (24 px from `@lg` container width).
-- Radius: `sm` 4, `chip` 6, `md` 12 (callouts, disclosures, tables), `lg` 20 (cards, bubbles),
-  `xl` 28 (composer), `pill` (every button and chip, as on the storefront).
-- Elevation: navy-tinted `shadow-sm` (cards, composer), `shadow-md` (popovers, focused composer,
-  floating jump button), `shadow-purchase` (purchase button only).
+- Spacing: Tailwind's 4 px scale. Dashboard sections use 24 px gaps; page gutters are 16 px (24 px from `sm`).
+- Radius: `sm` 4, `chip` 6, `md` 12 (callouts, disclosures, tables), `lg` 20 (cards),
+  `xl` 28 (retained storefront token), `pill` (every button and chip, as on the storefront).
+- Elevation: navy-tinted `shadow-sm` (cards) and `shadow-md` (dialogs); commerce elevation tokens
+  are retained and unused.
 - Icons: lucide, 20 px in buttons (`[&_svg]:size-5`), 16 px in small buttons and inline labels,
   14 px next to link text; always `aria-hidden`, never the only label.
 - Touch targets: ≥ 44 px (`sm` buttons are 44 px tall; header icon buttons 44 px).

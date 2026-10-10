@@ -29,7 +29,7 @@ not provide it): the boundary checker scans imports without it, and Next uses th
 ## Pull requests
 
 Branch from `develop`, keep changes focused, use Conventional Commits, and target `develop`.
-Describe verification (commands, browsers, screenshots at panel sizes). See `AGENTS.md`.
+Describe verification (commands, browsers, desktop, dark and mobile screenshots). See `AGENTS.md`.
 
 ## Branch flow and protection
 
@@ -41,8 +41,8 @@ actors**):
 - changes arrive only through pull requests, merged with a **merge commit** (squash and rebase are
   disabled) so ancestry between the long-lived branches is preserved;
 - the aggregate **Required checks** job (workflow lint, history secret scan, static checks, the
-  database suite when `test:db` exists, the production image and the browser suite against that
-  image, in three shards) must pass on a branch that is up to date with its base (strict);
+  database suite, the hardened production-image smoke and the browser suite against a production
+  build with real PostgreSQL and a fake IdP) must pass on a branch that is up to date with its base (strict);
 - force-pushes and deletion of `main`/`develop` are blocked; review threads must be resolved.
 
 Working agreement (not automated, to avoid friction):

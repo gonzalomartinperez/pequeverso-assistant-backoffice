@@ -78,6 +78,21 @@ function pattern(value: unknown, regex: RegExp, path: string): string | null {
   return parsed;
 }
 
+/** Reject impossible dates and JavaScript's silent day rollover before presentation. */
+function calendarDay(value: unknown, path: string): string | null {
+  const parsed = pattern(value, DAY, path);
+  if (parsed == null) return null;
+  const instant = new Date(`${parsed}T00:00:00Z`);
+  if (Number.isNaN(instant.getTime()) || instant.toISOString().slice(0, 10) !== parsed) fail(path);
+  return parsed;
+}
+
+function calendarMonth(value: unknown, path: string): string | null {
+  const parsed = pattern(value, MONTH, path);
+  if (parsed != null) calendarDay(`${parsed}-01`, path);
+  return parsed;
+}
+
 function spend(value: unknown, path: string): Spend {
   const raw = optionalObject(value, path) ?? {};
   return {
@@ -139,7 +154,7 @@ function runWindow(value: unknown, path: string): RunWindow {
 
 function dailyRow(value: unknown, path: string): DailyRow {
   const raw = object(value, path);
-  const day = pattern(raw.day, DAY, `${path}.day`) ?? fail(`${path}.day`);
+  const day = calendarDay(raw.day, `${path}.day`) ?? fail(`${path}.day`);
   return {
     day,
     completed: count(raw.completed, `${path}.completed`),
@@ -254,8 +269,8 @@ export function parseOpsSummary(value: unknown): OpsSummary {
     },
     budget: budget
       ? {
-          month: pattern(budget.month, MONTH, "$.budget.month"),
-          day: pattern(budget.day, DAY, "$.budget.day"),
+          month: calendarMonth(budget.month, "$.budget.month"),
+          day: calendarDay(budget.day, "$.budget.day"),
           monthlyLimit: money(budget.monthly_limit, "$.budget.monthly_limit"),
           monthlyCutoff: money(budget.monthly_cutoff, "$.budget.monthly_cutoff"),
           dailyLimit: money(budget.daily_limit, "$.budget.daily_limit"),

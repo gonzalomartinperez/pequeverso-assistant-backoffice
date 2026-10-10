@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 // Dashboard against a RUNNING pequeverso-assistant-api (fixture provider, no paid calls):
 //   LIVE_OPS_URL=http://127.0.0.1:8257 LIVE_OPS_TOKEN=… npm run test:browser -- live-ops.spec.ts
-// Skipped otherwise. The API's data is real bookkeeping of fixture runs, labelled synthetic.
+// Seed one completed fixture run before this suite. Skipped otherwise. The API's data is real bookkeeping of fixture runs, labelled synthetic.
 test.skip(!process.env.LIVE_OPS_URL, "LIVE_OPS_URL not set");
 
 test("reads the real API ops summary over HTTP and labels fixture data as synthetic", async ({
@@ -26,7 +26,7 @@ test("reads the real API ops summary over HTTP and labels fixture data as synthe
   await expect(page.getByTestId("pricing")).toContainText("No es la factura del proveedor");
   await expect(
     page.getByRole("region", { name: "Últimas ejecuciones" }).getByRole("row"),
-  ).not.toHaveCount(1);
+  ).toHaveCount(2);
   if (info.project.name === "chromium")
     await page.screenshot({
       path: "docs/verification/backoffice/desktop-dashboard-real-api.png",

@@ -133,3 +133,19 @@ whiteouts in inherited layers; measured Docker metadata/CLI image size grew rath
 No physical VPS disk saving or production capacity improvement is claimed. Shared base layers,
 finite log/image retention, persistent PostgreSQL backups and monitoring budgets belong to the
 authorized vps-ops handoff; no registry publication or VPS changes were performed.
+
+### Calendar boundary regression (2026-10-10)
+
+Release review found that a syntactically correct but impossible `daily.day` could reach the
+UTC formatter and crash the dashboard (`2026-99-99`), or silently roll over (`2026-02-30`).
+The adapter now requires an exact UTC calendar roundtrip for daily and optional budget days,
+and validates budget months with their first calendar day. Missing optional values stay null;
+the pinned API contracts and lockfile are unchanged. Invalid HTTP payloads become an unavailable
+reading before presentation. Four regression tests cover invalid days/months, leap years and
+safe display, missing budget values, and the HTTP failure boundary. The focused operations
+suite passes 22 tests; the full unit suite passes 75 tests. Production provider calls and real
+OAuth remain outside these fixture checks.
+
+The optional live-API browser check requires exactly one completed fixture execution to be
+seeded before the suite. It now checks for that data row, so an empty bookkeeping result cannot
+pass merely because it has no table header.

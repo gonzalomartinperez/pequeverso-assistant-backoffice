@@ -15,6 +15,8 @@ import {
   percent,
 } from "../../src/features/operations/domain/summary.ts";
 
+import { day as displayDay } from "../../src/features/operations/presentation/format.ts";
+
 const pinned = JSON.parse(readFileSync("contracts/ops/ops.summary.example.json", "utf8"));
 const fixture = JSON.parse(readFileSync("contracts/ops/summary.fixture.json", "utf8"));
 
@@ -43,6 +45,59 @@ describe("ops summary contract", () => {
       () => parseOpsSummary({ ...pinned, recent: Array.from({ length: 51 }, () => run) }),
       OpsPayloadError,
     );
+  });
+
+  it("rejects impossible daily dates, including silent calendar rollover", () => {
+    for (const day of [
+      "2026-99-99",
+      "2026-00-01",
+      "2026-13-01",
+      "2026-01-00",
+      "2026-02-30",
+      "2026-04-31",
+      "2026-02-29",
+      "1900-02-29",
+    ]) {
+      assert.throws(() => parseOpsSummary({ ...pinned, daily: [{ ...pinned.daily[0], day }] }), {
+        name: "Error",
+        message: "invalid ops summary at $.daily[0].day",
+      });
+    }
+  });
+
+  it("preserves real leap days and month boundaries for safe UTC rendering", () => {
+    for (const day of ["2024-02-29", "2000-02-29", "2026-01-01", "2026-12-31"]) {
+      const summary = parseOpsSummary({ ...pinned, daily: [{ ...pinned.daily[0], day }] });
+      assert.equal(summary.daily[0]?.day, day);
+      const row = summary.daily[0];
+      assert.ok(row);
+      assert.doesNotThrow(() => displayDay(row.day));
+    }
+  });
+
+  it("validates optional budget calendar values without replacing missing data", () => {
+    for (const month of ["2026-00", "2026-13", "2026-99"])
+      assert.throws(
+        () => parseOpsSummary({ ...pinned, budget: { ...pinned.budget, month } }),
+        OpsPayloadError,
+      );
+    for (const day of ["2026-99-99", "2026-02-29", "2026-02-30"])
+      assert.throws(
+        () => parseOpsSummary({ ...pinned, budget: { ...pinned.budget, day } }),
+        OpsPayloadError,
+      );
+    const missing = parseOpsSummary({
+      ...pinned,
+      budget: { ...pinned.budget, month: null, day: null },
+    });
+    assert.equal(missing.budget?.month, null);
+    assert.equal(missing.budget?.day, null);
+    const valid = parseOpsSummary({
+      ...pinned,
+      budget: { ...pinned.budget, month: "2024-02", day: "2024-02-29" },
+    });
+    assert.equal(valid.budget?.month, "2024-02");
+    assert.equal(valid.budget?.day, "2024-02-29");
   });
 
   it("parses the local synthetic fixture with the same shape", () => {
@@ -97,6 +152,21 @@ describe("ops summary contract", () => {
       null,
     ];
     for (const payload of bad) assert.throws(() => parseOpsSummary(payload), OpsPayloadError);
+  });
+});
+
+describe("invalid calendar HTTP boundary", () => {
+  it("returns unavailable instead of passing a rendering crash to the dashboard", async () => {
+    const source = httpOpsSource(
+      { url: "http://ops.test", token: "fixture-token" },
+      async () =>
+        new Response(
+          JSON.stringify({ ...pinned, daily: [{ ...pinned.daily[0], day: "2026-99-99" }] }),
+        ),
+    );
+    const reading = await source.read();
+    assert.equal(reading.status, "unavailable");
+    assert.equal(reading.status === "unavailable" && reading.reason, "invalid");
   });
 });
 

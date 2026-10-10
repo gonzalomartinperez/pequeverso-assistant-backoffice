@@ -22,7 +22,7 @@ elapsed() { awk -v start="$1" -v end="$(monotonic)" 'BEGIN {printf "%.3f", end-s
 wait_ready() {
   local container=$1
   for _ in $(seq 1 100); do
-    if docker exec "$container" pg_isready -U synthetic -d backoffice >/dev/null 2>&1; then return; fi
+    if docker exec "$container" pg_isready -h 127.0.0.1 -U synthetic -d backoffice >/dev/null 2>&1; then return; fi
     sleep .1
   done
   echo 'PostgreSQL readiness timeout' >&2

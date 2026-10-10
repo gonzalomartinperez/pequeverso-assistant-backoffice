@@ -152,6 +152,10 @@ jobs:
           cache-to: type=gha,mode=max,scope=web-node24-amd64
       - name: Smoke the exact image hardened (fail-closed, migrations, readiness, headers)
         run: scripts/smoke-image.sh pequeverso-assistant-backoffice:rc
+      - name: Build the pinned non-root PostgreSQL IAM artifact
+        run: docker build -f Dockerfile.postgres --build-arg SERVICE_REVISION="$GITHUB_SHA" -t pequeverso-backoffice-postgres:rc .
+      - name: Compare bounded IAM settings and restore with the exact app image
+        run: scripts/smoke-postgres.sh pequeverso-assistant-backoffice:rc /tmp/postgres-receipt pequeverso-backoffice-postgres:rc
 
   backoffice:
     # Production build + real PostgreSQL + the real Better Auth callback against the local fake

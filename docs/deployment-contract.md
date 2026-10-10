@@ -29,6 +29,10 @@ or make the production environment ready.
 
 ## PostgreSQL (required)
 
+Use the [PostgreSQL runtime and recovery worksheet](postgresql-runtime.md) for the separately
+built database artifact, PostgreSQL18 volume boundary, measured bounded recipe and isolated
+restore drill. Infrastructure remains owned by vps-ops; this is not a deployment authorization.
+
 - A dedicated database and role for the backoffice on a private network; never exposed publicly,
   never shared with portfolio services. Tested with PostgreSQL 17.6 and 18.4.
 - Store PostgreSQL data on a dedicated persistent volume, never the disposable tmpfs used by

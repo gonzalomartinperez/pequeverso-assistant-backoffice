@@ -1,0 +1,21 @@
+# Pequeverso IAM database artifact only; infrastructure is owned by vps-ops.
+# Upstream 18.4 tag still resolves to this digest (verified 2026-10-10).
+FROM postgres:18.4-bookworm@sha256:882236b897e39051d2368c5ccc6cda944904723506b2dfc97f2a8f5bc9afa382
+USER root
+# Signed Debian security packages; never disable repository/signature validation.
+RUN apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 update \
+    && apt-get install -y --no-install-recommends \
+        liblzma5=5.4.1-1+deb12u2 xz-utils=5.4.1-1+deb12u2 \
+        libpcre2-8-0=10.42-1+deb12u2 \
+        libperl5.36=5.36.0-7+deb12u4 perl=5.36.0-7+deb12u4 \
+        perl-base=5.36.0-7+deb12u4 perl-modules-5.36=5.36.0-7+deb12u4 \
+        libssl3=3.0.22-1~deb12u1 openssl=3.0.22-1~deb12u1 \
+        tzdata=2026c-0+deb12u1 \
+    && rm -rf /var/lib/apt/lists/* /usr/local/bin/gosu \
+    && test "$(id -u postgres)" = 999 \
+    && test "$(id -g postgres)" = 999
+# The unchanged official entrypoint only uses gosu when uid=0. Root startup is unsupported;
+# initialize a NEW volume's ownership separately, then always execute as postgres.
+USER 999:999
+ARG SERVICE_REVISION=
+LABEL org.opencontainers.image.revision=${SERVICE_REVISION}

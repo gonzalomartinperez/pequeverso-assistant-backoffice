@@ -10,7 +10,7 @@ route, database or Coolify resource exists for the backoffice.
 |---|---|
 | Image | Built from `Dockerfile` at a reviewed `develop` commit; publish to a private registry and deploy **by digest** only. Not published yet. |
 | Base | `node:24.21.0-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6`, `linux/amd64` (built and run locally; other architectures untested) |
-| Commands | default `node server.js` (Next.js 16.3.6 standalone); one-shot `node scripts/db-migrate.ts` (migrations) |
+| Commands | default `node server.js` (Next.js 16.3.8 standalone); one-shot `node scripts/db-migrate.ts` (migrations) |
 | User | `node` (UID/GID 1000:1000), no capabilities |
 | Port | `3000/tcp` on `0.0.0.0` (`PORT`, `HOSTNAME`) |
 | Filesystem | Read-only root tested; writable tmpfs `/tmp` and `/app/.next/cache` (`uid=1000,gid=1000,mode=0700,size=32m`) |

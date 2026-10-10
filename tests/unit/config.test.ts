@@ -107,14 +107,60 @@ describe("backoffice configuration", () => {
     );
   });
 
-  it("parses TRUSTED_PROXY_IPS strictly", () => {
+  it("accepts valid proxy IPs and CIDRs at the existing width boundaries", () => {
+    const valid = [
+      "10.0.1.5",
+      "::1",
+      "2001:db8::1",
+      "::ffff:192.0.2.1",
+      "10.0.0.0/8",
+      "10.0.1.5/32",
+      "2001:db8::/16",
+      "2001:db8::1/128",
+    ];
     assert.deepEqual(
-      parseConfig({ ...production, TRUSTED_PROXY_IPS: "10.0.1.5, 172.18.0.0/16" }).trustedProxies,
-      ["10.0.1.5", "172.18.0.0/16"],
+      parseConfig({ ...production, TRUSTED_PROXY_IPS: ` ${valid.join(", ")}, ` }).trustedProxies,
+      valid,
     );
     assert.deepEqual(parseConfig(production).trustedProxies, []);
-    for (const bad of ["0.0.0.0/0", "proxy.local", "10.0.0.1/33", "10.0.0.0/4"])
-      assert.throws(() => parseConfig({ ...production, TRUSTED_PROXY_IPS: bad }));
+  });
+
+  it("rejects malformed proxy IP literals before production can start", () => {
+    for (const bad of [
+      "proxy.local",
+      "::::",
+      "::::/32",
+      "2001:::1",
+      "1:2:3:4:5:6:7:8:9",
+      "999.0.0.1",
+      "01.2.3.4",
+      "10.0.1.5/24/24",
+    ])
+      assert.throws(
+        () => parseConfig({ ...production, TRUSTED_PROXY_IPS: bad }),
+        /TRUSTED_PROXY_IPS/,
+      );
+  });
+
+  it("rejects unsupported proxy CIDR widths and nondecimal notation", () => {
+    for (const bad of [
+      "0.0.0.0/0",
+      "10.0.0.0/7",
+      "10.0.0.1/33",
+      "::1/0",
+      "::1/15",
+      "::1/129",
+      "::1/1e2",
+      "10.0.0.1/3.2",
+      "10.0.0.1/+24",
+      "10.0.0.1/",
+      "::1/-1",
+      "::1/ 32",
+    ])
+      assert.throws(
+        () => parseConfig({ ...production, TRUSTED_PROXY_IPS: bad }),
+        /TRUSTED_PROXY_IPS/,
+      );
   });
 
   it("error messages never echo configured values", () => {

@@ -5,15 +5,18 @@ description: "Review a pequeverso-assistant-backoffice change or prepare its pul
 
 # Review and deliver
 
-1. Diff against `develop`. Flag: invented commerce claims; HTML rendering of answers; URLs that
-   bypass `domain/links.ts`; postMessage with `"*"` or with content/credentials; storage of
-   conversation data; new third-party scripts; viewport breakpoints inside the embed; motion
-   without a reduced-motion path; hover-only information; unvalidated payloads.
-2. Confirm `npm run check` and `npm run test:browser` evidence, with embedded screenshots at panel
-   sizes for UI changes. Require reproducible evidence for defects; separate blockers from
-   suggestions.
-3. Docs: architecture, design system, embed integration, deployment contract, API contract and
-   coordination stay accurate for what changed.
+1. Review the diff against `develop` and read the auth, IAM and ops-data ADRs. Flag admission
+   without a verified e-mail or presented invitation, implicit account linking, missing server-side
+   role checks, mutations without transactional owner re-checks, secrets or sessions exposed to the
+   browser or logs, unvalidated ops payloads, and public access to private pages.
+2. Confirm `npm run check`, `npm run test:db` and `npm run test:browser` evidence. For UI changes,
+   inspect desktop, dark and mobile screenshots in `docs/verification/backoffice/`; check keyboard
+   use, focus restoration, overflow, contrast and reduced motion. Missing values must remain
+   "No disponible" and fixtures must be visibly synthetic. Require reproducible evidence for
+   defects; separate blockers from suggestions.
+3. Keep architecture, authentication, design system, deployment contract, pinned ops contract and
+   coordination docs accurate. Changes to migrations are append-only; contracts come only from an
+   identified committed API revision. Do not render prompts, answers or buyer data in the dashboard.
 4. Dependency PRs: follow [dependencies.md](../../../docs/dependencies.md). The policy decides
    auto-merge; never approve, merge or re-label a PR to get around it, and treat security updates
    against `main` by re-targeting them to `develop`.

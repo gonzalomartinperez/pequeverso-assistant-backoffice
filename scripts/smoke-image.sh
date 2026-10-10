@@ -38,6 +38,15 @@ fi
 grep -q configuration_invalid /tmp/pv-bo-unconf.log || { echo "no configuration_invalid log" >&2; exit 1; }
 ! grep -q "$PW" /tmp/pv-bo-unconf.log
 
+# A fully configured production start also rejects malformed trusted-proxy addresses.
+if docker run --rm "${hardened[@]}" --network "$NET" "${config[@]}" \
+  -e TRUSTED_PROXY_IPS=::::/32 "$IMAGE" timeout 20 node server.js >/tmp/pv-bo-proxy.log 2>&1; then
+  echo "malformed trusted proxy configuration started" >&2; exit 1
+fi
+grep -q configuration_invalid /tmp/pv-bo-proxy.log || { echo "no proxy configuration_invalid log" >&2; exit 1; }
+! grep -q "$PW" /tmp/pv-bo-proxy.log
+! grep -q '::::' /tmp/pv-bo-proxy.log
+
 # 2. Migrations as a one-shot container; a second run applies nothing.
 docker run --rm "${hardened[@]}" --network "$NET" -e DATABASE_URL="$URL" "$IMAGE" node scripts/db-migrate.ts
 docker run --rm "${hardened[@]}" --network "$NET" -e DATABASE_URL="$URL" "$IMAGE" node scripts/db-migrate.ts

@@ -34,7 +34,11 @@ force-pushes and deletion, and have no bypass; the branch flow and the owner-aut
 are a documented working agreement instead of a Branch policy check (removed to avoid friction,
 after it had been verified live).
 
-## Requests to other owners
+## Historical requests to other owners (2026-09-27)
+
+These requests describe the former public chat shells. They are superseded by the backoffice
+milestone below and the current [deployment contract](deployment-contract.md); they are not
+activation instructions.
 
 - **API agent:** (done: contract committed.) Web revision verified together: this repository's
   `develop` after the handoff-alignment PR, against API `dc4e4c6`. Open points: a retry of a failed

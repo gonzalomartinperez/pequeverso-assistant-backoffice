@@ -49,7 +49,7 @@ Source of truth: `scripts/dependabot/policy.ts` (tested in `tests/unit/dependabo
    Labels `dependencies:auto-merge` / `dependencies:manual-review` only communicate the result.
 3. GitHub merges only when the `protect-develop` ruleset is satisfied: **Required checks** (workflow
    lint, history secret scan, static checks, database suite, production image, browser suite against
-   the image) green on a head that is up to date with
+   a production build with real PostgreSQL and a fake IdP) green on a head that is up to date with
    `develop` (strict). There is no bypass actor; the workflow never merges directly.
 4. Any new push, rebase, base change, reopen or label change re-runs the policy, so a PR that stops
    qualifying loses auto-merge before its checks can finish.

@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 import { assertDisposableDatabase, isLoopbackUrl } from "./fixture-safety.ts";
 
 /**
@@ -30,9 +31,6 @@ export type BackofficeConfig = {
   trustedProxies: string[];
 };
 
-const IPV4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
-const IPV6 = /^[0-9a-f:]+$/i;
-
 function proxies(raw: string | undefined): string[] {
   const list = (raw ?? "")
     .split(",")
@@ -40,13 +38,16 @@ function proxies(raw: string | undefined): string[] {
     .filter(Boolean);
   for (const entry of list) {
     const [address = "", prefix, extra] = entry.split("/");
-    const v4 = IPV4.test(address);
-    const v6 = !v4 && address.includes(":") && IPV6.test(address);
+    const family = isIP(address);
     const bits = prefix === undefined ? null : Number(prefix);
     if (
       extra !== undefined ||
-      !(v4 || v6) ||
-      (bits !== null && (!Number.isInteger(bits) || bits < (v4 ? 8 : 16) || bits > (v4 ? 32 : 128)))
+      family === 0 ||
+      (prefix !== undefined && !/^\d{1,3}$/.test(prefix)) ||
+      (bits !== null &&
+        (!Number.isInteger(bits) ||
+          bits < (family === 4 ? 8 : 16) ||
+          bits > (family === 4 ? 32 : 128)))
     )
       throw new Error("TRUSTED_PROXY_IPS entries must be IP addresses or narrow CIDR ranges");
   }

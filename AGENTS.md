@@ -1,32 +1,36 @@
-# Repository guidelines — pequeverso-assistant-web
+# Repository guidelines — pequeverso-assistant-backoffice
 
-Frontend of the Pequeverso shopping assistant: **one** conversation implementation served in two
-shells. `/embed` (inside the storefront's panel) is the primary customer surface; `/` is a
-secondary demo/testing surface. Public repository; source visible, all rights reserved (see
-`LICENSE`). Never commit secrets, private operations details or other repositories' internals.
+Private operations backoffice of the Pequeverso assistant (renamed from `pequeverso-assistant-web`
+on 2026-10-05; GitHub redirects the old URL): OAuth sign-in, access management and an operations
+dashboard.
+The public conversation lives only in the storefront; this repository serves no public chat.
+Public repository; all rights reserved (see `LICENSE`). Never commit secrets,
+private operations details or other repositories' internals.
 
-- English for code, docs and commits. Customer copy is neutral Latin American Spanish with "tú",
-  matching the storefront (`src/shared/i18n/copy.ts`).
+- English for code, docs and commits. UI copy is neutral Spanish with "tú".
 - Node from `.nvmrc` (24.21.0); restore with `npm ci`. Next.js 16 App Router, React 19, strict
-  TypeScript 7 (the only type checker, also used by `next build`), Tailwind 4 with owned shadcn-style
-  primitives, Biome.
+  TypeScript 7, Tailwind 4 with owned primitives, Better Auth on PostgreSQL, Biome.
 - Read [docs/architecture.md](docs/architecture.md) before changing behavior and
   [docs/design-system.md](docs/design-system.md) before changing UI.
 
+## Backoffice rules
+
+- Access only through Better Auth OAuth (Google, GitHub): no passwords, no public sign-up, no
+  domain-based access, no implicit account linking. Admission rules live in
+  `src/features/auth/application/access.ts`; never move them into UI code.
+- Every page and server action re-checks the role server-side (`requireActor`). No credentials,
+  sessions or tokens in `localStorage`, URLs (except the one-time invitation link) or logs.
+- Operations data comes only from the API's private summary through `src/server/operations.ts`;
+  validate it, show missing values as "No disponible", label fixture data as synthetic, and never
+  display prompts, answers, buyer data, cookies or secrets.
+- Schema changes are new files in `migrations/` (append-only); run `npm run test:db`.
+
 ## Non-negotiables
 
-- The assistant is advisory and read-only: no checkout, payment, order or cart features without a
-  separately approved capability. Purchase actions link to the storefront's purchase section.
-- Never display invented prices, ratings, discounts, stock, urgency or testimonials. Prices appear
-  only when the API sends `price` (it omits unverified prices), always with its note and date.
-- Treat API payloads, answer text, URLs and postMessage data as untrusted: validate at the adapter
-  or protocol boundary; render answer text only through `RichTextView` (no HTML, no auto-linking);
-  every URL passes `domain/links.ts`.
-- No credentials, CSRF tokens or conversation text in URLs, storage, logs or postMessage. Never use
-  `"*"` as a postMessage target.
+- Treat API payloads and anything from the network as untrusted: validate at the adapter boundary.
 - No tracking, analytics, session replay or third-party feedback services.
-- Consume the pinned API contract (`contracts/api/`, `contracts/source.json`); do not invent
-  endpoints, events or auth behavior. Mocks must say they are mocks.
+- Consume only pinned, committed contracts (`contracts/ops/`, `contracts/ops/source.json`); do not
+  invent endpoints, fields or auth behavior. Mocks and fixtures must say they are synthetic.
 - Architecture boundaries are enforced by `scripts/check-boundaries.ts` (run in `npm test`).
 - Other repositories (storefront, API, portfolio, vps-ops) are read-only references. Never import
   from them at runtime or edit their working trees.
@@ -39,10 +43,9 @@ secondary demo/testing surface. Public repository; source visible, all rights re
   working agreement (no branch-policy automation); rulesets enforce PRs and Required checks.
   Nothing is deployed without explicit owner authorization. Preserve
   other agents' uncommitted work; never reset or stash it.
-- Before a PR: `npm run check` (lint, typecheck, unit + contract + boundaries, security, docs,
-  skills, build) and `npm run test:browser`. Inspect real screenshots for UI changes, at embedded
-  panel sizes through the harness — not only full-page `/embed`.
-- The deterministic suite owns ports 3207 (proxy), 3208 (web), 3210 (harness), 8207 (mock API).
+- Before a PR: `npm run check`, `npm run test:db` and `npm run test:browser`. Inspect the real
+  screenshots in `docs/verification/backoffice/` for UI changes (desktop, dark, mobile).
+- Browser suite ports: 3241 (web), 8237 (mock ops), 8238 (fake IdP).
 - Paid model calls, production actions, DNS and storefront changes need separate explicit authority.
 - Skills live in `.agents/skills/` (canonical); `.claude/skills/` adapters point to them. A skill is
   a procedure, never an authorization.

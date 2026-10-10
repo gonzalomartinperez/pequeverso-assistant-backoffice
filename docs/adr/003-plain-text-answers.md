@@ -1,6 +1,7 @@
 # ADR 003 — Owned renderer for the API's plain-text answers
 
-**Status:** accepted (2026-09-27)
+**Status:** superseded (2026-10-05). The public conversation moved into the storefront
+(native assistant); this repository is now the private backoffice and serves no chat.
 
 **Context.** The API contract states that `content` is plain text that may contain `**bold**` and
 `- ` list lines, to be rendered as text and never as HTML. A Markdown library would accept far more

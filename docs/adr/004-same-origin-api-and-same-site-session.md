@@ -1,6 +1,7 @@
 # ADR 004 — Same-origin API and same-site session
 
-**Status:** proposed (depends on domain approval)
+**Status:** superseded (2026-10-05). The public conversation moved into the storefront
+(native assistant); this repository is now the private backoffice and serves no chat.
 
 **Context.** The API issues an HttpOnly session cookie and expects a CSRF token in memory. Browsers
 increasingly block third-party cookies in iframes.

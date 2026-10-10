@@ -1,136 +1,151 @@
 # Verification
 
-Measured facts are separated from visual judgment. Everything here ran against the deterministic
-**mock** API and the local storefront **harness**; nothing ran against the real API, a real
-storefront or production.
+## Backoffice
 
-## Environment
-
-WSL2 (Linux 6.18), Node 24.21.0, Next.js 16.3.6, TypeScript 7.0.2, Playwright 1.63.0
-(Chromium 1243, Firefox 1543, WebKit 2359), Docker 29.1.3. Date: 2026-09-27.
-
-## Automated results (local)
+Run on 2026-10-05 (WSL2, Node 24.21.0, Next.js 16.3.6, TypeScript 7.0.2, Better Auth 1.7.7,
+Recharts 3.10.1, Playwright 1.63.0, Docker 29.1.3, PostgreSQL 17.6 and 18.4 in containers).
 
 | Suite | Command | Result |
 |---|---|---|
-| Lint/format | `npm run lint` | Biome: 0 errors, 0 warnings |
-| Types | `npm run typecheck` | TypeScript 7.0.2: 0 errors (app, tests, scripts, harness host) |
-| Unit, contract, boundaries | `npm test` | 11/11 pinned artifacts; 48/48 tests; 40 modules, 0 boundary violations |
-| Repository checks | `security:check`, `docs:check`, `skills:check` | 0 findings / 0 missing links / 4 skills, 0 problems |
-| Build | `npm run build` | passes; TypeScript run by Next's CLI checker |
-| Browser | `npm run test:browser` | **107 passed, 6 skipped, 0 failed** (Chromium, Firefox, WebKit, Pixel 7, iPhone 15) |
+| Types, lint, boundaries | `npm run typecheck`, `npm run lint`, `npm test` | 0 errors; 69 unit tests (access, ops contract 1.2, bounded body reading, config, CSP, fixture safety); 0 boundary violations |
+| Schema drift + DB suite | `npm run test:db` (`DATABASE_URL` = disposable server) | 0 differences between `migrations/` and Better Auth; re-apply is a no-op; 17/17 integration tests on 17.6 (repeated 3×, stable) and on 18.4 (the CI image digest) |
+| Browser | `TEST_DATABASE_URL=… npm run test:browser` | 31 passed, 3 skipped (the live-API spec without `LIVE_OPS_URL`) in Chromium, Firefox, WebKit, mobile Chromium; axe WCAG 2.2 AA scans, CSP-violation listener |
+| Real API | `LIVE_OPS_URL=… npm run test:browser -- live-ops.spec.ts` | 3/3 engines against committed API `87fc109` (ops contract 1.2; `git archive`, fixture provider, 3 generated fixture answers incl. one in English); earlier also against `332d3c7` |
+| Image | `docker build`, run `--read-only --cap-drop ALL` | migrations applied as one-shot; `/healthz` 200; `/readyz` 200 with the database and 503 without it (then `/panel` → `/ingresar?error=unavailable` and the sign-in page shows the unavailable notice); uid 1000; ~66 MiB idle; ~97 MB image |
 
-Skips are intentional: the mobile-panel layout test on the three desktop projects, the
-frame-ancestors enforcement check outside Chromium, and WebKit's Shift+Tab step (see limitations).
+What the integration and browser suites prove, through the real Better Auth OAuth callback with a
+local fake identity provider and a real PostgreSQL: owner bootstrap; uninvited identities (also in
+the owner's domain) and unverified e-mails refused with no user row; invitation single use, bound
+to its e-mail, superseded, expired and revoked; no implicit account linking; viewer cannot open
+access management and gets no linking controls; revocation through a native modal dialog
+(Escape returns focus to the trigger, success to the section heading) ends the viewer's sessions
+on the next request; OAuth state mismatch, foreign Origin and foreign callback URLs refused; no e-mail/password endpoints; nothing auth-related in
+`localStorage`; neither the ops token nor the internal URL in the page; missing data rendered as
+"No disponible"; one daily reading shown without a trend chart.
 
-## Real API integration
+Not proven: real Google and GitHub OAuth apps, `__Secure-` cookies behind TLS, deployment on the
+VPS, real model costs (the API ran the fixture provider; its data is labelled synthetic).
 
-Joint verification against a **running** pequeverso-assistant-api (fixture provider, paid AI
-disabled), not the mock: **6/6 passed** in Chromium and WebKit (`npm run test:live`).
+Screenshots (inspected): `verification/backoffice/` — `sign-in.png`, `desktop-dashboard.png`,
+`desktop-dashboard-dark.png`, `desktop-dashboard-real-api.png`, `desktop-access.png`,
+`desktop-missing-data.png`, `desktop-unavailable.png`, `desktop-revoke-dialog.png`, `mobile-dashboard-top.png`,
+`mobile-dashboard-daily.png`.
 
-| Item | Value |
-|---|---|
-| API state | **Committed** `pequeverso-assistant-api` `develop` `dc4e4c6` (`git archive`), contract manifest `d163b6d7…` = the pinned contract. An earlier run against the same contract from the API's then-uncommitted tree also passed 6/6. |
-| API settings | `AI_PROVIDER=fixture`, `ALLOW_PAID_AI=false`, `FIXTURE_CHUNK_DELAY_MS=350`, `ALLOWED_ORIGINS=["http://localhost:3207"]`, SQLite in a scratch directory; `/health/ready` reported catalog revision `ae6d237877c2`, `price_status: verified` |
-| Web settings | production build, `STOREFRONT_ORIGIN=https://pequeverso.com`, `EMBED_ALLOWED_ORIGINS=http://localhost:3210` |
-| Covered | embedded streamed answer with verified price card, resources, sources and API follow-ups; stop → `run.cancelled` → retry; history restored after reload; same session in the standalone page; `DELETE /session` clears history |
+The former chat shells' verification record (2026-09-27) remains in the git history.
 
-Reproduce: run the API from a copy of its repository with the settings above on `:8000`, then
-`npm run build && npm run live:stack` and `npm run test:live`. Screenshot:
-`screenshots/live-chromium-embed-real-api.png`.
+## Continuation — 2026-10-10
 
-## Measurements
+The previous unit-test total was corrected to **69**: the original 2026-10-05
+[CI run](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/actions/runs/37290521328)
+reports 69 tests and 69 passes, as does the clean-checkout rerun below.
 
-Same WSL2 machine, which other workloads shared, so absolute times vary ±40 % between runs.
-Development-tool speed and browser performance are reported separately.
+Security fixes were reviewed against their primary releases: [Next 16.3.8](https://github.com/vercel/next.js/releases/tag/v16.3.8)
+and [source-map-js 1.2.2](https://github.com/7rulnik/source-map-js/releases/tag/v1.2.2).
+[PR #30](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/30)
+combines the patches because each separate update would leave the other advisory failing audit;
+it also incorporates the existing historical release ancestry without changing files.
 
-### TypeScript 7.0.2 vs 5.9.3 (developer tooling)
+| Verification | Result | Measured wall time |
+|---|---|---|
+| Fresh worktree, `nvm use && npm ci --no-audit --no-fund` | Node 24.21.0, locked install; source-map-js 1.2.2 installed | 31.76 s |
+| `npm run check` at security head `5d9fefc` | Lint, TypeScript, 69 unit tests, boundaries, public-files/docs/skills checks and Next 16.3.8 build pass | 60.67 s |
+| `npm audit --audit-level=moderate` | 0 vulnerabilities | command passed |
+| Local PostgreSQL 18.4 `npm run test:db` on pre-patch baseline | Schema drift 0; idempotent migration reapply; 17 integrations pass | 14.50 s |
+| Local hardened baseline image `sha256:31a56442bbe7d0edc9e5d67fafd6145f51f2ab65f6cd131c5233ceed69d3da2a` | UID 1000, read-only, no capabilities, fail-closed, migrations 2 then 0, health/readiness and private headers pass; database loss gives 503; idle 76.49 MiB | 16.69 s |
+| Security PR real CI | All required jobs pass; locked audit 0, database suite, exact hardened image and browser suite | 187 s workflow; see job times below |
+| Security PR browser suite | 31 passed, 3 live-API tests skipped; Chromium, Firefox, WebKit and mobile Chromium | 59.8 s test suite; 174 s complete job |
 
-Two isolated copies of the same source, identical lockfile except `typescript`; cold runs.
+[Security CI run 38012009025](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/actions/runs/38012009025)
+job durations from GitHub's actual start/end timestamps: static checks 23 s, database 26 s,
+workflow lint 15 s, history secret scan 8 s, exact production image plus smoke 121 s,
+backoffice browser job 174 s. These are measured runs, not promised future performance.
 
-| Measure | TypeScript 7.0.2 | TypeScript 5.9.3 | Finding |
-|---|---|---|---|
-| `tsc --noEmit`, whole project (3 runs) | 2.3 / 3.2 / 3.3 s | 7.3 / 9.6 / 6.3 s | ≈ 2.3× faster (median 3.2 s vs 7.3 s) |
-| Type-check step inside `next build` (6 interleaved builds) | 1.2 / 1.9 / 1.2 s | 8.7 / 14.3 / 5.5 s | 4–7× faster in every pair |
-| Whole `next build`, interleaved pairs | 68 / 110 / 60 s | 79 / 105 / 62 s | **within noise**: webpack compile (13–21 s both), page generation and tracing dominate; no total-build gain is claimed |
+The first local browser attempt ran alongside multiple storefront browsers/builds: 24 passed,
+two exceeded the existing 45 s total test timeout (Firefox invitation lifecycle, WebKit dark
+page), one was interrupted and five did not run. CPU pressure averaged 84.79% over 60 s with no
+memory pressure. After releasing the competing browser load, both failed cases passed unchanged:
+Firefox lifecycle 26.0 s (27.71 s wall), WebKit dark 16.4 s (17.66 s wall). This supports contention
+as the cause; the partial run is **not** counted as a green suite. The complete CI suite above
+passed without a test timeout change.
 
-A faster checker does not change what ships to browsers: the client bundle is identical.
+Fresh local desktop light/dark, access, confirmation dialog and unavailable/missing-data
+screenshots were inspected: no observed clipping, clear synthetic banner, honest missing values
+and visible focus. Original mobile captures were also inspected; the complete CI suite covers
+mobile again. Screenshot inspection does not prove production behavior.
 
-### Browser (production build, Chromium desktop)
+The API's committed `b9ffbdacd0a19f75e1909227fd71470f6873c24d` ops schema and example were compared
+with the pinned `87fc109` artifacts using `git show`: both are byte-identical (hashes in
+`contracts/ops/source.json`). No repin or contract migration is needed for these revisions.
 
-| Measure | Result |
-|---|---|
-| JavaScript loaded by `/embed` | 7 scripts, 528 KB raw / **157 KB gzip** (≈ 127 KB Next.js + React runtime, ≈ 30 KB this app: feature 16 KB, icons + primitives 12 KB, page 2.3 KB); `/` is the same within 1 KB. Legacy polyfills (40 KB gz) are not loaded by modern browsers. |
-| CSS | 30 KB raw (one file, Tailwind output) |
-| Streaming a 12-part answer in the embedded panel, native CPU | 0 long tasks, 0 ms total blocking time |
-| Same, 4× CPU throttling | 5 long tasks, max 131 ms, 164 ms total blocking time |
-| Event Timing, embedded interactions (type, send, minimize, reopen, expand, restore) | max keydown 16 ms / click 24 ms native; 96 ms / 48 ms at 4× throttling |
+Limits remain: no deployment, real Google/GitHub credentials, TLS/proxy cookies, real model calls
+or private-network integration was exercised here. The local baseline image is explicitly the
+pre-patch image; the security-patched exact image is verified by the linked CI run. Release and
+activation decisions require their own current checks and the deployment-contract smoke steps.
 
-Structural guarantees behind these numbers: the committed transcript is memoized and keeps the same
-props while tokens arrive (only the draft re-renders), answers are parsed by a linear-time parser,
-and no animation runs per token.
+### Trusted-proxy configuration regression
 
-### Production container
+The continuation review reproduced a production-config gap: the character-only IPv6 validator
+accepted `::::/32`, and numeric conversion accepted scientific notation such as `::1/1e2`.
+The parser now uses Node's `net.isIP` and decimal CIDR notation. It keeps the existing IPv4
+`/8`–`/32` and IPv6 `/16`–`/128` bounds; valid IPv4, IPv6 and mapped IPv6 literals are accepted.
+Ten focused configuration tests pass, covering malformed literals, notation and both width
+boundaries. The earlier 69-unit total above describes the security-patch revision; this change
+adds two configuration cases. Final runtime verification is recorded separately against the exact
+candidate commit and image, and required CI exercises the updated parser before merging.
 
-| Measure | Result |
-|---|---|
-| Image | 96 MB (`docker image inspect` size), `linux/amd64` |
-| Runtime | UID 1000, read-only root, `/tmp` + 32 MiB `.next/cache` tmpfs, all capabilities dropped, `healthy` |
-| Memory | ≈ 51 MiB idle; ≈ 224 MiB immediately after 400 concurrent page renders |
-| SIGTERM | exits at once with code 143 (signal); acceptable because the web tier holds no streams (SSE goes to the API) |
-| Headers | `/embed`: `frame-ancestors https://pequeverso.com`, `Cache-Control: private, no-store`, no `X-Frame-Options` |
+### Container quality continuation (2026-10-10)
 
-CI (GitHub Actions, PR #1): static checks, image build, and the full browser suite **against this
-image** — 107 passed, 6 skipped.
+Exact local runtime candidate source `da6691d7c7a9d1b43bb2db002289b70cc8a61194`, image
+`sha256:78d9adb782ae44263ea58a286fb132361f91bde706f9c0b92a885729ca1ed0ae`: official
+Node 24.21.0 base refreshed by immutable digest, PCRE2/liblzma/tzdata updates present, signed
+Debian `perl-base` patch pinned, unused global npm/npx/Corepack/Yarn removed. Application code,
+contracts and lockfile are unchanged from PR31 (71 units, 17 integrations, 31 browser passes).
+Later changes to host smoke/docs are excluded from the runtime build context.
 
-## Acceptance matrix
+Hardened exact-image fixture smoke passed in 15.64 s with app ceilings 384 MiB / 1 CPU / 128
+PIDs / no extra swap, 32 HTTP requests at concurrency 4, idle sample 58.3 MiB, and final cgroup
+high-water 109,895,680 bytes (104.8 MiB) including database loss. Startup was 2,230 ms and idle
+SIGTERM stop 300 ms with exit143, no SIGKILL/OOM. Durations use Linux monotonic uptime; an
+earlier wall-clock sample became negative after a WSL/NTP clock adjustment and was discarded.
+Next's installed shutdown handler closes HTTP/Next before explicitly returning143. This does
+not prove authenticated transactions drain during shutdown. The actual image probe against a
+hanging HTTP server failed in 2.139 s, within its separate Docker 5 s timeout.
 
-Embedded (primary) criteria are verified through the cross-origin harness at real panel sizes.
-✔ = automated test in all five projects unless noted; ◐ = partially / with a documented limit.
+A synthetic PostgreSQL custom dump was restored into a new isolated database: all canonical
+SQL data bytes matched before/after (only randomized PostgreSQL restrict markers excluded),
+including 2 users, 23 sessions, 3 invitations, 8 audit rows and 2 migration records. The same
+exact image validated migration checksums (0 pending), liveness200 and readiness200 against
+the restored database. This is a local fixture recovery proof; encrypted off-server backups,
+auth-secret recovery, real-provider login and production RPO/RTO remain untested.
 
-| Area | Criterion | Embedded | Standalone |
-|---|---|---|---|
-| Loading | Iframe created on first open, handshake, ready | ✔ | n/a |
-| Loading | Offline API → explanation + reconnect | ✔ | shared view |
-| Answer | Streamed answer, verified product card with price, note and date | ✔ | ✔ |
-| Answer | Sources disclosure, useful links, follow-up chips | ✔ | ✔ |
-| Answer | Price omitted when the API sends none (unit: API example) | ✔ | ✔ |
-| Safety | Foreign product URL dropped, unlisted links not rendered, answer text never linkified, markup shown as text | ✔ | shared view |
-| Streaming | Stop keeps partial text; retry succeeds | ✔ | shared view |
-| Streaming | Interrupted stream (EOF, stall ≥ 45 s) reported with partial text | ✔ (+ unit) | shared view |
-| Streaming | No forced scroll while rereading; jump-to-latest control | ✔ | shared view |
-| Failures | Failed run, busy refusal (question restored), expired session (notice + question restored) | ✔ | shared view |
-| Failures | Budget exhausted → questions disabled, support link, store usable | ✔ | shared view |
-| Failures | Iframe unreachable → host fallback; removal leaves the page working | ✔ (harness) | n/a |
-| Continuity | Minimize/reopen keeps the same document and conversation | ✔ | n/a |
-| Continuity | Expand/restore resizes without remount | ✔ (desktop) | n/a |
-| Continuity | Streaming continues while minimized; unread badge | ✔ | n/a |
-| Continuity | History restored after reload with one session request | ✔ | ✔ (shared session with embed) |
-| Keyboard | Enter opens; focus enters the frame; Escape minimizes and returns focus to the launcher | ✔ ◐ WebKit: composer needs a click/Tab | n/a |
-| Keyboard | Escape in the clear confirmation closes only it; focus returns | ✔ | ✔ (same control) |
-| Keyboard | Shift+Tab from composer reaches the follow-ups | ✔ Chromium/Firefox ◐ WebKit default | shared view |
-| Hidden panel | `inert`, out of tab order, animations paused, announcements silenced | ✔ | n/a |
-| Mobile | Near-full-viewport panel, composer on screen, targets ≥ 40–44 px | ✔ Pixel 7, iPhone 15 | ✔ |
-| Mobile | No auto-focus/keyboard pop on touch | ✔ | n/a |
-| Zoom/motion | 200 % zoom equivalent without horizontal scroll; no running animations with reduced motion | ✔ | — |
-| Themes | Light and dark; automated WCAG 2.2 A/AA scan clean in both | ✔ | ✔ |
-| Protocol | Invalid messages and a hostile sibling frame ignored | ✔ | n/a |
-| Headers | `/embed` frame-ancestors = allowlist, no XFO; other routes DENY | ✔ | ✔ |
-| Locale | Spanish (the only locale the storefront and API support) | ✔ | ✔ |
+Trivy 0.75.0 scanned the exact images with a current database. Baseline findings: 264 total,
+35 with available fixes; final: 228 OS findings, **0 with available fixes across all severity
+levels, including UNKNOWN**, and 0 Node package findings. Remaining raw severity counts are
+1 CRITICAL, 50 HIGH, 96 MEDIUM, 77 LOW and 4 UNKNOWN; they are visible, not silently accepted
+or suppressed. The remaining critical zlib CVE-2023-45853 is scoped by the
+[Debian security tracker](https://security-tracker.debian.org/tracker/CVE-2023-45853) to MiniZip
+which Bookworm does not build into these binary packages; exact-image `minizip` and
+`libminizip1` packages are absent. This package/source assessment does not erase scanner data
+or imply blanket acceptance of the other affected/deferred/will-not-fix OS findings.
 
-## Visual review (judgment, from rendered screenshots)
+Global installers occupied about 24 MiB in the baseline live filesystem. Removing them creates
+whiteouts in inherited layers; measured Docker metadata/CLI image size grew rather than shrank.
+No physical VPS disk saving or production capacity improvement is claimed. Shared base layers,
+finite log/image retention, persistent PostgreSQL backups and monitoring budgets belong to the
+authorized vps-ops handoff; no registry publication or VPS changes were performed.
 
-Findings fixed during review: dark text on the coral purchase button (a `tailwind-merge` /
-token-name collision), stretched avatar, half-width single product card in the expanded panel,
-avatar column wasting width on phones and the compact panel, spurious "jump to latest" button
-caused by a scroll race, duplicated failure + unavailable messages, empty hint row on touch.
+### Calendar boundary regression (2026-10-10)
 
-## Known limitations
+Release review found that a syntactically correct but impossible `daily.day` could reach the
+UTC formatter and crash the dashboard (`2026-99-99`), or silently roll over (`2026-02-30`).
+The adapter now requires an exact UTC calendar roundtrip for daily and optional budget days,
+and validates budget months with their first calendar day. Missing optional values stay null;
+the pinned API contracts and lockfile are unchanged. Invalid HTTP payloads become an unavailable
+reading before presentation. Four regression tests cover invalid days/months, leap years and
+safe display, missing budget values, and the HTTP failure boundary. The focused operations
+suite passes 22 tests; the full unit suite passes 75 tests. Production provider calls and real
+OAuth remain outside these fixture checks.
 
-- **WebKit focus:** WebKit ignores `focus()` inside a cross-origin frame without a user gesture
-  there, even after the host focuses the iframe. Focus reaches the frame document (Escape and Tab
-  work); the composer needs one click or Tab. Real Safari/iOS was not tested.
-- **WebKit Tab order:** like Safari's default, WebKit only tabs to form controls, so buttons are
-  skipped unless the user enables full keyboard access. Platform behavior, not app logic.
-- Screen-reader behavior (NVDA, VoiceOver, TalkBack) and real devices were **not** tested; axe scans
-  are not proof of accessibility.
+The optional live-API browser check requires exactly one completed fixture execution to be
+seeded before the suite. It now checks for that data row, so an empty bookkeeping result cannot
+pass merely because it has no table header.

@@ -124,7 +124,8 @@ WSL contention and filesystem/cache state can change latency; no production SLA 
   transaction/lock/error rates, checkpoint/write time, data/WAL bytes and host free space.
   Alert proposals: memory80%, disk free20%, backup older26 h, readiness failure2 min. WAL128MB
   is not a hard cap; monitor actual growth and investigate before storage runs out.
-- Budget live cluster + WAL + at least two dump/restore copies + encrypted staging + bounded
+- Budget the live cluster (PGDATA already includes pg_wal; do not add WAL a second time) +
+  at least two dump/restore copies + encrypted staging + bounded
   logs + current/rollback images/build cache. Do not sum requests as reservations or assume
   vps-ops' proposed6CPU/8GiB ceiling describes purchased hardware (capacity is currently null).
   Do not purge IAM history, delete the last usable backup or prune unrelated project artifacts.

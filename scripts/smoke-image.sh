@@ -70,6 +70,7 @@ code="$(curl --max-time 6 -sS -o /dev/null -w '%{http_code}' "http://127.0.0.1:$
 ! docker logs "$APP" 2>&1 | grep -q "$PW"
 
 # Bounded synthetic HTTP load, not authenticated-user or real-provider capacity.
+echo "before_load_stats=$(docker stats --no-stream --format '{{.MemUsage}} CPU={{.CPUPerc}} PIDs={{.PIDs}}' "$APP")"
 for _ in $(seq 1 8); do
   jobs=()
   for route in healthz readyz ingresar panel; do
@@ -91,4 +92,4 @@ docker stop --time 20 "$APP" >/dev/null
 echo "shutdown_ms=$(( $(date +%s%3N) - stopped_at ))"
 test "$(docker inspect --format '{{.State.OOMKilled}}' "$APP")" = false
 test "$(docker inspect --format '{{.State.ExitCode}}' "$APP")" = 0
-echo "image smoke passed: fail-closed, migrations idempotent, non-root read-only, ready/not-ready, private headers; idle $mem"
+echo "image smoke passed: fail-closed, migrations idempotent, non-root read-only, ready/not-ready, private headers; post-load memory $mem"

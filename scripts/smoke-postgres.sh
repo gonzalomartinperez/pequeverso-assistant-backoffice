@@ -123,12 +123,19 @@ SQL
     sleep .2
   done
   docker exec "$app" node -e "Promise.all(['healthz','readyz'].map(async p=>{const r=await fetch('http://localhost:3000/'+p,{signal:AbortSignal.timeout(2000)});if(r.status!==200)process.exitCode=1;console.log(p+'='+r.status)}))" > "$receipt/$mode-restored-ready.txt"
+  app_stopped=$(monotonic)
   docker stop --time 20 "$app" >/dev/null
+  printf 'restored_app_stop_seconds=%s\n' "$(elapsed "$app_stopped")" >> "$receipt/$mode-metrics.txt"
+  app_exit=$(docker inspect --format '{{.State.ExitCode}}/{{.State.OOMKilled}}' "$app")
+  [[ $app_exit == 0/false || $app_exit == 143/false ]]
+  printf 'restored_app_exit=%s\n' "$app_exit" >> "$receipt/$mode-metrics.txt"
   docker rm "$app" >/dev/null
   docker exec "$container" sh -c 'printf "final_before_stop_peak_bytes="; cat /sys/fs/cgroup/memory.peak' >> "$receipt/$mode-metrics.txt"
   stopped=$(monotonic)
   docker stop --time 20 "$container" >/dev/null
-  printf 'stop_seconds=%s\n' "$(elapsed "$stopped")" >> "$receipt/$mode-metrics.txt"
+  stop_elapsed=$(elapsed "$stopped")
+  printf 'stop_seconds=%s\n' "$stop_elapsed" >> "$receipt/$mode-metrics.txt"
+  awk -v duration="$stop_elapsed" 'BEGIN {exit !(duration>=0 && duration<=20)}'
   docker inspect --format 'exit_code={{.State.ExitCode}} oom_killed={{.State.OOMKilled}}' "$container" >> "$receipt/$mode-metrics.txt"
   [[ $(docker inspect --format '{{.State.ExitCode}}/{{.State.OOMKilled}}' "$container") == 0/false ]]
   docker start "$container" >/dev/null

@@ -92,3 +92,44 @@ Ten focused configuration tests pass, covering malformed literals, notation and 
 boundaries. The earlier 69-unit total above describes the security-patch revision; this change
 adds two configuration cases. Final runtime verification is recorded separately against the exact
 candidate commit and image, and required CI exercises the updated parser before merging.
+
+### Container quality continuation (2026-10-10)
+
+Exact local runtime candidate source `da6691d7c7a9d1b43bb2db002289b70cc8a61194`, image
+`sha256:78d9adb782ae44263ea58a286fb132361f91bde706f9c0b92a885729ca1ed0ae`: official
+Node 24.21.0 base refreshed by immutable digest, PCRE2/liblzma/tzdata updates present, signed
+Debian `perl-base` patch pinned, unused global npm/npx/Corepack/Yarn removed. Application code,
+contracts and lockfile are unchanged from PR31 (71 units, 17 integrations, 31 browser passes).
+Later changes to host smoke/docs are excluded from the runtime build context.
+
+Hardened exact-image fixture smoke passed in 15.64 s with app ceilings 384 MiB / 1 CPU / 128
+PIDs / no extra swap, 32 HTTP requests at concurrency 4, idle sample 58.3 MiB, and final cgroup
+high-water 109,895,680 bytes (104.8 MiB) including database loss. Startup was 2,230 ms and idle
+SIGTERM stop 300 ms with exit143, no SIGKILL/OOM. Durations use Linux monotonic uptime; an
+earlier wall-clock sample became negative after a WSL/NTP clock adjustment and was discarded.
+Next's installed shutdown handler closes HTTP/Next before explicitly returning143. This does
+not prove authenticated transactions drain during shutdown. The actual image probe against a
+hanging HTTP server failed in 2.139 s, within its separate Docker 5 s timeout.
+
+A synthetic PostgreSQL custom dump was restored into a new isolated database: all canonical
+SQL data bytes matched before/after (only randomized PostgreSQL restrict markers excluded),
+including 2 users, 23 sessions, 3 invitations, 8 audit rows and 2 migration records. The same
+exact image validated migration checksums (0 pending), liveness200 and readiness200 against
+the restored database. This is a local fixture recovery proof; encrypted off-server backups,
+auth-secret recovery, real-provider login and production RPO/RTO remain untested.
+
+Trivy 0.75.0 scanned the exact images with a current database. Baseline findings: 264 total,
+35 with available fixes; final: 228 OS findings, **0 with available fixes across all severity
+levels, including UNKNOWN**, and 0 Node package findings. Remaining raw severity counts are
+1 CRITICAL, 50 HIGH, 96 MEDIUM, 77 LOW and 4 UNKNOWN; they are visible, not silently accepted
+or suppressed. The remaining critical zlib CVE-2023-45853 is scoped by the
+[Debian security tracker](https://security-tracker.debian.org/tracker/CVE-2023-45853) to MiniZip
+which Bookworm does not build into these binary packages; exact-image `minizip` and
+`libminizip1` packages are absent. This package/source assessment does not erase scanner data
+or imply blanket acceptance of the other affected/deferred/will-not-fix OS findings.
+
+Global installers occupied about 24 MiB in the baseline live filesystem. Removing them creates
+whiteouts in inherited layers; measured Docker metadata/CLI image size grew rather than shrank.
+No physical VPS disk saving or production capacity improvement is claimed. Shared base layers,
+finite log/image retention, persistent PostgreSQL backups and monitoring budgets belong to the
+authorized vps-ops handoff; no registry publication or VPS changes were performed.

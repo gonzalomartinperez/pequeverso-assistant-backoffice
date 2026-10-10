@@ -17,6 +17,8 @@ cleanup() {
   docker network rm "$NET" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
+# Linux monotonic uptime avoids NTP/WSL wall-clock adjustments in duration measurements.
+monotonic_ms() { awk '{printf "%.0f", $1 * 1000}' /proc/uptime; }
 hardened=(--read-only --memory 384m --memory-swap 384m --cpus 1 --pids-limit 128
   --log-driver local --log-opt max-size=5m --log-opt max-file=2
   --tmpfs /tmp:rw,nosuid,nodev,size=32m,mode=1777 --tmpfs /app/.next/cache:uid=1000,gid=1000,mode=0700,size=32m
@@ -55,12 +57,12 @@ docker run --rm "${hardened[@]}" --network "$NET" -e DATABASE_URL="$URL" "$IMAGE
 docker run --rm "${hardened[@]}" --network "$NET" -e DATABASE_URL="$URL" "$IMAGE" node scripts/db-migrate.ts
 
 # 3. Configured start: non-root, healthy, ready, private headers.
-started_at="$(date +%s%3N)"
+started_at="$(monotonic_ms)"
 docker run -d --name "$APP" "${hardened[@]}" --network "$NET" -p "127.0.0.1:$PORT:3000" "${config[@]}" "$IMAGE" >/dev/null
 test "$(docker exec "$APP" id -u)" != 0
 for _ in $(seq 1 40); do curl --max-time 3 -fsS "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1 && break; sleep 1; done
 curl --max-time 3 -fsS "http://127.0.0.1:$PORT/readyz" | grep -q '"ready"'
-echo "startup_ms=$(( $(date +%s%3N) - started_at ))"
+echo "startup_ms=$(( $(monotonic_ms) - started_at ))"
 headers="$(curl --max-time 6 -sS -o /dev/null -D - "http://127.0.0.1:$PORT/ingresar")"
 grep -qi '^content-security-policy:.*frame-ancestors .none.' <<<"$headers"
 grep -qi '^cache-control:.*no-store' <<<"$headers"
@@ -87,9 +89,10 @@ docker stop "$DB" >/dev/null
 code="$(curl --max-time 6 -sS -o /tmp/pv-bo-ready.json -w '%{http_code}' "http://127.0.0.1:$PORT/readyz")"
 test "$code" = 503 && grep -q '"not_ready"' /tmp/pv-bo-ready.json
 mem="$(docker stats --no-stream --format '{{.MemUsage}}' "$APP")"
-stopped_at="$(date +%s%3N)"
+echo "cgroup_memory_peak_after_db_loss_bytes=$(docker exec "$APP" sh -c 'cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo unavailable')"
+stopped_at="$(monotonic_ms)"
 docker stop --time 20 "$APP" >/dev/null
-echo "shutdown_ms=$(( $(date +%s%3N) - stopped_at ))"
+echo "shutdown_ms=$(( $(monotonic_ms) - stopped_at ))"
 test "$(docker inspect --format '{{.State.OOMKilled}}' "$APP")" = false
 exit_code="$(docker inspect --format '{{.State.ExitCode}}' "$APP")"
 echo "shutdown_exit_code=$exit_code"

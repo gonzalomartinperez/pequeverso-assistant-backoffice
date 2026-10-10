@@ -15,9 +15,9 @@ route, database or Coolify resource exists for the backoffice.
 | Port | `3000/tcp` on `0.0.0.0` (`PORT`, `HOSTNAME`) |
 | Filesystem | Read-only root tested; writable tmpfs `/tmp` and `/app/.next/cache` (`uid=1000,gid=1000,mode=0700,size=32m`) |
 | State | None in the container. Identity and access live in PostgreSQL (below). |
-| Shutdown | SIGTERM ends the process (no long-lived streams); a 20 s stop grace period is ample |
-| Resources | Measured locally: ~64 MiB right after start (read-only, production config). Proposal: request 0.1 CPU / 128 MB, limit 1 CPU / 384 MB; confirm under real use |
-| Size | ~97 MB uncompressed (local build, 2026-10-05) |
+| Shutdown | Next handles SIGTERM by closing HTTP/Next and exiting 143; use a 20 s stop grace period. Smoke verifies idle stop without SIGKILL/OOM; in-flight authenticated transaction drainage remains untested |
+| Resources | Local bounded synthetic fixture: idle 58.3 MiB, cgroup high-water 104.8 MiB including database loss. Proposal: request 0.1 CPU / 128 MiB, limit 1 CPU / 384 MiB; real-provider and authenticated load remain untested |
+| Size | Docker 29 inspect `Size`: 98,914,468 bytes; CLI image listing: 417 MB. Baseline fields were 96,552,397 bytes / 405 MB. No image/disk size reduction is claimed; global installers are absent from the live filesystem but inherited layers remain |
 
 The immutable official base keeps Node 24.21.0. Its refreshed Debian PCRE2 package is
 `10.42-1+deb12u2`; runtime installs the available signed Debian security package

@@ -188,7 +188,8 @@ function Availability({ summary }: { summary: OpsSummary }) {
             {f.ms(summary.windows.find((w) => w.hours === 24)?.latency.firstDelta?.p95 ?? null)}
           </p>
           <p className="mt-2 text-tiny text-muted">
-            Desde la aceptación hasta el primer fragmento enviado; no hasta la respuesta final.
+            Desde la aceptación hasta el primer fragmento emitido por la API; no hasta la respuesta
+            final.
           </p>
         </div>
       </div>
@@ -400,7 +401,7 @@ function Runs({ window }: { window: RunWindow }) {
                 value: window.latency.firstDelta
                   ? `${f.ms(window.latency.firstDelta.p50)} / ${f.ms(window.latency.firstDelta.p95)}`
                   : f.UNAVAILABLE,
-                hint: "Desde que la API acepta la pregunta hasta el primer fragmento enviado.",
+                hint: "Desde que la API acepta la pregunta hasta el primer fragmento emitido por la API.",
               },
               {
                 term: "Respuesta completa (p50 / p95)",

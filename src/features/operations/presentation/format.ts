@@ -29,6 +29,8 @@ export function usd(value: Money): string {
   if (value == null) return UNAVAILABLE;
   const amount = Number(value);
   if (!Number.isFinite(amount)) return UNAVAILABLE;
+  if (amount > 0 && amount < 0.0001) return "< US$ 0,0001";
+  if (amount < 0 && amount > -0.0001) return "> −US$ 0,0001";
   const digits = Math.abs(amount) < 1 ? 4 : 2;
   return `US$ ${new Intl.NumberFormat("es", {
     minimumFractionDigits: digits,

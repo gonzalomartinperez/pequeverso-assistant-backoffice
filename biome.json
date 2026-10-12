@@ -12,7 +12,9 @@
       "!next-env.d.ts",
       "!public",
       "!contracts/ops/ops.schema.json",
-      "!contracts/ops/ops.summary.example.json"
+      "!contracts/ops/ops.summary.example.json",
+      "!contracts/telemetry/ops.telemetry.schema.json",
+      "!contracts/telemetry/ops.telemetry.example.json"
     ]
   },
   "formatter": {

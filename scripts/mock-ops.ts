@@ -13,6 +13,12 @@ const fixture = JSON.parse(
     "utf8",
   ),
 ) as Record<string, unknown>;
+const telemetry = JSON.parse(
+  readFileSync(
+    path.resolve(import.meta.dirname, "..", "contracts/telemetry/ops.telemetry.example.json"),
+    "utf8",
+  ),
+) as Record<string, unknown>;
 let variant = "full";
 
 function payload(): unknown {
@@ -51,7 +57,8 @@ createServer((request, response) => {
     response.writeHead(204).end();
     return;
   }
-  if (url.pathname !== "/internal/v1/ops/summary" || request.method !== "GET") {
+  const isTelemetry = url.pathname === "/internal/v1/ops/telemetry";
+  if ((!isTelemetry && url.pathname !== "/internal/v1/ops/summary") || request.method !== "GET") {
     response.writeHead(404).end();
     return;
   }
@@ -65,7 +72,19 @@ createServer((request, response) => {
       .end('{"error":{"code":"unauthorized"}}');
     return;
   }
+  if (isTelemetry && variant === "telemetry-off") {
+    response.writeHead(404).end();
+    return;
+  }
   response
     .writeHead(200, { "content-type": "application/json", "cache-control": "no-store" })
-    .end(JSON.stringify(payload()));
+    .end(
+      JSON.stringify(
+        isTelemetry
+          ? variant === "telemetry-invalid"
+            ? { schema_version: "99" }
+            : telemetry
+          : payload(),
+      ),
+    );
 }).listen(port, "127.0.0.1", () => console.log(`mock ops (SYNTHETIC) on http://127.0.0.1:${port}`));

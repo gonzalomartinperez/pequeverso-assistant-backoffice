@@ -1,0 +1,218 @@
+{
+  "title": "Pequeverso · backoffice privado",
+  "uid": "pequeverso-backoffice",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": ["pequeverso", "private", "proposal"],
+  "timezone": "utc",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Prometheus privado"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Estado del scrape privado",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=\"pequeverso-backoffice\"}",
+          "legendFormat": "{{operation}} · {{outcome}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No disponible"
+        },
+        "overrides": []
+      },
+      "description": "Muestras privadas del backoffice. No mide uptime del proveedor, salud de compradores ni factura. RSS sólo proceso; métricas se reinician con el proceso."
+    },
+    {
+      "id": 2,
+      "title": "Memoria RSS del proceso",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "pequeverso_backoffice_process_resident_memory_bytes",
+          "legendFormat": "{{operation}} · {{outcome}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "No disponible"
+        },
+        "overrides": []
+      },
+      "description": "Muestras privadas del backoffice. No mide uptime del proveedor, salud de compradores ni factura. RSS sólo proceso; métricas se reinician con el proceso."
+    },
+    {
+      "id": 3,
+      "title": "Lecturas de operaciones por segundo",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (operation,outcome) (rate(pequeverso_backoffice_operation_total[5m]))",
+          "legendFormat": "{{operation}} · {{outcome}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "noValue": "No disponible"
+        },
+        "overrides": []
+      },
+      "description": "Muestras privadas del backoffice. No mide uptime del proveedor, salud de compradores ni factura. RSS sólo proceso; métricas se reinician con el proceso."
+    },
+    {
+      "id": 4,
+      "title": "Latencia p95 de operaciones",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le,operation) (rate(pequeverso_backoffice_operation_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{operation}} · {{outcome}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "No disponible"
+        },
+        "overrides": []
+      },
+      "description": "Muestras privadas del backoffice. No mide uptime del proveedor, salud de compradores ni factura. RSS sólo proceso; métricas se reinician con el proceso."
+    },
+    {
+      "id": 5,
+      "title": "Exportador de trazas configurado",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "pequeverso_backoffice_trace_export_enabled"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "No disponible",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Desactivado"
+                },
+                "1": {
+                  "text": "Configurado"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "description": "Configurado no significa collector accesible ni entrega garantizada. Backend-only y opcional."
+    },
+    {
+      "id": 6,
+      "title": "Exportaciones OTLP por segundo",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (outcome) (rate(pequeverso_backoffice_trace_export_total[5m]))",
+          "legendFormat": "{{outcome}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "noValue": "No disponible"
+        },
+        "overrides": []
+      },
+      "description": "Resultados de lotes, no spans entregados ni pérdidas de cola. No reconstruye un ledger financiero."
+    }
+  ]
+}

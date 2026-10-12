@@ -1,8 +1,9 @@
 import { CircleAlert, CircleCheck, FlaskConical, TriangleAlert } from "lucide-react";
 import { Badge } from "@/shared/ui/badge";
+import { LinkButton } from "@/shared/ui/button";
 import { Callout } from "@/shared/ui/callout";
 import { Facts, Section, TableRegion, td, th } from "@/shared/ui/sections";
-import type { OpsReading } from "../application/ports";
+import type { OpsReading, TelemetryReading } from "../application/ports";
 import {
   acceptedRuns,
   budgetUse,
@@ -14,6 +15,7 @@ import {
 } from "../domain/summary";
 import { DailyCharts } from "./daily-charts";
 import * as f from "./format";
+import { Telemetry } from "./telemetry";
 
 const UNAVAILABLE_READING: Record<Exclude<OpsReading, { status: "ok" }>["reason"], string> = {
   not_configured: "El backoffice no tiene configurada la conexión privada con la API.",
@@ -22,18 +24,29 @@ const UNAVAILABLE_READING: Record<Exclude<OpsReading, { status: "ok" }>["reason"
   invalid: "La API respondió con datos que no cumplen el contrato.",
 };
 
-export function Dashboard({ reading }: { reading: OpsReading }) {
+export function Dashboard({
+  reading,
+  telemetry,
+}: {
+  reading: OpsReading;
+  telemetry: TelemetryReading;
+}) {
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-heading">Estado del asistente</h1>
-        <p className="text-small text-muted">
-          Lectura del {f.when(reading.fetchedAt)}. Sin contenido de conversaciones: solo agregados
-          operativos.
-        </p>
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-heading">Estado del asistente</h1>
+          <p className="text-small text-muted">
+            Lectura del {f.when(reading.fetchedAt)}. Sin contenido de conversaciones: solo agregados
+            operativos.
+          </p>
+        </div>
+        <LinkButton href="/panel" variant="outline" size="sm">
+          Actualizar lectura
+        </LinkButton>
       </header>
       {reading.status === "ok" ? (
-        <Summary summary={reading.summary} now={reading.fetchedAt} />
+        <Summary summary={reading.summary} now={reading.fetchedAt} telemetry={telemetry} />
       ) : (
         <Callout tone="danger" role="alert">
           <CircleAlert aria-hidden="true" />
@@ -43,11 +56,20 @@ export function Dashboard({ reading }: { reading: OpsReading }) {
           </div>
         </Callout>
       )}
+      {reading.status !== "ok" ? <Telemetry reading={telemetry} /> : null}
     </div>
   );
 }
 
-function Summary({ summary, now }: { summary: OpsSummary; now: Date }) {
+function Summary({
+  summary,
+  now,
+  telemetry,
+}: {
+  summary: OpsSummary;
+  now: Date;
+  telemetry: TelemetryReading;
+}) {
   return (
     <>
       {summary.service.synthetic ? (
@@ -59,8 +81,27 @@ function Summary({ summary, now }: { summary: OpsSummary; now: Date }) {
           </p>
         </Callout>
       ) : null}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Availability summary={summary} />
+      <Availability summary={summary} />
+      <Telemetry reading={telemetry} />
+      <nav aria-label="Secciones del estado" className="flex flex-wrap gap-2">
+        {[
+          ["budget", "Presupuesto"],
+          ["runs-24", "Solicitudes"],
+          ["daily", "Actividad"],
+          ["recent", "Últimas ejecuciones"],
+        ]
+          .filter(([id]) => id !== "runs-24" || summary.windows.some((w) => w.hours === 24))
+          .map(([id, label]) => (
+            <a
+              key={id}
+              href={`#${id}-title`}
+              className="inline-flex min-h-11 items-center rounded-pill border border-line px-4 text-small font-bold text-link focus-visible:outline-3 focus-visible:outline-ring"
+            >
+              {label}
+            </a>
+          ))}
+      </nav>
+      <div className="grid gap-6 lg:grid-cols-2">
         <Service summary={summary} />
         <Catalog summary={summary} now={now} />
       </div>
@@ -87,7 +128,11 @@ function Summary({ summary, now }: { summary: OpsSummary; now: Date }) {
 function Availability({ summary }: { summary: OpsSummary }) {
   const available = summary.availability.status === "available";
   return (
-    <Section id="availability" title="Disponibilidad">
+    <Section
+      id="availability"
+      title="¿Puede responder ahora?"
+      description="Estado declarado por la API en esta lectura, no un historial de uptime ni una comprobación del proveedor."
+    >
       <p className="flex items-center gap-2 text-title text-ink">
         {available ? (
           <CircleCheck aria-hidden="true" className="size-5 text-icon" />
@@ -99,6 +144,26 @@ function Availability({ summary }: { summary: OpsSummary }) {
       {!available ? (
         <p className="mt-2 text-small text-copy">{f.reason(summary.availability.reason)}</p>
       ) : null}
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="rounded-md bg-surface-sunken p-4">
+          <p className="text-tiny font-bold text-muted">PRESUPUESTO RESTANTE DEL MES</p>
+          <p className="mt-1 text-title text-ink">
+            {f.usd(summary.budget?.remainingMonth ?? null)}
+          </p>
+          <p className="mt-1 text-tiny text-muted">
+            Reservas pendientes y estimadas incluidas en el cálculo de la API.
+          </p>
+        </div>
+        <div className="rounded-md bg-surface-sunken p-4">
+          <p className="text-tiny font-bold text-muted">RESPUESTAS COMPLETADAS · 24 H</p>
+          <p className="mt-1 text-title text-ink">
+            {f.count(summary.windows.find((w) => w.hours === 24)?.runs.completed ?? null)}
+          </p>
+          <p className="mt-1 text-tiny text-muted">
+            No mide disponibilidad; las omisiones no se convierten en cero.
+          </p>
+        </div>
+      </div>
       <p className="mt-3 text-tiny text-muted">
         Asistente habilitado en la API:{" "}
         {summary.service.assistantEnabled == null
@@ -194,7 +259,7 @@ function Budget({ summary }: { summary: OpsSummary }) {
     <Section
       id="budget"
       title={`Presupuesto de ${b.month ?? "este mes"}`}
-      description="Confirmado: costo calculado con el uso informado por el proveedor. Estimado: ejecuciones sin informe de uso; se conserva la reserva de peor caso. Pendiente: reservas de ejecuciones en curso."
+      description="Con uso informado (confirmado en el ledger): costo estimado con los tokens reportados y las tarifas versionadas, no un importe reconciliado con la factura. Estimado: uso desconocido; se conserva la reserva de peor caso. Pendiente: reservas de ejecuciones en curso."
     >
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-3 text-small">
@@ -226,7 +291,7 @@ function Budget({ summary }: { summary: OpsSummary }) {
                   Período
                 </th>
                 <th scope="col" className={th}>
-                  Confirmado
+                  Con uso informado
                 </th>
                 <th scope="col" className={th}>
                   Estimado
@@ -414,7 +479,7 @@ function Daily({ summary }: { summary: OpsSummary }) {
                     Rechazadas
                   </th>
                   <th scope="col" className={th}>
-                    Confirmado
+                    Con uso informado
                   </th>
                   <th scope="col" className={th}>
                     Estimado

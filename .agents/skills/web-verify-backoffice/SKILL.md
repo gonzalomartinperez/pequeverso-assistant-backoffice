@@ -10,7 +10,7 @@ not available, stop and report the database and browser suites as not run; do no
 
 1. `npm run check` (Biome, TypeScript 7, unit/contract/boundaries, file/docs/skills checks, build).
 2. Start a disposable server, e.g. `docker run -d --rm --name bo-pg -e POSTGRES_USER=test
-   -e POSTGRES_PASSWORD=test -p 127.0.0.1:55432:5432 postgres:17.6-alpine`, then
+   -e POSTGRES_PASSWORD=test -p 127.0.0.1:55432:5432 postgres:18.6-bookworm@sha256:9551dd5bf356409a21b31248f49b33bba9bb1877365f3a7e933aecd9af3cf52d`, then
    `DATABASE_URL=postgres://test:test@127.0.0.1:55432/postgres npm run test:db`. Expect 0 schema
    differences and every integration test passing.
 3. `TEST_DATABASE_URL=… npm run test:browser` (ports 3241, 8237, 8238 must be free). Expect all

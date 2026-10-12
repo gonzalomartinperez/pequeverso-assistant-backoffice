@@ -120,3 +120,35 @@ the deterministic tests so far; it will be observed live on the first such Depen
 - No approving review is required by the rulesets (single maintainer; GitHub forbids self-approval).
   If a required review is introduced later, unattended merges stop until a reviewer approves — the
   policy must not be replaced by bot approvals.
+
+## Runtime support inventory (2026-10-12)
+
+"LTS" is used only where the upstream publishes that policy; a maintained stable library
+is not promoted to an invented LTS product. Application/infra owners must periodically
+review security advisories, supported versions and exact new artifacts.
+
+| Component | Project revision | Upstream support classification |
+|---|---|---|
+| Node / npm build tooling | Node24.21.0, bundled npm11.19.0 | [Node24 LTS](https://nodejs.org/en/about/previous-releases); npm has its own stable releases, not a separate guaranteed LTS window |
+| Next.js | 16.3.8 | [16.x Active LTS](https://nextjs.org/support-policy); pinned patch, recheck security updates |
+| PostgreSQL image/tools | 18.6-bookworm, immutable linux/amd64 manifest in Dockerfile.postgres | [Supported major18 until2030-11-14](https://www.postgresql.org/support/versioning/); current stable minor18.6, not an upstream product called LTS |
+| Debian runtime | bookworm slim + exact signed packages | [Debian LTS](https://www.debian.org/lts/), architecture/package coverage varies; residual CVEs remain activation decisions |
+| React / React DOM |19.3.0 | [Stable React19](https://react.dev/versions); no published separate LTS guarantee |
+| Better Auth |1.7.7 | [Stable upstream](https://www.better-auth.com/docs/introduction); pinned and OAuth/schema regression tested, no invented LTS |
+| pg |8.23.1 | [Maintained stable](https://node-postgres.com/); no LTS window advertised |
+| OpenTelemetry JS |API1.9.1,resources/traceSDK2.12.0,OTLPHTTP0.223.0 | [Official API/SDK signal stability](https://opentelemetry.io/docs/languages/js/); exporter0.x release line is experimental semver, not LTS; manual bounded usage explicitly reviewed |
+| TypeScript |7.0.2 | [Stable compiler releases](https://www.typescriptlang.org/docs/); no separate LTS policy |
+| Tailwind/PostCSS |4.3.3 | [Stable tooling](https://tailwindcss.com/docs); no separate LTS policy |
+| Playwright / axe |1.63.0 /4.13.0 | [Stable Playwright](https://playwright.dev/docs/release-notes) and [axe](https://github.com/dequelabs/axe-core/releases); test-only, no invented LTS |
+| Biome |2.5.15 | [Stable formatter/linter](https://biomejs.dev/); test/build-only, no separate LTS |
+| lucide / Recharts |1.50.0 /3.10.1 | [Stable icons](https://lucide.dev/) /[charts](https://recharts.github.io/); maintained libraries, no LTS promise |
+| Owned primitives |CVA0.7.1,clsx2.1.1,tailwind-merge3.7.0,server-only0.0.1 | Stable exact dependencies reviewed in lockfile; no LTS promise; CVA/server-only0.x need explicit compatibility review |
+| Docker / Grafana / Prometheus / collector |Infrastructure selected versions pending | Project does not install or upgrade a shared stack; vps-ops must select official supported versions and validate supplied BO artifacts |
+
+The portfolio frontend at immutable `aed8ea710c8b847ddc9066aaef5ce48d3793b494`
+was read via `git show` (AGENTS/CLAUDE/architecture/deployment/Dockerfile); its Next standalone,
+exec Node, read-only tmpfs and owned-image separation confirm the same runtime pattern.
+No portfolio assets, identity, live working tree or infrastructure configuration were copied.
+The BO migration runner uses native Node24 TypeScript stripping and pg; any distroless
+candidate must preserve that command, SSR dependencies, uid, health/readiness, PostgreSQL
+TLS roots and writable cache bounds. Do not select a smaller base from nominal size alone.

@@ -6,7 +6,7 @@
 the backoffice adds invitations and an access audit trail. This data must stay separate from the
 public assistant (anonymous buyer sessions live in the API's SQLite) and must be backed up.
 
-**Decision.** A dedicated PostgreSQL database (tested on 17.6 and 18.4) on the VPS private
+**Decision.** A dedicated PostgreSQL database (historically tested on17.6/18.4; current reviewed artifact18.6) on the VPS private
 network, owned by this application. Schema lives in committed, append-only SQL migrations
 (`migrations/`), applied by `node scripts/db-migrate.ts` under an advisory lock with per-file
 checksums, as a one-shot command of the same image, before the release that needs them.

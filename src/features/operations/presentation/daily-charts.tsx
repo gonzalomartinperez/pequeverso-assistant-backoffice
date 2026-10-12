@@ -129,7 +129,7 @@ export function DailyCharts({ rows }: { rows: ChartRow[] }) {
               <Legend wrapperStyle={legendStyle} formatter={legendLabel} />
               <Bar
                 dataKey="confirmed"
-                name="Confirmado"
+                name="Con uso informado"
                 stackId="cost"
                 fill="var(--chart-confirmed)"
                 isAnimationActive={false}

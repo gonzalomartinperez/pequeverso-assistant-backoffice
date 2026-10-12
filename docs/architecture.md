@@ -52,3 +52,18 @@ that the example parses.
 
 The former public chat shells (`/`, `/embed`) were removed once the storefront's native
 assistant reached parity; their design remains in the git history.
+
+
+## Optional operational observability
+
+The private API telemetry endpoint1.0 is independent from summary1.2 and publicAPI1.3.
+The dashboard consumes only committed pinned schemas; telemetry is disabled by default
+and a missing/disabled/malformed reading never invalidates a valid legacy summary.
+Readiness is a point-in-time observation, provider status can be unknown, counters begin
+at process start, and null values never become zero.
+
+The BO's isolated manual OpenTelemetry provider never registers globally, so Next's
+automatic route/fetch spans cannot leak private URLs or invite tokens. An optional private
+metrics endpoint requires a distinct machine bearer; protected human pages still recheck
+Better Auth roles. See [observability](observability.md) for switches, bounds, privacy and
+BO-only Prometheus/Grafana proposals. Infrastructure deployment remains owned by vps-ops.

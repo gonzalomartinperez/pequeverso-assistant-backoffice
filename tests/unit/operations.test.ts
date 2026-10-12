@@ -15,7 +15,10 @@ import {
   percent,
 } from "../../src/features/operations/domain/summary.ts";
 
-import { day as displayDay } from "../../src/features/operations/presentation/format.ts";
+import {
+  day as displayDay,
+  usd as displayUsd,
+} from "../../src/features/operations/presentation/format.ts";
 
 const pinned = JSON.parse(readFileSync("contracts/ops/ops.summary.example.json", "utf8"));
 const fixture = JSON.parse(readFileSync("contracts/ops/summary.fixture.json", "utf8"));
@@ -292,4 +295,38 @@ describe("ops HTTP source", () => {
     ).read();
     assert.equal(reading.status === "unavailable" && reading.reason, "invalid");
   });
+});
+
+it("private ops forwards only validated server-generated trace context", async () => {
+  const valid = "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01";
+  for (const traceparent of [
+    null,
+    valid,
+    "00-00000000000000000000000000000000-0000000000000000-01",
+    "bad\r\nAuthorization: injected",
+  ]) {
+    let headers: Headers | undefined;
+    const fetcher: typeof fetch = async (_url, init) => {
+      headers = new Headers(init?.headers);
+      return Response.json(pinned);
+    };
+    const result = await httpOpsSource(
+      { url: "https://private", token: "synthetic-only" },
+      fetcher,
+      4000,
+      traceparent,
+    ).read();
+    assert.equal(result.status, "ok");
+    assert.equal(headers?.get("traceparent"), traceparent === valid ? valid : null);
+    assert.equal(headers?.get("baggage"), null);
+    assert.equal(headers?.get("tracestate"), null);
+  }
+});
+
+it("tiny nonzero estimated costs never render as zero or pretend invoice reconciliation", () => {
+  assert.equal(displayUsd(null), "No disponible");
+  assert.equal(displayUsd("0.000000"), "US$ 0,0000");
+  assert.equal(displayUsd("0.000001"), "< US$ 0,0001");
+  assert.equal(displayUsd("-0.000001"), "> −US$ 0,0001");
+  assert.equal(displayUsd("0.004133"), "US$ 0,0041");
 });

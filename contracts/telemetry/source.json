@@ -1,7 +1,7 @@
 {
   "status": "pinned",
   "api_repository": "gonzalomartinperez/pequeverso-assistant-api",
-  "api_revision": "debb678559b59425503e70fec3e6d16ea173ae81",
+  "api_revision": "b7dcb0c27d214cb1b560a8ee6101f858545646fc",
   "contract": "private telemetry1.0, independent from summary1.2 and public chat",
   "files": {
     "contracts/ops.telemetry.schema.json": {

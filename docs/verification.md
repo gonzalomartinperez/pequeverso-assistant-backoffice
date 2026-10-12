@@ -179,5 +179,8 @@ with its existing accessibility, CSP and real fake-provider OAuth assertions; in
 light/dark/mobile screenshots; exact application and PostgreSQL 18.6 migration, backup/restore,
 read-only/non-root and private observability smoke; exact-image inventory and security review;
 independent review and green required CI. No deployment or real OAuth/provider acceptance is
-implied. The telemetry pin currently names accessible API commit `debb678`; both pinned files
-are byte-identical to `03898d8`. It must name the integrated API commit before backoffice merge.
+implied. Both private source pins now name integrated API commit `b7dcb0c` (API PR39). The summary1.2
+schema/example remain byte-identical to `87fc109`; the telemetry1.0 schema/example remain
+byte-identical to `03898d8` and the temporary accessible pin `debb678`. All four recorded
+SHA-256 hashes were verified against `git show b7dcb0c:<path>`. This metadata update does not
+establish end-to-end acceptance of the final images.

@@ -2,7 +2,7 @@
   "status": "pinned",
   "note": "Pinned from pequeverso-assistant-api develop (ops contract 1.2: pricing and recent runs). Only committed revisions are consumed.",
   "api_repository": "gonzalomartinperez/pequeverso-assistant-api",
-  "api_revision": "87fc10956dbb7506c5efff5f8d45e01857a4f1e2",
+  "api_revision": "b7dcb0c27d214cb1b560a8ee6101f858545646fc",
   "api_branch": "develop",
   "files": {
     "contracts/ops.schema.json": {

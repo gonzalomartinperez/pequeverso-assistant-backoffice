@@ -28,7 +28,7 @@ docker network create "$NET" >/dev/null
 docker run -d --name "$DB" --network "$NET" -e POSTGRES_USER=backoffice -e POSTGRES_PASSWORD="$PW" \
   -e POSTGRES_DB=backoffice --memory 256m --memory-swap 256m --cpus 0.5 --pids-limit 128 \
   --log-driver local --log-opt max-size=5m --log-opt max-file=2 --tmpfs /var/lib/postgresql \
-  postgres:18.4-bookworm@sha256:882236b897e39051d2368c5ccc6cda944904723506b2dfc97f2a8f5bc9afa382 >/dev/null
+  postgres:18.6-bookworm@sha256:9551dd5bf356409a21b31248f49b33bba9bb1877365f3a7e933aecd9af3cf52d >/dev/null
 for _ in $(seq 1 30); do docker exec "$DB" pg_isready -U backoffice -d backoffice >/dev/null 2>&1 && break; sleep 1; done
 
 URL="postgres://backoffice:$PW@$DB:5432/backoffice"
@@ -70,6 +70,9 @@ grep -qi '^x-robots-tag:.*noindex' <<<"$headers"
 code="$(curl --max-time 6 -sS -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/panel")"
 [[ "$code" =~ ^30[37]$ ]] || { echo "unauthenticated /panel answered $code" >&2; exit 1; }
 ! docker logs "$APP" 2>&1 | grep -q "$PW"
+# Observability stays inaccessible when not explicitly configured.
+code="$(curl --max-time 6 -sS -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/internal/v1/ops/metrics")"
+test "$code" = 404
 
 # Bounded synthetic HTTP load, not authenticated-user or real-provider capacity.
 echo "before_load_stats=$(docker stats --no-stream --format '{{.MemUsage}} CPU={{.CPUPerc}} PIDs={{.PIDs}}' "$APP")"

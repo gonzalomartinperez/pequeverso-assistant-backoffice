@@ -92,6 +92,7 @@ export class SafeObservability {
     read: (traceparent: string | null) => Promise<T>,
     classify: (value: T) => Outcome,
   ): Promise<T> {
+    if (!OPERATIONS.includes(operation)) return read(null);
     await this.initialize();
     const started = performance.now();
     const span = this.tracer?.startSpan(
@@ -106,7 +107,8 @@ export class SafeObservability {
         ? `00-${context.traceId}-${context.spanId}-${context.traceFlags.toString(16).padStart(2, "0")}`
         : null;
       const result = await read(traceparent);
-      outcome = classify(result);
+      const observed = classify(result);
+      outcome = OUTCOMES.includes(observed) ? observed : "error";
       return result;
     } finally {
       const seconds = Math.max(0, (performance.now() - started) / 1000);

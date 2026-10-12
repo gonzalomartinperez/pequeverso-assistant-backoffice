@@ -219,7 +219,7 @@ function Catalog({ summary, now }: { summary: OpsSummary; now: Date }) {
             term: "Origen",
             value:
               c.source === "live"
-                ? "Publicado (remoto)"
+                ? "Instantánea remota (no verifica despliegue)"
                 : c.source === "bundled"
                   ? "Instantánea empaquetada"
                   : f.UNAVAILABLE,

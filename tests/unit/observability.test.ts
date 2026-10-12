@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { once } from "node:events";
 import { createServer } from "node:http";
 import { test } from "node:test";
-import { SafeObservability } from "../../src/server/observability.ts";
+import { SafeObservability, type SafeOperation } from "../../src/server/observability.ts";
 import { parseObservability } from "../../src/server/observability-config.ts";
 
 const TOKEN = "synthetic-private-scrape-token-0000000000000000";
@@ -157,4 +157,15 @@ test("collector failure stays outside the business result and exports only a saf
     server.closeAllConnections();
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
+});
+
+test("unexpected labels cannot grow cardinality or leak caller strings", async () => {
+  const source = new SafeObservability({ metricsToken: null, otlpEndpoint: null });
+  const value = await source.observe(
+    "PRIVATE_USER_URL" as SafeOperation,
+    async () => "ok",
+    () => "ok",
+  );
+  assert.equal(value, "ok");
+  assert.doesNotMatch(source.metrics(), /PRIVATE_USER_URL/);
 });

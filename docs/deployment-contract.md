@@ -87,7 +87,7 @@ rebuild, to change them). Secret names proposed for vps-ops: `pequeverso-backoff
 
 See [observability](observability.md) for the full server-only variables and privacy/bounds.
 `OPS_TELEMETRY_ENABLED=false` preserves legacy summary-only operation. Private telemetry1.0
-is independent from unchanged summary1.2/publicAPI1.3. `OBSERVABILITY_METRICS_ENABLED=false`
+is independent from unchanged summary1.2 and the public chat contract. `OBSERVABILITY_METRICS_ENABLED=false`
 keeps `/internal/v1/ops/metrics` absent; enabling it requires a new, distinct
 `OBSERVABILITY_READ_TOKEN`, never the API-client token. `OBSERVABILITY_TRACES_ENABLED=false`
 starts no exporter; enabling requires a reviewed private

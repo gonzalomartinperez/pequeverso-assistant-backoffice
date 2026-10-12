@@ -149,3 +149,35 @@ OAuth remain outside these fixture checks.
 The optional live-API browser check requires exactly one completed fixture execution to be
 seeded before the suite. It now checks for that data row, so an empty bookkeeping result cannot
 pass merely because it has no table header.
+
+## Availability candidate — 2026-10-12 (acceptance incomplete)
+
+The last complete local `npm run check` passed at `def022e` in 116.39 s with 89 unit tests.
+The PostgreSQL 18.6 database suite subsequently passed 17/17 in 11.38 s. These results do not
+validate every later candidate change or its exact application image.
+
+The first browser run at `cf2457a` finished with 33 passed, 8 failed and 3 optional live-API
+specifications skipped in 550.81 s. Seven failures exposed incorrect new test assumptions
+(old fixture wording and repeated OAuth despite an existing session); `e6702cb` corrected
+those tests without changing admission, permissions or timeout budgets. One WebKit IAM
+lifecycle test exhausted its 45-second budget.
+
+The affected run at `e6702cb` finished with 6 passed and 4 failed in 429.34 s. The optional
+telemetry fallbacks passed in all three engines; technical observations passed in Firefox,
+WebKit and mobile Chromium. Three IAM lifecycle cases and Chromium technical observation
+exhausted the unchanged 45-second per-test limit, including axe `frame.evaluate` and reload
+operations. Trace actions lasting roughly 3–15 s were recorded. No cause, CPU attribution or
+flaky designation is established. The dependent full suite did not run after that failure.
+
+The harness creates a random disposable database for each process; inspection disproved the
+hypothesis that identities from an earlier run contaminated the next database. Failure logs,
+contexts, traces and screenshots were preserved outside the repository. Preview timestamp
+coherence and wording were then corrected in `9795fbb`; the pinned examples stayed unchanged.
+
+Remaining finite gates: complete check at the final head; full dedicated CI browser suite
+with its existing accessibility, CSP and real fake-provider OAuth assertions; inspected
+light/dark/mobile screenshots; exact application and PostgreSQL 18.6 migration, backup/restore,
+read-only/non-root and private observability smoke; exact-image inventory and security review;
+independent review and green required CI. No deployment or real OAuth/provider acceptance is
+implied. The telemetry pin currently names accessible API commit `debb678`; both pinned files
+are byte-identical to `03898d8`. It must name the integrated API commit before backoffice merge.

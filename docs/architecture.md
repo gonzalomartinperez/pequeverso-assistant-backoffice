@@ -56,7 +56,7 @@ assistant reached parity; their design remains in the git history.
 
 ## Optional operational observability
 
-The private API telemetry endpoint1.0 is independent from summary1.2 and publicAPI1.3.
+The private API telemetry endpoint1.0 is independent from summary1.2 and the public chat contract.
 The dashboard consumes only committed pinned schemas; telemetry is disabled by default
 and a missing/disabled/malformed reading never invalidates a valid legacy summary.
 Readiness is a point-in-time observation, provider status can be unknown, counters begin

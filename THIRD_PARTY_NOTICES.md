@@ -38,3 +38,8 @@ Runtime and development dependencies keep their own licences (see `package-lock.
 `lucide-react` (ISC), `class-variance-authority` (Apache-2.0), `clsx` and `tailwind-merge` (MIT),
 Next.js and React (MIT), `better-auth` (MIT), `pg` (MIT), `recharts` (MIT) and
 `@axe-core/playwright` (MPL-2.0, development only).
+
+The optional server-only telemetry uses `@opentelemetry/api` 1.9.1,
+`@opentelemetry/resources` and `@opentelemetry/sdk-trace-base` 2.12.0, and
+`@opentelemetry/exporter-trace-otlp-http` 0.223.0 (Apache-2.0, OpenTelemetry Authors;
+https://github.com/open-telemetry/opentelemetry-js). Their dependency licences remain their own.

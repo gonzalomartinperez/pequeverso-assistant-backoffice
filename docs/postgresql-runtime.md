@@ -7,10 +7,10 @@ conversation/catalog/spend data remains in the API's SQLite volume. There is no 
 ## Artifact and security boundary
 
 Build `Dockerfile.postgres` from the reviewed repository commit. Its source is the immutable
-`postgres:18.4-bookworm@sha256:882236b897e39051d2368c5ccc6cda944904723506b2dfc97f2a8f5bc9afa382`
-for linux/amd64. A fresh upstream pull on 2026-10-10 still resolved to that digest. The derived
+`postgres:18.6-bookworm@sha256:9551dd5bf356409a21b31248f49b33bba9bb1877365f3a7e933aecd9af3cf52d`
+for linux/amd64. A fresh official linux/amd64 manifest pull on 2026-10-12 resolved to that digest. The derived
 artifact installs exact signed Debian security patches for OpenSSL, PCRE2, perl, xz/lzma and
-tzdata; upstream 18.4 remains unchanged. Available-fix scans must cover **all** severities,
+tzdata; the 18.6 base already contains these exact versions. Available-fix scans must cover **all** severities,
 including UNKNOWN, before using the artifact. Residual advisories remain visible, not accepted
 implicitly. Other architectures are untested. Publish/deploy only by a separately authorized
 registry manifest digest; a local image id is not that digest.
@@ -26,6 +26,19 @@ unsupported; encrypt backups outside this database artifact under infrastructure
 libxml2 and zlib remain because PostgreSQL core links them; their unresolved advisories remain
 visible activation risks, not implicitly accepted. Installer/file removal adds whiteouts to
 inherited layers: no physical image size saving is claimed. Security changes do not certify a production environment.
+
+## Minor-release compatibility
+
+[PostgreSQL 18.6 release notes](https://www.postgresql.org/docs/release/18.6/)
+state that 18.x needs no dump/restore solely for this minor upgrade. Version 18.5 was
+never released. The fixes include security hardening of SQL functions, psql and pg_dump;
+review logical decoding plugins, pgcrypto cipher recovery and GIN/btree_gist/ltree
+indexes before updating an existing cluster. This IAM schema uses none of those extensions,
+indexes or replication slots; do not infer this for other databases. PostgreSQL 18 has
+[major support until November 14, 2030](https://www.postgresql.org/support/versioning/);
+continue applying supported minor/security updates. The PG18 volume boundary and durability
+settings remain unchanged. A fresh artifact still requires exact smoke, seeded SQL restore,
+persistent restart, signed package review and all-severity vulnerability scan.
 
 ## Storage and isolation
 

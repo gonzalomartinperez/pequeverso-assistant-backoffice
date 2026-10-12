@@ -312,6 +312,34 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   await viewer.context().close();
 });
 
+test("analytics cards and disclosures reflow with 200 percent text @mobile", async ({ page }) => {
+  await signIn(page, "owner@example.test", "owner");
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "200%";
+  });
+  expect(
+    await page.evaluate(() =>
+      Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
+    ),
+  ).toBe(32);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await expect(
+      page.getByRole("region", { name: "¿Puede responder ahora?", exact: true }),
+    ).toBeVisible();
+    const diagnostic = page.getByText("Diagnóstico técnico y configuración", { exact: true });
+    await diagnostic.click();
+    await expect(page.getByRole("heading", { name: "Estado técnico", exact: true })).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+      ),
+    ).toBe(true);
+    await diagnostic.click();
+  }
+  expect(await cspViolations(page)).toEqual([]);
+});
+
 test("technical observation stays honest, accessible and separate from provider availability @mobile", async ({
   page,
 }, info) => {

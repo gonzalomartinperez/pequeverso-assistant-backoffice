@@ -148,7 +148,7 @@ function Availability({ summary }: { summary: OpsSummary }) {
       description="Estado declarado por la API en esta lectura, no un historial de uptime ni una comprobación del proveedor."
     >
       <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4">
+        <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4 [overflow-wrap:anywhere]">
           <p className="text-tiny font-bold text-muted">DISPONIBILIDAD PUNTUAL</p>
           <p className="mt-2 flex items-center gap-2 text-title text-ink">
             {available ? (
@@ -164,7 +164,7 @@ function Availability({ summary }: { summary: OpsSummary }) {
               : f.reason(summary.availability.reason)}
           </p>
         </div>
-        <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4">
+        <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4 [overflow-wrap:anywhere]">
           <p className="text-tiny font-bold text-muted">PRESUPUESTO RESTANTE DEL MES</p>
           <p className="mt-2 text-heading text-ink tabular-nums">
             {f.usd(summary.budget?.remainingMonth ?? null)}
@@ -173,7 +173,7 @@ function Availability({ summary }: { summary: OpsSummary }) {
             Reservas pendientes y estimadas incluidas en el cálculo de la API.
           </p>
         </div>
-        <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4">
+        <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4 [overflow-wrap:anywhere]">
           <p className="text-tiny font-bold text-muted">RESPUESTAS COMPLETADAS · 24 H</p>
           <p className="mt-2 text-heading text-ink tabular-nums">
             {f.count(summary.windows.find((w) => w.hours === 24)?.runs.completed ?? null)}
@@ -182,7 +182,7 @@ function Availability({ summary }: { summary: OpsSummary }) {
             No mide disponibilidad; las omisiones no se convierten en cero.
           </p>
         </div>
-        <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4">
+        <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4 [overflow-wrap:anywhere]">
           <p className="text-tiny font-bold text-muted">PRIMER TEXTO · P95 · 24 H</p>
           <p className="mt-2 text-heading text-ink tabular-nums">
             {f.ms(summary.windows.find((w) => w.hours === 24)?.latency.firstDelta?.p95 ?? null)}

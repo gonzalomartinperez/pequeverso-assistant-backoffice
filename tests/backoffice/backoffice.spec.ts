@@ -289,8 +289,11 @@ test("technical observation stays honest, accessible and separate from provider 
 }, info) => {
   await signIn(page, "owner@example.test", "owner");
   const technical = page.getByRole("region", { name: "Estado técnico" });
-  await expect(technical.getByTestId("telemetry-fixture-banner")).toContainText(
-    "métricas técnicas describen esta muestra",
+  const fixtureNotice = technical.getByTestId("telemetry-fixture-banner");
+  await expect(fixtureNotice).toContainText("Proveedor de prueba (fixture)");
+  await expect(fixtureNotice).toContainText("mediciones HTTP y de recursos");
+  await expect(fixtureNotice).toContainText(
+    "no prueban disponibilidad de OpenAI ni calidad del modelo",
   );
   await expect(technical).toContainText("API preparada");
   await expect(technical).toContainText("Proveedor: sin comprobar");
@@ -312,9 +315,10 @@ test("technical observation stays honest, accessible and separate from provider 
 test("disabled or invalid optional telemetry preserves valid legacy spend and runs", async ({
   page,
 }) => {
+  await signIn(page, "owner@example.test", "owner");
   for (const name of ["telemetry-off", "telemetry-invalid"]) {
     await variant(name);
-    await signIn(page, "owner@example.test", "owner");
+    await page.goto("/panel");
     const technical = page.getByRole("region", { name: "Estado técnico" });
     await expect(technical).toContainText("No disponible");
     await expect(page.getByRole("heading", { name: "Presupuesto de 2026-10" })).toBeVisible();

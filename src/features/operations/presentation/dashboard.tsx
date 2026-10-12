@@ -316,7 +316,7 @@ function Budget({ summary }: { summary: OpsSummary }) {
               </tr>
               <tr>
                 <th scope="row" className={`${td} text-left font-extrabold`}>
-                  Hoy ({b.day ?? f.UNAVAILABLE})
+                  Día ({b.day ?? f.UNAVAILABLE})
                 </th>
                 <td className={td}>{f.usd(b.daySpend.confirmed)}</td>
                 <td className={td}>{f.usd(b.daySpend.estimated)}</td>

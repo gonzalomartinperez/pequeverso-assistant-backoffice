@@ -330,11 +330,29 @@ test("analytics cards and disclosures reflow with 200 percent text @mobile", asy
     const diagnostic = page.getByText("Diagnóstico técnico y configuración", { exact: true });
     await diagnostic.click();
     await expect(page.getByRole("heading", { name: "Estado técnico", exact: true })).toBeVisible();
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
-      ),
-    ).toBe(true);
+    const reflow = await page.evaluate(() => {
+      const root = document.documentElement;
+      // Content-free structural diagnostics; deliberately omit text, URLs, ids and tokens.
+      const structuralOverflow = [
+        ...document.querySelectorAll("header, nav, main, section, div, span"),
+      ]
+        .filter((element) => {
+          let ancestor: Element | null = element;
+          while (ancestor) {
+            if (["auto", "scroll"].includes(getComputedStyle(ancestor).overflowX)) return false;
+            ancestor = ancestor.parentElement;
+          }
+          return element.getBoundingClientRect().right + window.scrollX > root.clientWidth + 1;
+        })
+        .slice(0, 12)
+        .map((element) => ({
+          tag: element.tagName,
+          classes: element.className,
+          right: Math.round(element.getBoundingClientRect().right + window.scrollX),
+        }));
+      return { clientWidth: root.clientWidth, scrollWidth: root.scrollWidth, structuralOverflow };
+    });
+    expect(reflow.scrollWidth, JSON.stringify(reflow)).toBeLessThanOrEqual(reflow.clientWidth + 1);
     await diagnostic.click();
   }
   expect(await cspViolations(page)).toEqual([]);

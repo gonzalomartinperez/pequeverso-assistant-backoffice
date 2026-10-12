@@ -140,8 +140,9 @@ test("owner dashboard shows labelled synthetic data, charts and accessible table
     await page.screenshot({ path: `${SHOTS}/desktop-dashboard.png`, fullPage: true });
   if (mobile) {
     await page.screenshot({ path: `${SHOTS}/mobile-dashboard-top.png` });
-    await page.getByRole("heading", { name: "Actividad diaria" }).scrollIntoViewIfNeeded();
-    await page.screenshot({ path: `${SHOTS}/mobile-dashboard-daily.png` });
+    await page
+      .getByRole("region", { name: "Actividad diaria", exact: true })
+      .screenshot({ path: `${SHOTS}/mobile-dashboard-daily.png` });
   }
   // No secret or private configuration reaches the browser.
   const html = await page.content();
@@ -218,8 +219,15 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   const link = (await page.getByTestId("invitation-link").textContent())?.trim() ?? "";
   expect(link).toMatch(/^http:\/\/localhost:3241\/invitacion\/[A-Za-z0-9_-]{43}$/);
   await axe(page);
-  if (info.project.name === "chromium")
+  if (info.project.name === "chromium") {
+    // Keep the opaque invitation URL only in test memory, never in a public screenshot.
+    await page.reload();
+    await expect(page.getByTestId("invitation-link")).toHaveCount(0);
+    await expect(
+      page.getByRole("region", { name: "Invitaciones" }).getByRole("row", { name: new RegExp(email) }),
+    ).toContainText("Pendiente");
     await page.screenshot({ path: `${SHOTS}/desktop-access.png`, fullPage: true });
+  }
 
   // Someone else with the link but another e-mail is refused, and the link still works afterwards.
   const intruder = await newPage(browser);

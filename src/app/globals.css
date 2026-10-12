@@ -7,11 +7,11 @@
  *              7ae5987, src/app/globals.css). Components never read these directly.
  * 3. Semantic  roles components use (`--surface`, `--ink`, `--action`, …) for light and dark
  * 4. Theme     `@theme inline` maps roles to Tailwind utilities (bg-surface, text-ink, …)
- * 5. Base      typography, focus, selection, reduced motion, hidden-panel motion pause
+ * 5. Base      typography, focus, selection and reduced motion
  *
  * Theme mechanism: `<html data-theme="light|dark">`, set before first paint by the root layout
- * (standalone: stored or system preference; embed: the host's `theme`). Nothing else themes.
- * Coral is reserved for the purchase action and verified prices, as on the storefront.
+ * from the system colour preference. The private backoffice has no embedded chat shell.
+ * Commerce colour tokens are retained from the storefront and unused by this backoffice.
  */
 @import "tailwindcss";
 

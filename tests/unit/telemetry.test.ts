@@ -10,7 +10,7 @@ const settings = { url: "https://private", token: "fixture-only" };
 
 test("telemetry pinned bytes come from the committed API source", () => {
   const source = JSON.parse(readFileSync("contracts/telemetry/source.json", "utf8"));
-  assert.equal(source.api_revision, "03898d88859d52ea9df7c2f28ed95a3f66d87f82");
+  assert.equal(source.api_revision, "debb678559b59425503e70fec3e6d16ea173ae81");
   for (const file of Object.values(source.files) as { local: string; sha256: string }[])
     assert.equal(createHash("sha256").update(readFileSync(file.local)).digest("hex"), file.sha256);
   const reading = parseOpsTelemetry(fixture);

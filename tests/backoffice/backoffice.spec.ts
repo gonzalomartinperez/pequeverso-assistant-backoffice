@@ -111,6 +111,20 @@ test("owner dashboard shows labelled synthetic data, charts and accessible table
   await expect(page).toHaveURL(/\/panel$/);
   await expect(page.getByRole("heading", { level: 1, name: "Estado del asistente" })).toBeVisible();
   await expect(page.getByTestId("synthetic-banner")).toContainText("Datos sintéticos (fixture)");
+  const overview = page.getByRole("region", { name: "¿Puede responder ahora?", exact: true });
+  await expect(overview.getByText("PRESUPUESTO RESTANTE DEL MES", { exact: true })).toBeVisible();
+  await expect(overview.getByText("RESPUESTAS COMPLETADAS · 24 H", { exact: true })).toBeVisible();
+  await expect(overview.getByText("PRIMER TEXTO · P95 · 24 H", { exact: true })).toBeVisible();
+  // Technical data is available through a real disclosure, not removed or eagerly overwhelming.
+  const diagnostic = page.getByText("Diagnóstico técnico y configuración", { exact: true });
+  await expect(diagnostic.locator("..")).not.toHaveAttribute("open");
+  await diagnostic.focus();
+  await page.keyboard.press("Enter");
+  await expect(diagnostic.locator("..")).toHaveAttribute("open", "");
+  await expect(page.getByRole("heading", { name: "Estado técnico", exact: true })).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(diagnostic.locator("..")).not.toHaveAttribute("open");
+
   const mobile = info.project.name.startsWith("mobile");
   if (!mobile)
     await expect(page.getByTestId("actor")).toContainText("owner@example.test · propietario");
@@ -224,7 +238,9 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
     await page.reload();
     await expect(page.getByTestId("invitation-link")).toHaveCount(0);
     await expect(
-      page.getByRole("region", { name: "Invitaciones" }).getByRole("row", { name: new RegExp(email) }),
+      page
+        .getByRole("region", { name: "Invitaciones" })
+        .getByRole("row", { name: new RegExp(email) }),
     ).toContainText("Pendiente");
     await page.screenshot({ path: `${SHOTS}/desktop-access.png`, fullPage: true });
   }
@@ -300,6 +316,7 @@ test("technical observation stays honest, accessible and separate from provider 
   page,
 }, info) => {
   await signIn(page, "owner@example.test", "owner");
+  await page.getByText("Diagnóstico técnico y configuración", { exact: true }).click();
   const technical = page.getByRole("region", { name: "Estado técnico" });
   const fixtureNotice = technical.getByTestId("telemetry-fixture-banner");
   await expect(fixtureNotice).toContainText("Proveedor de prueba (fixture)");
@@ -331,6 +348,7 @@ test("disabled or invalid optional telemetry preserves valid legacy spend and ru
   for (const name of ["telemetry-off", "telemetry-invalid"]) {
     await variant(name);
     await page.goto("/panel");
+    await page.getByText("Diagnóstico técnico y configuración", { exact: true }).click();
     const technical = page.getByRole("region", { name: "Estado técnico" });
     await expect(technical).toContainText("No disponible");
     await expect(page.getByRole("heading", { name: "Presupuesto de 2026-10" })).toBeVisible();

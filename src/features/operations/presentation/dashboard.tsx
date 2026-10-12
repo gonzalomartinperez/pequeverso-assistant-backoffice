@@ -32,7 +32,7 @@ export function Dashboard({
   telemetry: TelemetryReading;
 }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div className="flex flex-col gap-1">
           <h1 className="text-heading">Estado del asistente</h1>
@@ -82,12 +82,11 @@ function Summary({
         </Callout>
       ) : null}
       <Availability summary={summary} />
-      <Telemetry reading={telemetry} />
       <nav aria-label="Secciones del estado" className="flex flex-wrap gap-2">
         {[
+          ["daily", "Actividad"],
           ["budget", "Presupuesto"],
           ["runs-24", "Solicitudes"],
-          ["daily", "Actividad"],
           ["recent", "Últimas ejecuciones"],
         ]
           .filter(([id]) => id !== "runs-24" || summary.windows.some((w) => w.hours === 24))
@@ -101,22 +100,37 @@ function Summary({
             </a>
           ))}
       </nav>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Service summary={summary} />
-        <Catalog summary={summary} now={now} />
+      <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <Daily summary={summary} />
+        <div className="flex min-w-0 flex-col gap-5">
+          <Budget summary={summary} />
+          <Catalog summary={summary} now={now} />
+        </div>
       </div>
-      <Budget summary={summary} />
-      {summary.windows.length ? (
-        summary.windows.map((window) => <Runs key={window.hours} window={window} />)
-      ) : (
-        <Section id="runs" title="Solicitudes">
-          <p className="text-small text-copy">
-            {f.UNAVAILABLE}: la API todavía no registra métricas de ejecución.
-          </p>
-        </Section>
-      )}
-      <Daily summary={summary} />
+      <div className="grid min-w-0 items-start gap-5 xl:grid-cols-2">
+        {summary.windows.length ? (
+          summary.windows.map((window) => <Runs key={window.hours} window={window} />)
+        ) : (
+          <Section id="runs" title="Solicitudes">
+            <p className="text-small text-copy">
+              {f.UNAVAILABLE}: la API todavía no registra métricas de ejecución.
+            </p>
+          </Section>
+        )}
+      </div>
       <Recent summary={summary} />
+      <details className="min-w-0 rounded-lg border border-line bg-surface-raised p-5 shadow-sm">
+        <summary className="min-h-11 cursor-pointer content-center text-title text-ink focus-visible:outline-3 focus-visible:outline-ring">
+          Diagnóstico técnico y configuración
+        </summary>
+        <p className="mt-2 text-small text-muted">
+          Lecturas opcionales del proceso y del servicio; no acreditan disponibilidad del proveedor.
+        </p>
+        <div className="mt-4 grid min-w-0 items-start gap-5 xl:grid-cols-2">
+          <Telemetry reading={telemetry} />
+          <Service summary={summary} />
+        </div>
+      </details>
       <p className="text-tiny text-muted">
         Métricas registradas desde: {f.when(summary.metricsSince)}. Resumen generado por la API el{" "}
         {f.when(summary.generatedAt)}.
@@ -133,34 +147,48 @@ function Availability({ summary }: { summary: OpsSummary }) {
       title="¿Puede responder ahora?"
       description="Estado declarado por la API en esta lectura, no un historial de uptime ni una comprobación del proveedor."
     >
-      <p className="flex items-center gap-2 text-title text-ink">
-        {available ? (
-          <CircleCheck aria-hidden="true" className="size-5 text-icon" />
-        ) : (
-          <TriangleAlert aria-hidden="true" className="size-5 text-danger" />
-        )}
-        {available ? "Acepta preguntas" : "No acepta preguntas"}
-      </p>
-      {!available ? (
-        <p className="mt-2 text-small text-copy">{f.reason(summary.availability.reason)}</p>
-      ) : null}
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-md bg-surface-sunken p-4">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4">
+          <p className="text-tiny font-bold text-muted">DISPONIBILIDAD PUNTUAL</p>
+          <p className="mt-2 flex items-center gap-2 text-title text-ink">
+            {available ? (
+              <CircleCheck aria-hidden="true" className="size-5 shrink-0 text-icon" />
+            ) : (
+              <TriangleAlert aria-hidden="true" className="size-5 shrink-0 text-danger" />
+            )}
+            {available ? "Acepta preguntas" : "No acepta preguntas"}
+          </p>
+          <p className="mt-2 text-tiny text-muted">
+            {available
+              ? "Estado declarado en esta lectura."
+              : f.reason(summary.availability.reason)}
+          </p>
+        </div>
+        <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4">
           <p className="text-tiny font-bold text-muted">PRESUPUESTO RESTANTE DEL MES</p>
-          <p className="mt-1 text-title text-ink">
+          <p className="mt-2 text-heading text-ink tabular-nums">
             {f.usd(summary.budget?.remainingMonth ?? null)}
           </p>
-          <p className="mt-1 text-tiny text-muted">
+          <p className="mt-2 text-tiny text-muted">
             Reservas pendientes y estimadas incluidas en el cálculo de la API.
           </p>
         </div>
-        <div className="rounded-md bg-surface-sunken p-4">
+        <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4">
           <p className="text-tiny font-bold text-muted">RESPUESTAS COMPLETADAS · 24 H</p>
-          <p className="mt-1 text-title text-ink">
+          <p className="mt-2 text-heading text-ink tabular-nums">
             {f.count(summary.windows.find((w) => w.hours === 24)?.runs.completed ?? null)}
           </p>
-          <p className="mt-1 text-tiny text-muted">
+          <p className="mt-2 text-tiny text-muted">
             No mide disponibilidad; las omisiones no se convierten en cero.
+          </p>
+        </div>
+        <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4">
+          <p className="text-tiny font-bold text-muted">PRIMER TEXTO · P95 · 24 H</p>
+          <p className="mt-2 text-heading text-ink tabular-nums">
+            {f.ms(summary.windows.find((w) => w.hours === 24)?.latency.firstDelta?.p95 ?? null)}
+          </p>
+          <p className="mt-2 text-tiny text-muted">
+            Desde la aceptación hasta el primer fragmento enviado; no hasta la respuesta final.
           </p>
         </div>
       </div>
@@ -348,7 +376,7 @@ function Runs({ window }: { window: RunWindow }) {
       title={`Solicitudes · ${f.windowLabel(window.hours)}`}
       description="Aceptada: la API empezó a responder. Interrumpida: la conexión se cortó antes del final y no cuenta como completada. Rechazada: no llegó a responder (presupuesto, capacidad o límites)."
     >
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-5 2xl:grid-cols-2">
         <Facts
           items={[
             { term: "Aceptadas", value: f.count(accepted) },
@@ -437,7 +465,7 @@ function Daily({ summary }: { summary: OpsSummary }) {
       {rows.length === 0 ? (
         <p className="text-small text-copy">{f.UNAVAILABLE}: todavía no hay días con registros.</p>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
           {hasTrend(rows) ? (
             <DailyCharts
               rows={rows.map((row) => ({

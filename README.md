@@ -71,7 +71,8 @@ TEST_DATABASE_URL=postgres://test:test@127.0.0.1:55432/postgres npm run preview:
 
 Open http://localhost:3241/ingresar and choose "Proveedor de prueba": a local fake identity
 provider signs you in as `owner@example.test`; the dashboard shows the **synthetic** fixture from
-`scripts/mock-ops.ts`, clearly labelled. To read a real API instead, run
+`scripts/mock-ops.ts`, clearly labelled. Its static numbers and startup-refreshed sample timestamps
+are demonstration data, not live process measurements. To read a real API instead, run
 `pequeverso-assistant-api` with `OPS_READ_TOKEN` set and start the stack with `LIVE_OPS_URL` and
 `LIVE_OPS_TOKEN` (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 

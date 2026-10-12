@@ -6,8 +6,10 @@ remain in the summary; process counters are not a financial ledger. Missing read
 **No disponible**, never zero. A process uptime duration is not an availability percentage.
 Provider readiness cannot be inferred from API readiness or a synthetic provider. Real
 API resource/HTTP measurements describe that process even with a fixture model. The local
-mock serves a static committed example: its values are demonstration data, not live process
-measurements. Screenshot/test reports must retain that provenance. Fixtures
+mock serves a committed example with preview timestamps refreshed once at startup: its values
+are demonstration data, not live process measurements. The catalog verification timestamp
+therefore remains consistent with the example's verified-price verdict without changing the
+pinned artifact. Screenshot/test reports must retain that provenance. Fixtures
 remain prominently labelled; no provider probe or paid call is performed by the dashboard.
 
 ## Backoffice signals

@@ -291,9 +291,9 @@ test("technical observation stays honest, accessible and separate from provider 
   const technical = page.getByRole("region", { name: "Estado técnico" });
   const fixtureNotice = technical.getByTestId("telemetry-fixture-banner");
   await expect(fixtureNotice).toContainText("Proveedor de prueba (fixture)");
-  await expect(fixtureNotice).toContainText("mediciones HTTP y de recursos");
+  await expect(fixtureNotice).toContainText("La muestra informa HTTP y recursos del proceso");
   await expect(fixtureNotice).toContainText(
-    "no prueban disponibilidad de OpenAI ni calidad del modelo",
+    "no acredita disponibilidad de OpenAI ni calidad del modelo",
   );
   await expect(technical).toContainText("API preparada");
   await expect(technical).toContainText("Proveedor: sin comprobar");

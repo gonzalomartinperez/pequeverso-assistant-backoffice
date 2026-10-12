@@ -50,8 +50,8 @@ export function Telemetry({ reading }: { reading: TelemetryReading }) {
         <Callout tone="notice" role="note" data-testid="telemetry-fixture-banner">
           <FlaskConical aria-hidden="true" />
           <p>
-            <strong>Proveedor de prueba (fixture).</strong> Las mediciones HTTP y de recursos son
-            reales del proceso observado; no prueban disponibilidad de OpenAI ni calidad del modelo.
+            <strong>Proveedor de prueba (fixture).</strong> La muestra informa HTTP y recursos del
+            proceso; no acredita disponibilidad de OpenAI ni calidad del modelo.
           </p>
         </Callout>
       ) : null}

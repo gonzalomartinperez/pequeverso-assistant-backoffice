@@ -132,8 +132,23 @@ test("owner dashboard shows labelled synthetic data, charts and accessible table
   await expect(page.getByRole("heading", { name: "Presupuesto de 2026-10" })).toBeVisible();
   // The fixture deliberately reports a historical budget day: never imply it is today's spend.
   const budgetTable = page.getByRole("region", { name: "Gasto del mes y del día" });
-  await expect(budgetTable.getByRole("row", { name: /Día \(2026-10-05\)/ })).toBeVisible();
+  await expect(budgetTable.getByRole("columnheader", { name: /Día \(2026-10-05\)/ })).toBeVisible();
   await expect(budgetTable).not.toContainText("Hoy (");
+  for (const [label, month, day] of [
+    ["Con uso informado", "US$ 0,4123", "US$ 0,0612"],
+    ["Estimado", "US$ 0,0180", "US$ 0,0000"],
+    ["Pendiente", "US$ 0,0054", "US$ 0,0054"],
+    ["Límite", "US$ 10,00", "US$ 1,00"],
+  ] as const) {
+    const row = budgetTable
+      .getByRole("row")
+      .filter({ has: page.getByRole("rowheader", { name: label, exact: true }) });
+    await expect(row.getByRole("cell")).toHaveText([month, day]);
+  }
+  await expect(
+    page.getByRole("region", { name: "Presupuesto de 2026-10", exact: true }),
+  ).toContainText("no la factura del proveedor");
+
   await expect(page.getByRole("region", { name: "Gasto del mes y del día" })).toContainText(
     "US$ 0,4123",
   );

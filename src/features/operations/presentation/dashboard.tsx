@@ -170,7 +170,7 @@ function Availability({ summary }: { summary: OpsSummary }) {
             {f.usd(summary.budget?.remainingMonth ?? null)}
           </p>
           <p className="mt-2 text-tiny text-muted">
-            Reservas pendientes y estimadas incluidas en el cálculo de la API.
+            Hasta el corte de seguridad mensual, con reservas pendientes y estimadas incluidas.
           </p>
         </div>
         <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4 [overflow-wrap:anywhere]">
@@ -284,11 +284,17 @@ function Budget({ summary }: { summary: OpsSummary }) {
       </Section>
     );
   const use = budgetUse(summary);
+  const spendRows = [
+    { label: "Con uso informado", month: b.monthSpend.confirmed, day: b.daySpend.confirmed },
+    { label: "Estimado", month: b.monthSpend.estimated, day: b.daySpend.estimated },
+    { label: "Pendiente", month: b.monthSpend.pending, day: b.daySpend.pending },
+    { label: "Límite", month: b.monthlyLimit, day: b.dailyLimit },
+  ];
   return (
     <Section
       id="budget"
       title={`Presupuesto de ${b.month ?? "este mes"}`}
-      description="Con uso informado (confirmado en el ledger): costo estimado con los tokens reportados y las tarifas versionadas, no un importe reconciliado con la factura. Estimado: uso desconocido; se conserva la reserva de peor caso. Pendiente: reservas de ejecuciones en curso."
+      description="Importes calculados con el uso informado y las tarifas versionadas, no la factura del proveedor. Las reservas de uso desconocido y en curso se conservan."
     >
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-3 text-small">
@@ -317,48 +323,43 @@ function Budget({ summary }: { summary: OpsSummary }) {
             <thead>
               <tr>
                 <th scope="col" className={th}>
-                  Período
+                  Concepto
                 </th>
                 <th scope="col" className={th}>
-                  Con uso informado
+                  Mes
                 </th>
                 <th scope="col" className={th}>
-                  Estimado
-                </th>
-                <th scope="col" className={th}>
-                  Pendiente
-                </th>
-                <th scope="col" className={th}>
-                  Límite
+                  Día ({b.day ?? f.UNAVAILABLE})
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <th scope="row" className={`${td} text-left font-extrabold`}>
-                  Mes
-                </th>
-                <td className={td}>{f.usd(b.monthSpend.confirmed)}</td>
-                <td className={td}>{f.usd(b.monthSpend.estimated)}</td>
-                <td className={td}>{f.usd(b.monthSpend.pending)}</td>
-                <td className={td}>{f.usd(b.monthlyLimit)}</td>
-              </tr>
-              <tr>
-                <th scope="row" className={`${td} text-left font-extrabold`}>
-                  Día ({b.day ?? f.UNAVAILABLE})
-                </th>
-                <td className={td}>{f.usd(b.daySpend.confirmed)}</td>
-                <td className={td}>{f.usd(b.daySpend.estimated)}</td>
-                <td className={td}>{f.usd(b.daySpend.pending)}</td>
-                <td className={td}>{f.usd(b.dailyLimit)}</td>
-              </tr>
+              {spendRows.map((row) => (
+                <tr key={row.label}>
+                  <th scope="row" className={`${td} text-left font-extrabold`}>
+                    {row.label}
+                  </th>
+                  <td className={td}>{f.usd(row.month)}</td>
+                  <td className={td}>{f.usd(row.day)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </TableRegion>
       </div>
-      <Rates summary={summary} />
+      <details className="mt-3 rounded-md border border-line p-3">
+        <summary className="min-h-11 cursor-pointer content-center text-small font-extrabold text-link focus-visible:outline-3 focus-visible:outline-ring">
+          Tarifas y estados del gasto
+        </summary>
+        <p className="mt-2 text-small text-copy">
+          Con uso informado (confirmado en el ledger): costo estimado desde los tokens reportados.
+          Estimado: uso desconocido; se conserva la reserva de peor caso. Pendiente: reservas de
+          ejecuciones en curso. Ninguno es un importe reconciliado con la factura.
+        </p>
+        <Rates summary={summary} />
+      </details>
       <p className="mt-3 text-small text-copy">
-        Corte de seguridad mensual: {f.usd(b.monthlyCutoff)}. Restante antes del límite:{" "}
+        Corte de seguridad mensual: {f.usd(b.monthlyCutoff)}. Restante antes del corte:{" "}
         {f.usd(b.remainingMonth)}.
       </p>
     </Section>

@@ -231,3 +231,20 @@ by actual complete-section/keyboard-focus captures; two right-scrolled table sta
 Desktop and mobile images are not composited or retouched. This visual acceptance is separate
 from browser/CI acceptance, provider quality and production deployment. Final feature CI,
 container-base comparison and the corresponding exact final artifact checks remain finite gates.
+
+### Public capture privacy regression
+
+The `f97d74b` test-only change keeps the one-time invitation URL in test memory, reloads the
+actual access-management page, and requires the link to disappear while its pending row
+persists before publishing the access screenshot. All subsequent intruder, viewer, spent-link
+and revocation assertions remain intact. Mobile daily capture now covers the complete labelled
+section. No application/auth code, deadline or retry policy changed. The focused Chromium IAM,
+Chromium owner and mobile owner checks passed 3/3 in 36.43 s with zero retries.
+
+Eight refreshed `verification/backoffice/` PNGs were independently inspected at their current
+bytes; the invitation-token-bearing original is held privately outside the repository, and the
+accidentally clipped mobile original is retained as failed framing evidence. The current access
+capture contains no invitation URL/token. The 26-image gallery is unchanged and separately
+hash-bound. The unchanged sign-in/live-API legacy images and the 2026-10-05 metrics remain
+historical records; refreshed images do not re-date those test results or turn the failed full
+2026-10-12 browser run green.

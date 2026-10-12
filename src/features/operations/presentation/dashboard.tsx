@@ -126,7 +126,7 @@ function Summary({
         <p className="mt-2 text-small text-muted">
           Lecturas opcionales del proceso y del servicio; no acreditan disponibilidad del proveedor.
         </p>
-        <div className="mt-4 grid min-w-0 items-start gap-5 xl:grid-cols-2">
+        <div className="mt-4 grid min-w-0 items-start gap-5">
           <Telemetry reading={telemetry} />
           <Service summary={summary} />
         </div>

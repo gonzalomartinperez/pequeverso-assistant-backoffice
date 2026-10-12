@@ -19,7 +19,7 @@ export function Section({
     <section
       aria-labelledby={`${id}-title`}
       className={cn(
-        "rounded-lg border border-line bg-surface-raised p-5 shadow-sm sm:p-6",
+        "min-w-0 rounded-lg border border-line bg-surface-raised p-5 shadow-sm sm:p-6",
         className,
       )}
     >

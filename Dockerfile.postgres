@@ -17,7 +17,7 @@ RUN apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 update \
 # Purge unused GPG only; Trixie util-linux requires liblastlog2-2 -> libsqlite3-0.
 # Do not force a dependency removal or disable PostgreSQL XML support to hide CVE findings.
 RUN apt-get purge -y gpg \
-    && command -v gpgv \
+    && command -v sqv \
     && psql --version && pg_dump --version && pg_restore --version && pgbench --version
 # The unchanged official entrypoint only uses gosu when uid=0. Root startup is unsupported;
 # initialize a NEW volume's ownership separately, then always execute as postgres.

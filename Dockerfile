@@ -2,8 +2,8 @@
 # Production image for the Pequeverso assistant backoffice (docs/deployment-contract.md).
 # One image, two commands: `node server.js` (default) and `node scripts/db-migrate.ts` (one-shot
 # migrations, run by the operator before starting a release that needs them).
-# Base pinned by digest (node 24.21.0, Debian bookworm slim, linux/amd64 verified).
-FROM node:24.21.0-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20 AS build
+# Base pinned by digest (node 24.21.0, Debian trixie slim, linux/amd64 verified).
+FROM node:24.21.0-trixie-slim@sha256:c83040f7e24bacea68e58a0b96a484ba430bf24abb2973eab7ba4701144b7b63 AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json package-lock.json ./
@@ -14,7 +14,7 @@ COPY public ./public
 # `next build` type-checks with the project-local TypeScript 7 CLI; tests are excluded from the image.
 RUN npx next build --webpack
 
-FROM node:24.21.0-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20 AS runtime
+FROM node:24.21.0-trixie-slim@sha256:c83040f7e24bacea68e58a0b96a484ba430bf24abb2973eab7ba4701144b7b63 AS runtime
 LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice"
 LABEL org.opencontainers.image.description="Pequeverso assistant private backoffice (operations dashboard and access)"
 LABEL org.opencontainers.image.licenses="LicenseRef-Proprietary"
@@ -22,7 +22,7 @@ LABEL org.opencontainers.image.licenses="LicenseRef-Proprietary"
 # Pin the remaining available Debian security fix; retain apt signature verification.
 # Runtime uses only node and traced /app/node_modules: no global installers are needed.
 RUN apt-get update -o Acquire::http::Timeout=30 -o Acquire::Retries=2 \
-    && apt-get install -y --no-install-recommends perl-base=5.36.0-7+deb12u4 \
+    && apt-get install -y --no-install-recommends perl-base=5.40.1-6+deb13u1 liblzma5=5.8.1-1+deb13u2 \
     && rm -rf /var/lib/apt/lists/* /usr/local/lib/node_modules /opt/yarn-v1.22.22 \
     && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
         /usr/local/bin/yarn /usr/local/bin/yarnpkg

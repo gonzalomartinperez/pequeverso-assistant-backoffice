@@ -184,3 +184,50 @@ schema/example remain byte-identical to `87fc109`; the telemetry1.0 schema/examp
 byte-identical to `03898d8` and the temporary accessible pin `debb678`. All four recorded
 SHA-256 hashes were verified against `git show b7dcb0c:<path>`. This metadata update does not
 establish end-to-end acceptance of the final images.
+
+### Exact local evidence at runtime `11f13a5` (2026-10-12)
+
+The complete `npm run check` passed in 110.72 s with 89 unit tests. The exact application
+image `sha256:536698d8aa8ba6d1507ae7c6044ca52a82935548d4bb4aab4468149caea83605`
+and PostgreSQL 18.6 Bookworm image
+`sha256:45445d0130d9a1f98f179979a5d5885c911a3ecdb5cf9c1554bc1905bbc756d4`
+passed their shipped local smoke scripts in 23.14 s and 64.92 s respectively. The database
+smoke checks non-root/read-only quotas, durable settings, 2000/2000 transactions with zero
+failures, synthetic IAM dump/restore content hashes, restart persistence and exact-app
+migration/readiness. These are measured local fixture drills, not capacity or deployment proof.
+
+A separate actual-image test used the real Better Auth test-provider callback, not SQL session
+insertion. Missing, incorrect and API-client tokens each received 401 from the backoffice
+metrics route; its separate bearer received 200. Readiness and protected-panel operations
+increased counters across the compiled route/RSC boundary. Node JSON and Python protobuf OTLP
+payloads reached an isolated collector; both private summary/telemetry client span IDs matched
+API child-parent IDs in the same traces. Export batches were 2 successful/0 failed. This took
+119.72 s against API route-classification candidate image `sha256:48435fc564ff353b9590e9ebed033425d23615815f29a9d69112b88e0b76bf57`,
+with fixture provider, zero model requests and all own resources removed afterwards.
+Earlier failed attempts exposed external collector assumptions about protobuf-only and
+Content-Length framing; bounded JSON/protobuf/chunked decoding resolved them without product
+source changes. Those failed receipts were preserved rather than discarded.
+
+Fresh independent Trivy 0.75 scans at these exact image IDs reported 228 OS rows/99 distinct
+CVEs for the app (1 CRITICAL, 50 HIGH, zero Node findings and zero available fixes), and
+383 OS rows/134 distinct CVEs for PostgreSQL (2 CRITICAL, 63 HIGH, zero available fixes).
+The complete inventories, including other severities, remain visible in the external receipts;
+SBOM inventories contain 130 and 143 components. A source-package MiniZip applicability note
+is not suppression. PostgreSQL's required XML support retains the affected libxml2
+CVE-2026-6653; the absence of an available stable-base fix is not risk acceptance or readiness.
+A same-version Debian 13 candidate is evaluated separately and does not inherit these scans.
+
+The complete local browser run at capture checkout `5515732` finished in 521.88 s:
+**40 passed, 1 Firefox IAM lifecycle timeout, 3 optional LIVE_OPS skips, zero retries**.
+The 45-second deadline remains unchanged. Recorded final revocation/redirect assertions passed,
+but the run still failed; no CPU cause or flaky label is established. This does not certify
+external OAuth or real-provider behavior. Its private traces and original failed/publication-held
+captures are preserved outside the repository.
+
+The [current 26-image gallery](verification/availability-2026-10-12/README.md) was captured from
+the actual local production build with MOCK data at DPR2. Both author and independent root
+agents inspected every final image. Four mobile framing/focus originals were held and replaced
+by actual complete-section/keyboard-focus captures; two right-scrolled table states were added.
+Desktop and mobile images are not composited or retouched. This visual acceptance is separate
+from browser/CI acceptance, provider quality and production deployment. Final feature CI,
+container-base comparison and the corresponding exact final artifact checks remain finite gates.

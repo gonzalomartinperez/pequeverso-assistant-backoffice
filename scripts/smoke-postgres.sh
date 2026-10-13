@@ -125,8 +125,8 @@ SQL
     -e GITHUB_CLIENT_SECRET=synthetic -e TRUSTED_PROXY_IPS=127.0.0.1)
   docker run -d --name "$app" --network "$network" --read-only --cap-drop ALL \
     --security-opt no-new-privileges --memory 384m --memory-swap 384m --cpus 1 --pids-limit 128 \
-    --tmpfs /tmp:rw,noexec,nosuid,nodev,size=32m,uid=1000,gid=1000,mode=0700 \
-    --tmpfs /app/.next/cache:rw,noexec,nosuid,nodev,size=32m,uid=1000,gid=1000,mode=0700 \
+    --tmpfs /tmp:rw,noexec,nosuid,nodev,size=32m,uid=65532,gid=65532,mode=0700 \
+    --tmpfs /app/.next/cache:rw,noexec,nosuid,nodev,size=32m,uid=65532,gid=65532,mode=0700 \
     --log-driver local --log-opt max-size=5m --log-opt max-file=2 \
     "${app_config[@]}" "$image" >/dev/null
   for _ in $(seq 1 60); do

@@ -247,7 +247,6 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   await page.getByRole("button", { name: "Crear invitación" }).click();
   const link = (await page.getByTestId("invitation-link").textContent())?.trim() ?? "";
   expect(link).toMatch(/^http:\/\/localhost:3241\/invitacion\/[A-Za-z0-9_-]{43}$/);
-  await axe(page);
   if (info.project.name === "chromium") {
     // Keep the opaque invitation URL only in test memory, never in a public screenshot.
     await page.reload();
@@ -310,7 +309,6 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
   await trigger.click();
-  await axe(page);
   if (info.project.name === "chromium")
     await page.screenshot({ path: `${SHOTS}/desktop-revoke-dialog.png` });
   await dialog.getByRole("button", { name: "Quitar acceso" }).click();
@@ -325,6 +323,52 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   await viewer.goto("/panel");
   await expect(viewer).toHaveURL(/\/ingresar$/);
   await viewer.context().close();
+});
+
+test("newly created invitations are accessible", async ({ page }, info) => {
+  const attempt = `${info.project.name}-${info.repeatEachIndex}-${info.retry}`;
+  const email = `audit-pending-${attempt}@example.test`;
+  await signIn(page, "owner@example.test", "owner");
+  await page.goto("/panel/accesos");
+  await page.getByLabel("E-mail verificado de la persona").fill(email);
+  await page.getByRole("button", { name: "Crear invitación" }).click();
+  // Audit the same newly created, unconsumed invitation state as the lifecycle.
+  await expect(page.getByTestId("invitation-link")).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Invitaciones" })
+      .getByRole("row", { name: new RegExp(email) }),
+  ).toContainText("Pendiente");
+  await axe(page);
+});
+
+test("the owner's revocation dialog is accessible", async ({ page, browser }, info) => {
+  const attempt = `${info.project.name}-${info.repeatEachIndex}-${info.retry}`;
+  const email = `audit-revoke-${attempt}@example.test`;
+  await signIn(page, "owner@example.test", "owner");
+  await page.goto("/panel/accesos");
+  await page.getByLabel("E-mail verificado de la persona").fill(email);
+  await page.getByRole("button", { name: "Crear invitación" }).click();
+  const link = (await page.getByTestId("invitation-link").textContent())?.trim() ?? "";
+  expect(link).toMatch(/^http:\/\/localhost:3241\/invitacion\/[A-Za-z0-9_-]{43}$/);
+  const viewer = await newPage(browser);
+  try {
+    // Populate the member through the real invitation and OAuth callback, never injected SQL.
+    await viewer.goto(link);
+    await identity(email, `audit-revoke-${attempt}`);
+    await continueWithTestProvider(viewer);
+    await expect(viewer).toHaveURL(/\/panel$/);
+    await expect(viewer.getByTestId("actor")).toContainText(`${email} · lectura`);
+    await page.reload();
+    const member = page
+      .getByRole("region", { name: "Cuentas con acceso" })
+      .getByRole("row", { name: new RegExp(email) });
+    await member.getByRole("button", { name: `Quitar acceso ${email}` }).click();
+    await expect(page.getByRole("dialog", { name: "¿Quitar el acceso?" })).toBeVisible();
+    await axe(page);
+  } finally {
+    await viewer.context().close();
+  }
 });
 
 test("analytics cards and disclosures reflow with 200 percent text @mobile", async ({ page }) => {

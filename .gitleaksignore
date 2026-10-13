@@ -1,0 +1,4 @@
+# Two reviewed historical Git producer revision assertions, not credentials.
+# Exact commit/path/rule/line fingerprints; no file/rule/value wildcard.
+e247ca1b9013ac6dea8baba644dc7f4a0cac492a:tests/unit/telemetry.test.ts:generic-api-key:13
+298e6a21d2a6181bc898c3a1a705c1a55d27b263:tests/unit/telemetry.test.ts:generic-api-key:13

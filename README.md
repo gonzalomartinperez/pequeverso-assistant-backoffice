@@ -144,3 +144,5 @@ PostgreSQL (`pg` 8.23), Recharts 3.10, Tailwind CSS 4.3 with owned primitives, l
 Biome 2.5, Playwright 1.63 + axe-core. Node 24.21.0. Support classifications and exact versions are recorded in
 [the runtime inventory](docs/dependencies.md#runtime-support-inventory-2026-10-12);
 maintained libraries are not mislabeled LTS. No infrastructure stack is installed here.
+
+Shared runtime/version acceptance: [runtime baseline](docs/runtime-baseline.md).

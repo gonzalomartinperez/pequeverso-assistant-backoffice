@@ -10,25 +10,23 @@ remain outside this repository's authority.
 | Item | Value |
 |---|---|
 | Image | Built from `Dockerfile` at a reviewed `develop` commit; publish to a private registry and deploy **by digest** only. Not published yet. |
-| Base | `node:24.21.0-trixie-slim@sha256:c83040f7e24bacea68e58a0b96a484ba430bf24abb2973eab7ba4701144b7b63`, `linux/amd64` (built and run locally; other architectures untested) |
-| Commands | default `node server.js` (Next.js 16.3.8 standalone); one-shot `node scripts/db-migrate.ts` (migrations) |
-| User | `node` (UID/GID 1000:1000), no capabilities |
+| Base | Builder `node:24.21.0-trixie-slim@sha256:c83040f7e24bacea68e58a0b96a484ba430bf24abb2973eab7ba4701144b7b63`; runtime `gcr.io/distroless/nodejs24-debian13:nonroot@sha256:9eeb7f5887d0e239e78264b06f7f11d2e14be534050481803a9e4728fcdd278e`, `linux/amd64` (built and run locally; other architectures untested) |
+| Commands | default `node server.js` (Next.js16.4.0 standalone); one-shot `node scripts/db-migrate.ts` (migrations) |
+| User | `65532:65532` (distroless nonroot), no capabilities |
 | Port | `3000/tcp` on `0.0.0.0` (`PORT`, `HOSTNAME`) |
-| Filesystem | Read-only root tested; writable tmpfs `/tmp` and `/app/.next/cache` (`uid=1000,gid=1000,mode=0700,size=32m`) |
+| Filesystem | Read-only root tested; writable tmpfs `/tmp` and `/app/.next/cache` (`uid=65532,gid=65532,mode=0700,size=32m`) |
 | State | None in the container. Identity and access live in PostgreSQL (below). |
 | Shutdown | Next handles SIGTERM by closing HTTP/Next and exiting 143; use a 20 s stop grace period. Smoke verifies idle stop without SIGKILL/OOM; in-flight authenticated transaction drainage remains untested |
 | Resources | Local bounded synthetic fixture: idle 58.3 MiB, cgroup high-water 104.8 MiB including database loss. Proposal: request 0.1 CPU / 128 MiB, limit 1 CPU / 384 MiB; real-provider and authenticated load remain untested |
 | Size | Historical2026-10-10 final image inspect `Size`: 98,914,506 bytes; CLI image listing: 417 MB. Baseline fields were 96,552,397 bytes / 405 MB. No image/disk size reduction is claimed; global installers are absent from the live filesystem but inherited layers remain |
 
-The immutable official Debian 13 Trixie base keeps Node 24.21.0. Runtime installs exact signed
-security packages `perl-base=5.40.1-6+deb13u1` and `liblzma5=5.8.1-1+deb13u2`.
-Global npm, npx, Corepack and Yarn are removed from runtime; application dependencies remain
-the traced `/app/node_modules`, and migrations use Node/pg. Build-stage installers remain
-isolated from the final artifact. Removing inherited files creates whiteouts, not automatic
-physical layer savings. The same-version OS transition has separate exact-image smoke/scan
-receipts; previous Bookworm evidence remains historical. The compact dashboard requires its
-own final app artifact, not a relabelled infrastructure baseline. OS advisories remain visible:
-no available package fix is not risk acceptance or production readiness.
+Current runtime uses the shared maintained distroless Debian13 Node24 artifact, with no
+shell or global installer. Historical slim-image security-package/removal and size samples
+above remain historical; removal by whiteout was not physical layer optimization. Current
+local candidate inspect content bytes are71,170,167 versus98,462,725 for the rebuilt slim
+baseline. This is a mixed dependency/runtime comparison, not proof of lower RAM or faster
+requests. The same Node version, migration, readiness/failure, headers and stop checks passed
+on both exact local fixtures. Production/containerd/registry size measures are distinct.
 
 ## PostgreSQL (required)
 
@@ -175,7 +173,13 @@ Each new candidate needs its own exact-image measurements, smoke, scan and CI re
 do not attribute the old sample to a rebuilt artifact.
 
 Image built and run with `--read-only --tmpfs … --cap-drop ALL --security-opt no-new-privileges`
-as uid 1000: migrations applied, health and headers checked. Browser suite against the production
+as UID65532 for the current candidate (UID1000 was historical): migrations applied, health and headers checked. Browser suite against the production
 build with real PostgreSQL and a fake IdP: [verification.md](verification.md#backoffice).
 Not verified: real Google/GitHub OAuth, TLS/cookie prefixes through the proxy, the real API ops
 endpoint over the private network.
+
+## Shared runtime baseline
+
+See [runtime-baseline.md](runtime-baseline.md) for the2026-10-13 shared cohort and image
+acceptance. Actual committed locks and Dockerfiles supersede historical version/size samples;
+no production publication, deployment or live OAuth/provider check is implied.

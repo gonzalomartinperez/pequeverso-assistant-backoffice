@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 # Production image for the Pequeverso assistant backoffice (docs/deployment-contract.md).
 # One image, two commands: `node server.js` (default) and `node scripts/db-migrate.ts` (one-shot
 # migrations, run by the operator before starting a release that needs them).
@@ -7,36 +7,29 @@ FROM node:24.21.0-trixie-slim@sha256:c83040f7e24bacea68e58a0b96a484ba430bf24abb2
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+RUN --mount=type=cache,target=/root/.npm,sharing=locked npm ci --no-audit --no-fund
 COPY next.config.ts next-env.d.ts tsconfig.json postcss.config.json ./
 COPY src ./src
 COPY public ./public
 # `next build` type-checks with the project-local TypeScript 7 CLI; tests are excluded from the image.
 RUN npx next build --webpack
 
-FROM node:24.21.0-trixie-slim@sha256:c83040f7e24bacea68e58a0b96a484ba430bf24abb2973eab7ba4701144b7b63 AS runtime
+FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:9eeb7f5887d0e239e78264b06f7f11d2e14be534050481803a9e4728fcdd278e AS runtime
 LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice"
 LABEL org.opencontainers.image.description="Pequeverso assistant private backoffice (operations dashboard and access)"
 LABEL org.opencontainers.image.licenses="LicenseRef-Proprietary"
-# Fresh official base keeps Node 24.21.0 and includes the patched PCRE2 package.
-# Pin the remaining available Debian security fix; retain apt signature verification.
-# Runtime uses only node and traced /app/node_modules: no global installers are needed.
-RUN apt-get update -o Acquire::http::Timeout=30 -o Acquire::Retries=2 \
-    && apt-get install -y --no-install-recommends perl-base=5.40.1-6+deb13u1 liblzma5=5.8.1-1+deb13u2 \
-    && rm -rf /var/lib/apt/lists/* /usr/local/lib/node_modules /opt/yarn-v1.22.22 \
-    && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
-        /usr/local/bin/yarn /usr/local/bin/yarnpkg
 WORKDIR /app
+ENV PATH=/nodejs/bin:/usr/local/bin:/usr/bin:/bin
 ENV NODE_ENV=production BACKOFFICE_ENVIRONMENT=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
-COPY --chown=node:node LICENSE THIRD_PARTY_NOTICES.md ./
-COPY --from=build --chown=node:node /app/.next/standalone ./
-COPY --from=build --chown=node:node /app/.next/static ./.next/static
-COPY --from=build --chown=node:node /app/public ./public
+COPY --chown=65532:65532 LICENSE THIRD_PARTY_NOTICES.md ./
+COPY --from=build --chown=65532:65532 /app/.next/standalone ./
+COPY --from=build --chown=65532:65532 /app/.next/static ./.next/static
+COPY --from=build --chown=65532:65532 /app/public ./public
 # Migrations: the runner needs only Node and `pg` (already traced into the standalone output).
-COPY --chown=node:node migrations ./migrations
-COPY --chown=node:node scripts/db-migrate.ts ./scripts/db-migrate.ts
-RUN mkdir -p /app/.next/cache && chown node:node /app/.next/cache
-USER node
+COPY --chown=65532:65532 migrations ./migrations
+COPY --chown=65532:65532 scripts/db-migrate.ts ./scripts/db-migrate.ts
+USER 65532:65532
+ENTRYPOINT []
 EXPOSE 3000
 STOPSIGNAL SIGTERM
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

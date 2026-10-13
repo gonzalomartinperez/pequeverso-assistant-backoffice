@@ -1,0 +1,204 @@
+{
+  "runtime_source": "e91b15e190dfdd024f780e61886a67925cdf4f77",
+  "capture_source": "1f732169a6d57f8f7147747f03949d45edd494bc",
+  "mode": "static synthetic mock operations; real local application HTML; fake OAuth",
+  "desktop_viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "mobile_viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "device_scale_factor": 2,
+  "image_count": 26,
+  "inspection": {
+    "capture_agent": "all final 26 inspected",
+    "independent_root_agent": "all final 26 inspected; four Daily images inspected after native pointer-off-chart recapture",
+    "human_review": false
+  },
+  "images": [
+    {
+      "file": "desktop-dark-availability-budget-overview.png",
+      "sha256": "a61b018f6736dafe279b2278cca95fde744ede700419343e6c223630b20c171b",
+      "bytes": 90214,
+      "width": 2208,
+      "height": 630
+    },
+    {
+      "file": "desktop-dark-budget.png",
+      "sha256": "1058cfae0e8196335e3a079ef588d120f75ae5ba6f2e929106eed2ea36a0001c",
+      "bytes": 160346,
+      "width": 904,
+      "height": 1578
+    },
+    {
+      "file": "desktop-dark-catalog.png",
+      "sha256": "2cf39a4d8996093069e9c677888c446142ee158df845a0b9b45df121c50ac9f8",
+      "bytes": 75594,
+      "width": 904,
+      "height": 936
+    },
+    {
+      "file": "desktop-dark-daily-history.png",
+      "sha256": "7d11e859db41f1838b249043d0eabd5c379c0e7331f4a9826f99120731db6dbf",
+      "bytes": 123826,
+      "width": 1266,
+      "height": 2528
+    },
+    {
+      "file": "desktop-dark-overview.png",
+      "sha256": "e1b3de994833f9ad0b97003bcb11967aa90e8b2c53a986dafc04d74ad1f4df52",
+      "bytes": 1003149,
+      "width": 2880,
+      "height": 7686
+    },
+    {
+      "file": "desktop-dark-quality-latency-errors-tokens.png",
+      "sha256": "ec95f359ac6fa45badb5bcac3d0a923880c9a238350ef04cd710a849a69bbb05",
+      "bytes": 199033,
+      "width": 2208,
+      "height": 1736
+    },
+    {
+      "file": "desktop-dark-recent-runs.png",
+      "sha256": "2653368c72aad84ca898726a8ab8e6c9052ec1d4343c71ef953f4a1f0150f8c9",
+      "bytes": 260627,
+      "width": 2208,
+      "height": 1756
+    },
+    {
+      "file": "desktop-dark-telemetry-resources.png",
+      "sha256": "46c1221c5e3da34dc6b99b79a291abf236ef7172019ce0407e3870ef6a1bd5cc",
+      "bytes": 279061,
+      "width": 2208,
+      "height": 2422
+    },
+    {
+      "file": "desktop-light-availability-budget-overview.png",
+      "sha256": "29e093b0bf472018599a6d6466b626f89850006c39221a95f79a72345fdce600",
+      "bytes": 87232,
+      "width": 2208,
+      "height": 630
+    },
+    {
+      "file": "desktop-light-budget.png",
+      "sha256": "6b5dd84608c441c49a9fa9a49f1c8d2235125f43afdab81c36511dd967d87964",
+      "bytes": 155708,
+      "width": 904,
+      "height": 1578
+    },
+    {
+      "file": "desktop-light-catalog.png",
+      "sha256": "6a9c8148a0a05768b23138f14f183803e135170d7c06fd399ea6fb356a7baed0",
+      "bytes": 75440,
+      "width": 904,
+      "height": 936
+    },
+    {
+      "file": "desktop-light-daily-history.png",
+      "sha256": "e448b1f4f495685be74353eb5a361b04f9a41621c17bef8242fbed1f632142b9",
+      "bytes": 116569,
+      "width": 1266,
+      "height": 2528
+    },
+    {
+      "file": "desktop-light-overview.png",
+      "sha256": "8dcffa4b652b983840400eab69499a79d66c2599268989c086e000964a39baf8",
+      "bytes": 1000030,
+      "width": 2880,
+      "height": 7686
+    },
+    {
+      "file": "desktop-light-quality-latency-errors-tokens.png",
+      "sha256": "1b4a46f73193201f984536b68faeb5c7743996a432be64d5b961908c6a7d4824",
+      "bytes": 200627,
+      "width": 2208,
+      "height": 1736
+    },
+    {
+      "file": "desktop-light-recent-runs.png",
+      "sha256": "91cda9f1f5bac50ffb2fbc6d6e53ce612bfd659e1da0bd11f20fb0f0adc0aab0",
+      "bytes": 259985,
+      "width": 2208,
+      "height": 1756
+    },
+    {
+      "file": "desktop-light-telemetry-resources.png",
+      "sha256": "2475c33648a7d2b796fa1355490d50c34d3ad8d24549662555bda0248b2d4776",
+      "bytes": 281895,
+      "width": 2208,
+      "height": 2422
+    },
+    {
+      "file": "mobile-dark-daily-history-scroll-right.png",
+      "sha256": "97a2d9e7d7a965cbf3c29f1908a2f0fd727d7966835b5570799c127340409613",
+      "bytes": 150122,
+      "width": 716,
+      "height": 2554
+    },
+    {
+      "file": "mobile-dark-daily-history.png",
+      "sha256": "c054e9d7a7b7908b93f11ce224eea88b20fe08f69371548344ea31c004b3fc31",
+      "bytes": 117431,
+      "width": 716,
+      "height": 2554
+    },
+    {
+      "file": "mobile-dark-navigation-focus.png",
+      "sha256": "78829ba87f518a7eca4baa052b468cd9dc130d32068bc56a04b39414a89a24c9",
+      "bytes": 153169,
+      "width": 780,
+      "height": 1688
+    },
+    {
+      "file": "mobile-dark-overview.png",
+      "sha256": "4abb0c521910430b472a97dbbddb46eaaa60018af8a40508cc1017e46c072dbb",
+      "bytes": 149229,
+      "width": 780,
+      "height": 1688
+    },
+    {
+      "file": "mobile-dark-telemetry-resources.png",
+      "sha256": "98d333991f8fa7a4bccfbdbb7b1b79393fc24caaa8e5e165c20c6996740f5c9a",
+      "bytes": 390609,
+      "width": 716,
+      "height": 5344
+    },
+    {
+      "file": "mobile-light-daily-history-scroll-right.png",
+      "sha256": "d630d9c6661db1fee6e07263220015f791656478479602e0054ced4e2602ebb7",
+      "bytes": 141785,
+      "width": 716,
+      "height": 2554
+    },
+    {
+      "file": "mobile-light-daily-history.png",
+      "sha256": "2ae4c874b00739f04b32b1a06e46d537bd321dae3b1ddfbcfca4111293aac8f0",
+      "bytes": 109074,
+      "width": 716,
+      "height": 2554
+    },
+    {
+      "file": "mobile-light-navigation-focus.png",
+      "sha256": "c6af55397d5eb7702046775554be73d13ed2645b0d9f100af10ede79c796a3ab",
+      "bytes": 147483,
+      "width": 780,
+      "height": 1688
+    },
+    {
+      "file": "mobile-light-overview.png",
+      "sha256": "bd608647f2af7f25ae4b0d850014b2d06759f382983159ba9936d385f565ef5b",
+      "bytes": 143780,
+      "width": 780,
+      "height": 1688
+    },
+    {
+      "file": "mobile-light-telemetry-resources.png",
+      "sha256": "4399ac2a7b3ca9425fa4d94b732489fea9bff52b785de270989fc31776fb0eaa",
+      "bytes": 379025,
+      "width": 716,
+      "height": 5344
+    }
+  ]
+}

@@ -6,9 +6,13 @@ freshness, runs, latency, tokens and spend. The public conversation lives only i
 (`pequeverso`); the former chat shells were removed from this repository (see git history).
 
 The repository is public; the application is private. All rights reserved (see `LICENSE`).
-**Status:** application releases and local synthetic image/database drills are verified;
-not deployed by this project. Real OAuth, infrastructure, capacity, published image digests
-and model behavior require separate acceptance. The dashboard never enables the storefront.
+**Status:** the compact availability and telemetry dashboard is a release candidate. Local
+static/build and database checks pass; the full local browser run has two deadline failures
+that remain visible in [verification](docs/verification.md). Final exact-image acceptance and
+complete remote CI are required before merging this candidate. Earlier released image drills
+are historical evidence, not proof of this candidate. This project has not deployed the
+backoffice; real OAuth, infrastructure, capacity and model behavior need separate acceptance.
+The dashboard never enables the storefront.
 
 `Next.js 16 · Active LTS` `Node24 · LTS` `PostgreSQL18.6 · supported to2030`
 `React19` `TypeScript7` `Better Auth` `Tailwind4` `OpenTelemetry` `Prometheus/Grafana handoff`
@@ -26,24 +30,24 @@ disabled in this release preparation.
 
 Open each PNG for legible original pixels. Mobile overview/focus images show the first
 viewport; daily/resource details show complete sections. Mobile table views disclose different
-columns through actual horizontal scrolling. The [capture notes](docs/verification/availability-2026-10-12/README.md)
+columns through actual horizontal scrolling. The [capture notes](docs/verification/compact-availability-2026-10-13/README.md)
 record provenance and agent inspection; they do not claim human review.
 
 | Actual rendered view | Light fixture | Dark fixture |
 | --- | --- | --- |
-| Complete desktop overview · local MOCK | ![Light local MOCK Complete desktop overview](docs/verification/availability-2026-10-12/desktop-light-overview.png) | ![Dark local MOCK Complete desktop overview](docs/verification/availability-2026-10-12/desktop-dark-overview.png) |
-| Point-in-time availability and remaining budget · local MOCK | ![Light local MOCK Point-in-time availability and remaining budget](docs/verification/availability-2026-10-12/desktop-light-availability-budget-overview.png) | ![Dark local MOCK Point-in-time availability and remaining budget](docs/verification/availability-2026-10-12/desktop-dark-availability-budget-overview.png) |
-| Catalog freshness and origin · local MOCK | ![Light local MOCK Catalog freshness and origin](docs/verification/availability-2026-10-12/desktop-light-catalog.png) | ![Dark local MOCK Catalog freshness and origin](docs/verification/availability-2026-10-12/desktop-dark-catalog.png) |
-| Reported usage, estimated cost and reserved spend · local MOCK | ![Light local MOCK Reported usage, estimated cost and reserved spend](docs/verification/availability-2026-10-12/desktop-light-budget.png) | ![Dark local MOCK Reported usage, estimated cost and reserved spend](docs/verification/availability-2026-10-12/desktop-dark-budget.png) |
-| 24-hour outcomes, latency, tokens and failures · local MOCK | ![Light local MOCK 24-hour outcomes, latency, tokens and failures](docs/verification/availability-2026-10-12/desktop-light-quality-latency-errors-tokens.png) | ![Dark local MOCK 24-hour outcomes, latency, tokens and failures](docs/verification/availability-2026-10-12/desktop-dark-quality-latency-errors-tokens.png) |
-| Daily charts and accessible table · local MOCK | ![Light local MOCK Daily charts and accessible table](docs/verification/availability-2026-10-12/desktop-light-daily-history.png) | ![Dark local MOCK Daily charts and accessible table](docs/verification/availability-2026-10-12/desktop-dark-daily-history.png) |
-| Opaque synthetic recent-run identifiers · local MOCK | ![Light local MOCK Opaque synthetic recent-run identifiers](docs/verification/availability-2026-10-12/desktop-light-recent-runs.png) | ![Dark local MOCK Opaque synthetic recent-run identifiers](docs/verification/availability-2026-10-12/desktop-dark-recent-runs.png) |
-| Resources, HTTP counters and trace diagnostics · local MOCK | ![Light local MOCK Resources, HTTP counters and trace diagnostics](docs/verification/availability-2026-10-12/desktop-light-telemetry-resources.png) | ![Dark local MOCK Resources, HTTP counters and trace diagnostics](docs/verification/availability-2026-10-12/desktop-dark-telemetry-resources.png) |
-| Mobile first viewport · local MOCK | ![Light local MOCK Mobile first viewport](docs/verification/availability-2026-10-12/mobile-light-overview.png) | ![Dark local MOCK Mobile first viewport](docs/verification/availability-2026-10-12/mobile-dark-overview.png) |
-| Mobile actual keyboard focus · local MOCK | ![Light local MOCK Mobile actual keyboard focus](docs/verification/availability-2026-10-12/mobile-light-navigation-focus.png) | ![Dark local MOCK Mobile actual keyboard focus](docs/verification/availability-2026-10-12/mobile-dark-navigation-focus.png) |
-| Mobile complete daily activity, left table columns · local MOCK | ![Light local MOCK Mobile complete daily activity, left table columns](docs/verification/availability-2026-10-12/mobile-light-daily-history.png) | ![Dark local MOCK Mobile complete daily activity, left table columns](docs/verification/availability-2026-10-12/mobile-dark-daily-history.png) |
-| Mobile actual horizontal scroll, right table columns · local MOCK | ![Light local MOCK Mobile actual horizontal scroll, right table columns](docs/verification/availability-2026-10-12/mobile-light-daily-history-scroll-right.png) | ![Dark local MOCK Mobile actual horizontal scroll, right table columns](docs/verification/availability-2026-10-12/mobile-dark-daily-history-scroll-right.png) |
-| Mobile complete technical resources section · local MOCK | ![Light local MOCK Mobile complete technical resources section](docs/verification/availability-2026-10-12/mobile-light-telemetry-resources.png) | ![Dark local MOCK Mobile complete technical resources section](docs/verification/availability-2026-10-12/mobile-dark-telemetry-resources.png) |
+| Complete desktop overview · local MOCK | ![Light local MOCK Complete desktop overview](docs/verification/compact-availability-2026-10-13/desktop-light-overview.png) | ![Dark local MOCK Complete desktop overview](docs/verification/compact-availability-2026-10-13/desktop-dark-overview.png) |
+| Point-in-time availability and remaining budget · local MOCK | ![Light local MOCK Point-in-time availability and remaining budget](docs/verification/compact-availability-2026-10-13/desktop-light-availability-budget-overview.png) | ![Dark local MOCK Point-in-time availability and remaining budget](docs/verification/compact-availability-2026-10-13/desktop-dark-availability-budget-overview.png) |
+| Catalog freshness and origin · local MOCK | ![Light local MOCK Catalog freshness and origin](docs/verification/compact-availability-2026-10-13/desktop-light-catalog.png) | ![Dark local MOCK Catalog freshness and origin](docs/verification/compact-availability-2026-10-13/desktop-dark-catalog.png) |
+| Reported usage, estimated cost and reserved spend · local MOCK | ![Light local MOCK Reported usage, estimated cost and reserved spend](docs/verification/compact-availability-2026-10-13/desktop-light-budget.png) | ![Dark local MOCK Reported usage, estimated cost and reserved spend](docs/verification/compact-availability-2026-10-13/desktop-dark-budget.png) |
+| 24-hour and 30-day outcomes, latency, tokens and failures · local MOCK | ![Light local MOCK 24-hour and 30-day outcomes, latency, tokens and failures](docs/verification/compact-availability-2026-10-13/desktop-light-quality-latency-errors-tokens.png) | ![Dark local MOCK 24-hour and 30-day outcomes, latency, tokens and failures](docs/verification/compact-availability-2026-10-13/desktop-dark-quality-latency-errors-tokens.png) |
+| Daily charts and accessible table · local MOCK | ![Light local MOCK Daily charts and accessible table](docs/verification/compact-availability-2026-10-13/desktop-light-daily-history.png) | ![Dark local MOCK Daily charts and accessible table](docs/verification/compact-availability-2026-10-13/desktop-dark-daily-history.png) |
+| Opaque synthetic recent-run identifiers · local MOCK | ![Light local MOCK Opaque synthetic recent-run identifiers](docs/verification/compact-availability-2026-10-13/desktop-light-recent-runs.png) | ![Dark local MOCK Opaque synthetic recent-run identifiers](docs/verification/compact-availability-2026-10-13/desktop-dark-recent-runs.png) |
+| Resources, HTTP counters and trace diagnostics · local MOCK | ![Light local MOCK Resources, HTTP counters and trace diagnostics](docs/verification/compact-availability-2026-10-13/desktop-light-telemetry-resources.png) | ![Dark local MOCK Resources, HTTP counters and trace diagnostics](docs/verification/compact-availability-2026-10-13/desktop-dark-telemetry-resources.png) |
+| Mobile first viewport · local MOCK | ![Light local MOCK Mobile first viewport](docs/verification/compact-availability-2026-10-13/mobile-light-overview.png) | ![Dark local MOCK Mobile first viewport](docs/verification/compact-availability-2026-10-13/mobile-dark-overview.png) |
+| Mobile actual keyboard focus · local MOCK | ![Light local MOCK Mobile actual keyboard focus](docs/verification/compact-availability-2026-10-13/mobile-light-navigation-focus.png) | ![Dark local MOCK Mobile actual keyboard focus](docs/verification/compact-availability-2026-10-13/mobile-dark-navigation-focus.png) |
+| Mobile complete daily activity, left table columns · local MOCK | ![Light local MOCK Mobile complete daily activity, left table columns](docs/verification/compact-availability-2026-10-13/mobile-light-daily-history.png) | ![Dark local MOCK Mobile complete daily activity, left table columns](docs/verification/compact-availability-2026-10-13/mobile-dark-daily-history.png) |
+| Mobile actual horizontal scroll, right table columns · local MOCK | ![Light local MOCK Mobile actual horizontal scroll, right table columns](docs/verification/compact-availability-2026-10-13/mobile-light-daily-history-scroll-right.png) | ![Dark local MOCK Mobile actual horizontal scroll, right table columns](docs/verification/compact-availability-2026-10-13/mobile-dark-daily-history-scroll-right.png) |
+| Mobile complete technical resources section · local MOCK | ![Light local MOCK Mobile complete technical resources section](docs/verification/compact-availability-2026-10-13/mobile-light-telemetry-resources.png) | ![Dark local MOCK Mobile complete technical resources section](docs/verification/compact-availability-2026-10-13/mobile-dark-telemetry-resources.png) |
 
 ## Architecture and data flow
 

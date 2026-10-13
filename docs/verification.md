@@ -287,3 +287,44 @@ published screenshots or final production acceptance. Corrected-source productio
 four widths at 200% across browsers, full 48-case suite, final gallery and exact new app
 image smoke/scan remain pending. The older 34 public captures are retained as an explicitly
 identified baseline until final recapture; they are not relabelled as this redesign.
+
+## Compact dashboard candidate — 2026-10-13
+
+Runtime build source `e91b15e190dfdd024f780e61886a67925cdf4f77` passed `npm run check` in
+161.78 s: 89 unit tests, lint/types/boundaries, 77 documentation links, 3 skills, public-file
+checks and the production Next.js build. PostgreSQL 18.6 on the immutable Trixie artifact
+passed all 17 integrations in 17.618 s wrapper time (12.769 s test runner), with zero schema
+drift and idempotent migration reapply. Negative fixture URLs are rejected before loading
+Better Auth; the original 15 s bootstrap failure is retained as historical evidence.
+
+The original 48-case browser run had 42 passes, 3 optional LIVE_OPS skips and 3 deadline
+failures in 866.433 s. The two existing axe audits were then moved into dedicated cases with
+real OAuth/invitation setup and the same accessibility tags. Every functional IAM assertion
+and the continuous four-width reflow case stayed in place; the timeout stayed 45 s and local
+retries stayed zero. The complete discovered suite at test source `1f732169` reports **49
+passes, 3 optional LIVE_OPS skips and 2 deadline failures in 805.279 s**, not a green run.
+Runtime application code remains byte-identical to the e91 build.
+
+The Firefox revocation-dialog audit produced zero violations and its assertion completed
+within 44.604 s, but the overall case timed out during finalization; that case is not a pass.
+The WebKit functional IAM case timed out around confirmation: revocation and the next-request
+refusal were not verified by that local case. No false accessibility or business assertion
+was demonstrated by these traces, and no host-contention cause is asserted. Raw failures are
+preserved; a later CI run must be assessed independently and does not erase them.
+
+Continuous 200% text reflow at 320, 390, 768 and 1440 CSS px passed in Chromium, Firefox,
+WebKit and mobile Chromium. All final [26 compact screenshots](verification/compact-availability-2026-10-13/README.md)
+were inspected by both capture and independent root agents. These static synthetic mock
+photos prove framing and visible states, not live telemetry, model quality or deployment.
+The existing 3c88447 Trixie PostgreSQL artifact and its restore/scan receipts keep their own
+image identity. The redesigned final application image and full remote CI are still pending;
+previous image smoke or vulnerability scans must not be attributed to a different image ID.
+
+The later test-only source `7418120d6bacaab825aeade6b77310099a01aba3` adds a native
+instant scroll to the document top immediately before the existing mobile top photo, without
+changing assertions or budgets. The one owner-dashboard mobile case passed in 34.9 s
+(43.2 s Playwright suite; 48.478 s outer wrapper) with no retries. Its native Pixel 7 configuration
+is 412×839 CSS px, DPR 2.625; it is separate from the gallery's 390×844/DPR 2 photos.
+An initial external anchored selector discovered zero tests and exited 1; its diagnostic
+receipt remains preserved, and it is not counted as a browser case. This focused pass does
+not replace the failed complete-suite result above.

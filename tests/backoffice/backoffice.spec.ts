@@ -168,6 +168,7 @@ test("owner dashboard shows labelled synthetic data, charts and accessible table
   if (info.project.name === "chromium")
     await page.screenshot({ path: `${SHOTS}/desktop-dashboard.png`, fullPage: true });
   if (mobile) {
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
     await page.screenshot({ path: `${SHOTS}/mobile-dashboard-top.png` });
     await page
       .getByRole("region", { name: "Actividad diaria", exact: true })

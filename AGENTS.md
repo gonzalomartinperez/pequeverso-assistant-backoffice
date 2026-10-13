@@ -20,16 +20,17 @@ private operations details or other repositories' internals.
   `src/features/auth/application/access.ts`; never move them into UI code.
 - Every page and server action re-checks the role server-side (`requireActor`). No credentials,
   sessions or tokens in `localStorage`, URLs (except the one-time invitation link) or logs.
-- Operations data comes only from the API's private summary through `src/server/operations.ts`;
-  validate it, show missing values as "No disponible", label fixture data as synthetic, and never
-  display prompts, answers, buyer data, cookies or secrets.
+- Operations data comes only from the API's private summary and optional private telemetry through
+  their server adapters. Consume the committed API producer pins in `contracts/ops/source.json`
+  and `contracts/telemetry/source.json`; validate payloads, show missing values as "No disponible",
+  label fixture data as synthetic, and never display prompts, answers, buyer data, cookies or secrets.
 - Schema changes are new files in `migrations/` (append-only); run `npm run test:db`.
 
 ## Non-negotiables
 
 - Treat API payloads and anything from the network as untrusted: validate at the adapter boundary.
 - No tracking, analytics, session replay or third-party feedback services.
-- Consume only pinned, committed contracts (`contracts/ops/`, `contracts/ops/source.json`); do not
+- Consume only pinned, committed contracts (`contracts/ops/` and `contracts/telemetry/`); do not
   invent endpoints, fields or auth behavior. Mocks and fixtures must say they are synthetic.
 - Architecture boundaries are enforced by `scripts/check-boundaries.ts` (run in `npm test`).
 - Other repositories (storefront, API, portfolio, vps-ops) are read-only references. Never import

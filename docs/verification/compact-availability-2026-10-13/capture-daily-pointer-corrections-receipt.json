@@ -1,0 +1,37 @@
+{
+  "runtime_build_source": "e91b15e",
+  "capture_source": "1f73216",
+  "correction": "native pointer movement off chart; no stylesheet, image edits or runtime changes",
+  "rendered_application": true,
+  "synthetic_model": true,
+  "static_mock_values": true,
+  "device_scale_factor": 2,
+  "screenshots": [
+    {
+      "file": "mobile-light-daily-history.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-light-daily-history-scroll-right.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-dark-daily-history.png",
+      "theme": "dark"
+    },
+    {
+      "file": "mobile-dark-daily-history-scroll-right.png",
+      "theme": "dark"
+    }
+  ],
+  "table_scroll_light": {
+    "left": 670,
+    "viewport": 314,
+    "content": 984
+  },
+  "table_scroll_dark": {
+    "left": 670,
+    "viewport": 314,
+    "content": 984
+  }
+}

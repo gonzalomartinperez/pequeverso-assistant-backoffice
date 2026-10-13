@@ -13,6 +13,22 @@ const fixture = JSON.parse(
     "utf8",
   ),
 ) as Record<string, unknown>;
+const telemetry = JSON.parse(
+  readFileSync(
+    path.resolve(import.meta.dirname, "..", "contracts/telemetry/ops.telemetry.example.json"),
+    "utf8",
+  ),
+) as Record<string, unknown>;
+// Keep the static example's verdict coherent with its displayed age without modifying the
+// pinned contract artifact. These are preview timestamps, not production measurements.
+const sampledAt = new Date();
+fixture.generated_at = sampledAt.toISOString();
+const catalog = fixture.catalog as Record<string, unknown>;
+catalog.generated_at = sampledAt.toISOString();
+catalog.verified_at = sampledAt.toISOString();
+telemetry.generated_at = sampledAt.toISOString();
+telemetry.process_started_at = new Date(sampledAt.getTime() - 60_000).toISOString();
+(telemetry.readiness as Record<string, unknown>).checked_at = sampledAt.toISOString();
 let variant = "full";
 
 function payload(): unknown {
@@ -51,7 +67,8 @@ createServer((request, response) => {
     response.writeHead(204).end();
     return;
   }
-  if (url.pathname !== "/internal/v1/ops/summary" || request.method !== "GET") {
+  const isTelemetry = url.pathname === "/internal/v1/ops/telemetry";
+  if ((!isTelemetry && url.pathname !== "/internal/v1/ops/summary") || request.method !== "GET") {
     response.writeHead(404).end();
     return;
   }
@@ -65,7 +82,19 @@ createServer((request, response) => {
       .end('{"error":{"code":"unauthorized"}}');
     return;
   }
+  if (isTelemetry && variant === "telemetry-off") {
+    response.writeHead(404).end();
+    return;
+  }
   response
     .writeHead(200, { "content-type": "application/json", "cache-control": "no-store" })
-    .end(JSON.stringify(payload()));
+    .end(
+      JSON.stringify(
+        isTelemetry
+          ? variant === "telemetry-invalid"
+            ? { schema_version: "99" }
+            : telemetry
+          : payload(),
+      ),
+    );
 }).listen(port, "127.0.0.1", () => console.log(`mock ops (SYNTHETIC) on http://127.0.0.1:${port}`));

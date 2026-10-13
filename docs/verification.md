@@ -149,3 +149,182 @@ OAuth remain outside these fixture checks.
 The optional live-API browser check requires exactly one completed fixture execution to be
 seeded before the suite. It now checks for that data row, so an empty bookkeeping result cannot
 pass merely because it has no table header.
+
+## Availability candidate — 2026-10-12 (acceptance incomplete)
+
+The last complete local `npm run check` passed at `def022e` in 116.39 s with 89 unit tests.
+The PostgreSQL 18.6 database suite subsequently passed 17/17 in 11.38 s. These results do not
+validate every later candidate change or its exact application image.
+
+The first browser run at `cf2457a` finished with 33 passed, 8 failed and 3 optional live-API
+specifications skipped in 550.81 s. Seven failures exposed incorrect new test assumptions
+(old fixture wording and repeated OAuth despite an existing session); `e6702cb` corrected
+those tests without changing admission, permissions or timeout budgets. One WebKit IAM
+lifecycle test exhausted its 45-second budget.
+
+The affected run at `e6702cb` finished with 6 passed and 4 failed in 429.34 s. The optional
+telemetry fallbacks passed in all three engines; technical observations passed in Firefox,
+WebKit and mobile Chromium. Three IAM lifecycle cases and Chromium technical observation
+exhausted the unchanged 45-second per-test limit, including axe `frame.evaluate` and reload
+operations. Trace actions lasting roughly 3–15 s were recorded. No cause, CPU attribution or
+flaky designation is established. The dependent full suite did not run after that failure.
+
+The harness creates a random disposable database for each process; inspection disproved the
+hypothesis that identities from an earlier run contaminated the next database. Failure logs,
+contexts, traces and screenshots were preserved outside the repository. Preview timestamp
+coherence and wording were then corrected in `9795fbb`; the pinned examples stayed unchanged.
+
+Remaining finite gates: complete check at the final head; full dedicated CI browser suite
+with its existing accessibility, CSP and real fake-provider OAuth assertions; inspected
+light/dark/mobile screenshots; exact application and PostgreSQL 18.6 migration, backup/restore,
+read-only/non-root and private observability smoke; exact-image inventory and security review;
+independent review and green required CI. No deployment or real OAuth/provider acceptance is
+implied. Both private source pins now name integrated API commit `b7dcb0c` (API PR39). The summary1.2
+schema/example remain byte-identical to `87fc109`; the telemetry1.0 schema/example remain
+byte-identical to `03898d8` and the temporary accessible pin `debb678`. All four recorded
+SHA-256 hashes were verified against `git show b7dcb0c:<path>`. This metadata update does not
+establish end-to-end acceptance of the final images.
+
+### Exact local evidence at runtime `11f13a5` (2026-10-12)
+
+The complete `npm run check` passed in 110.72 s with 89 unit tests. The exact application
+image `sha256:536698d8aa8ba6d1507ae7c6044ca52a82935548d4bb4aab4468149caea83605`
+and PostgreSQL 18.6 Bookworm image
+`sha256:45445d0130d9a1f98f179979a5d5885c911a3ecdb5cf9c1554bc1905bbc756d4`
+passed their shipped local smoke scripts in 23.14 s and 64.92 s respectively. The database
+smoke checks non-root/read-only quotas, durable settings, 2000/2000 transactions with zero
+failures, synthetic IAM dump/restore content hashes, restart persistence and exact-app
+migration/readiness. These are measured local fixture drills, not capacity or deployment proof.
+
+A separate actual-image test used the real Better Auth test-provider callback, not SQL session
+insertion. Missing, incorrect and API-client tokens each received 401 from the backoffice
+metrics route; its separate bearer received 200. Readiness and protected-panel operations
+increased counters across the compiled route/RSC boundary. Node JSON and Python protobuf OTLP
+payloads reached an isolated collector; both private summary/telemetry client span IDs matched
+API child-parent IDs in the same traces. Export batches were 2 successful/0 failed. This took
+119.72 s against API route-classification candidate image `sha256:48435fc564ff353b9590e9ebed033425d23615815f29a9d69112b88e0b76bf57`,
+with fixture provider, zero model requests and all own resources removed afterwards.
+Earlier failed attempts exposed external collector assumptions about protobuf-only and
+Content-Length framing; bounded JSON/protobuf/chunked decoding resolved them without product
+source changes. Those failed receipts were preserved rather than discarded.
+
+Fresh independent Trivy 0.75 scans at these exact image IDs reported 228 OS rows/99 distinct
+CVEs for the app (1 CRITICAL, 50 HIGH, zero Node findings and zero available fixes), and
+383 OS rows/134 distinct CVEs for PostgreSQL (2 CRITICAL, 63 HIGH, zero available fixes).
+The complete inventories, including other severities, remain visible in the external receipts;
+SBOM inventories contain 130 and 143 components. A source-package MiniZip applicability note
+is not suppression. PostgreSQL's required XML support retains the affected libxml2
+CVE-2026-6653; the absence of an available stable-base fix is not risk acceptance or readiness.
+The same-version Debian 13 transition has its own baseline receipts below; it never inherits these Bookworm scans.
+
+The complete local browser run at capture checkout `5515732` finished in 521.88 s:
+**40 passed, 1 Firefox IAM lifecycle timeout, 3 optional LIVE_OPS skips, zero retries**.
+The 45-second deadline remains unchanged. Recorded final revocation/redirect assertions passed,
+but the run still failed; no CPU cause or flaky label is established. This does not certify
+external OAuth or real-provider behavior. Its private traces and original failed/publication-held
+captures are preserved outside the repository.
+
+The [current 26-image gallery](verification/availability-2026-10-12/README.md) was captured from
+the actual local production build with MOCK data at DPR2. Both author and independent root
+agents inspected every final image. Four mobile framing/focus originals were held and replaced
+by actual complete-section/keyboard-focus captures; two right-scrolled table states were added.
+Desktop and mobile images are not composited or retouched. This visual acceptance is separate
+from browser/CI acceptance, provider quality and production deployment. Final feature CI,
+container-base comparison and the corresponding exact final artifact checks remain finite gates.
+
+### Public capture privacy regression
+
+The `f97d74b` test-only change keeps the one-time invitation URL in test memory, reloads the
+actual access-management page, and requires the link to disappear while its pending row
+persists before publishing the access screenshot. All subsequent intruder, viewer, spent-link
+and revocation assertions remain intact. Mobile daily capture now covers the complete labelled
+section. No application/auth code, deadline or retry policy changed. The focused Chromium IAM,
+Chromium owner and mobile owner checks passed 3/3 in 36.43 s with zero retries.
+
+Eight refreshed `verification/backoffice/` PNGs were independently inspected at their current
+bytes; the invitation-token-bearing original is held privately outside the repository, and the
+accidentally clipped mobile original is retained as failed framing evidence. The current access
+capture contains no invitation URL/token. The 26-image gallery is unchanged and separately
+hash-bound. The unchanged sign-in/live-API legacy images and the 2026-10-05 metrics remain
+historical records; refreshed images do not re-date those test results or turn the failed full
+2026-10-12 browser run green.
+
+### Debian 13 infrastructure baseline `3c88447` (2026-10-13)
+
+The adopted same-version Node 24.21.0/PostgreSQL 18.6 Trixie Docker changes have separate
+local immutable artifacts: app `sha256:e2f59fecf6b686fe4086897c032a7e85a0c62c89477a4c6c275377c2a28f25b4`
+and PostgreSQL `sha256:afcb89c0b8d3c92ffdc98e28b58b9972292f0d90b9ffb8181a305719e768d2c1`.
+Their original OCI revision remains `3c88447`; these images contain the preceding UI, not the
+new compact layout. The shipped app/PG smoke commands passed in 38.40 s / 106.58 s: non-root,
+read-only quotas/no extra swap, health/readiness and DB loss, idempotent migrations, durable
+settings, 2000/2000 synthetic IAM transactions with zero failures, dump/restore hashes,
+restart and normal bounded termination. Real Better Auth fake-provider callbacks also
+verified separate metrics bearer 401/200 gates, shared readiness/RSC counters and actual
+Node JSON/Python protobuf OTLP with both private W3C parent relationships. Zero model requests
+were made. No elapsed-time benchmark is inferred from the correlation receipt.
+
+Fresh independent Trivy 0.75 scans (DB updated 2026-10-12 19:08 UTC) identified Debian 13.7.
+The app had 162 OS rows/71 distinct CVEs: 0 CRITICAL, 43 HIGH, 58 MEDIUM, 60 LOW, 1 UNKNOWN;
+PostgreSQL had 303 rows/117 CVEs: 1 CRITICAL, 61 HIGH, 108 MEDIUM, 126 LOW, 7 UNKNOWN.
+No Node vulnerability rows or available fixed versions were reported. SBOMs contained
+121/144 components respectively. PostgreSQL's actual required libxml2 CVE-2026-6653 remains
+vulnerable with a deferred fix: fewer rows or zero available fixes do not grant risk
+acceptance, certify exploitability or make production ready. The signed APT verifier is SQV;
+required Trixie SQLite is retained rather than forcibly removed.
+
+Image inspect Size fields were 98,461,515 (app) / 163,029,028 (PG) bytes versus the previous
+98,999,626/159,670,971. PostgreSQL metadata grew; inherited layers/whiteouts and shared storage
+prevent inferring physical disk reclamation from these numbers. Local single sequential
+samples also had slower startup/stop; no general performance improvement is claimed.
+Fresh-volume six-label UTF8 logical restore preserved content/order/restart while libc
+collation changed 2.36→2.41. This does not certify production indexes or allow automatic
+physical-volume reuse.
+
+The new compact dashboard is a later source change. Its enlarged-text gate found real
+320 px document overflow; content-free DOM/Range diagnostics isolated header/control wrapping,
+implicit grid tracks and a native summary word. Diagnostic CSSOM trials 662→329→320 were not
+published screenshots or final production acceptance. Corrected-source production build,
+four widths at 200% across browsers, full 48-case suite, final gallery and exact new app
+image smoke/scan remain pending. The older 34 public captures are retained as an explicitly
+identified baseline until final recapture; they are not relabelled as this redesign.
+
+## Compact dashboard candidate — 2026-10-13
+
+Runtime build source `e91b15e190dfdd024f780e61886a67925cdf4f77` passed `npm run check` in
+161.78 s: 89 unit tests, lint/types/boundaries, 77 documentation links, 3 skills, public-file
+checks and the production Next.js build. PostgreSQL 18.6 on the immutable Trixie artifact
+passed all 17 integrations in 17.618 s wrapper time (12.769 s test runner), with zero schema
+drift and idempotent migration reapply. Negative fixture URLs are rejected before loading
+Better Auth; the original 15 s bootstrap failure is retained as historical evidence.
+
+The original 48-case browser run had 42 passes, 3 optional LIVE_OPS skips and 3 deadline
+failures in 866.433 s. The two existing axe audits were then moved into dedicated cases with
+real OAuth/invitation setup and the same accessibility tags. Every functional IAM assertion
+and the continuous four-width reflow case stayed in place; the timeout stayed 45 s and local
+retries stayed zero. The complete discovered suite at test source `1f732169` reports **49
+passes, 3 optional LIVE_OPS skips and 2 deadline failures in 805.279 s**, not a green run.
+Runtime application code remains byte-identical to the e91 build.
+
+The Firefox revocation-dialog audit produced zero violations and its assertion completed
+within 44.604 s, but the overall case timed out during finalization; that case is not a pass.
+The WebKit functional IAM case timed out around confirmation: revocation and the next-request
+refusal were not verified by that local case. No false accessibility or business assertion
+was demonstrated by these traces, and no host-contention cause is asserted. Raw failures are
+preserved; a later CI run must be assessed independently and does not erase them.
+
+Continuous 200% text reflow at 320, 390, 768 and 1440 CSS px passed in Chromium, Firefox,
+WebKit and mobile Chromium. All final [26 compact screenshots](verification/compact-availability-2026-10-13/README.md)
+were inspected by both capture and independent root agents. These static synthetic mock
+photos prove framing and visible states, not live telemetry, model quality or deployment.
+The existing 3c88447 Trixie PostgreSQL artifact and its restore/scan receipts keep their own
+image identity. The redesigned final application image and full remote CI are still pending;
+previous image smoke or vulnerability scans must not be attributed to a different image ID.
+
+The later test-only source `7418120d6bacaab825aeade6b77310099a01aba3` adds a native
+instant scroll to the document top immediately before the existing mobile top photo, without
+changing assertions or budgets. The one owner-dashboard mobile case passed in 34.9 s
+(43.2 s Playwright suite; 48.478 s outer wrapper) with no retries. Its native Pixel 7 configuration
+is 412×839 CSS px, DPR 2.625; it is separate from the gallery's 390×844/DPR 2 photos.
+An initial external anchored selector discovered zero tests and exited 1; its diagnostic
+receipt remains preserved, and it is not counted as a browser case. This focused pass does
+not replace the failed complete-suite result above.

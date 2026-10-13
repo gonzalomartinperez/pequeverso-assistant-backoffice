@@ -1,15 +1,16 @@
 # Deployment contract (vps-ops handoff)
 
 What this repository provides for the shared VPS managed by `vps-ops` (Coolify + Traefik), and what
-it needs from it. **Nothing is deployed.** No image is published, and no DNS record, domain,
-route, database or Coolify resource exists for the backoffice.
+it needs from it. **Nothing is deployed or published by this project.** Local fixture images
+and databases are test artifacts; production resources, DNS, routes and Coolify provisioning
+remain outside this repository's authority.
 
 ## Artifact
 
 | Item | Value |
 |---|---|
 | Image | Built from `Dockerfile` at a reviewed `develop` commit; publish to a private registry and deploy **by digest** only. Not published yet. |
-| Base | `node:24.21.0-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20`, `linux/amd64` (built and run locally; other architectures untested) |
+| Base | `node:24.21.0-trixie-slim@sha256:c83040f7e24bacea68e58a0b96a484ba430bf24abb2973eab7ba4701144b7b63`, `linux/amd64` (built and run locally; other architectures untested) |
 | Commands | default `node server.js` (Next.js 16.3.8 standalone); one-shot `node scripts/db-migrate.ts` (migrations) |
 | User | `node` (UID/GID 1000:1000), no capabilities |
 | Port | `3000/tcp` on `0.0.0.0` (`PORT`, `HOSTNAME`) |
@@ -17,15 +18,17 @@ route, database or Coolify resource exists for the backoffice.
 | State | None in the container. Identity and access live in PostgreSQL (below). |
 | Shutdown | Next handles SIGTERM by closing HTTP/Next and exiting 143; use a 20 s stop grace period. Smoke verifies idle stop without SIGKILL/OOM; in-flight authenticated transaction drainage remains untested |
 | Resources | Local bounded synthetic fixture: idle 58.3 MiB, cgroup high-water 104.8 MiB including database loss. Proposal: request 0.1 CPU / 128 MiB, limit 1 CPU / 384 MiB; real-provider and authenticated load remain untested |
-| Size | Docker 29 inspect `Size`: 98,914,468 bytes; CLI image listing: 417 MB. Baseline fields were 96,552,397 bytes / 405 MB. No image/disk size reduction is claimed; global installers are absent from the live filesystem but inherited layers remain |
+| Size | Historical2026-10-10 final image inspect `Size`: 98,914,506 bytes; CLI image listing: 417 MB. Baseline fields were 96,552,397 bytes / 405 MB. No image/disk size reduction is claimed; global installers are absent from the live filesystem but inherited layers remain |
 
-The immutable official base keeps Node 24.21.0. Its refreshed Debian PCRE2 package is
-`10.42-1+deb12u2`; runtime installs the available signed Debian security package
-`perl-base=5.36.0-7+deb12u4`. Global npm, npx, Corepack and Yarn are removed from runtime;
-application dependencies remain the traced `/app/node_modules`, and migrations use Node/pg.
-Build-stage installers remain isolated from the final artifact. OS advisories without an
-available fix stay visible in exact-image scan evidence; this change does not imply acceptance
-or make the production environment ready.
+The immutable official Debian 13 Trixie base keeps Node 24.21.0. Runtime installs exact signed
+security packages `perl-base=5.40.1-6+deb13u1` and `liblzma5=5.8.1-1+deb13u2`.
+Global npm, npx, Corepack and Yarn are removed from runtime; application dependencies remain
+the traced `/app/node_modules`, and migrations use Node/pg. Build-stage installers remain
+isolated from the final artifact. Removing inherited files creates whiteouts, not automatic
+physical layer savings. The same-version OS transition has separate exact-image smoke/scan
+receipts; previous Bookworm evidence remains historical. The compact dashboard requires its
+own final app artifact, not a relabelled infrastructure baseline. OS advisories remain visible:
+no available package fix is not risk acceptance or production readiness.
 
 ## PostgreSQL (required)
 
@@ -34,7 +37,7 @@ built database artifact, PostgreSQL18 volume boundary, measured bounded recipe a
 restore drill. Infrastructure remains owned by vps-ops; this is not a deployment authorization.
 
 - A dedicated database and role for the backoffice on a private network; never exposed publicly,
-  never shared with portfolio services. Tested with PostgreSQL 17.6 and 18.4.
+  never shared with portfolio services. Historical tests covered17.6/18.4; current artifact uses supported PostgreSQL 18.6. Runtime app credentials must not be superuser; infrastructure owns dedicated migration/runtime grants.
 - Store PostgreSQL data on a dedicated persistent volume, never the disposable tmpfs used by
   `scripts/smoke-image.sh`. Volume and backup lifecycle belong to vps-ops; container removal must
   preserve data. Leave at least 20% disk headroom for WAL, migrations and dump/restore working space.
@@ -52,9 +55,11 @@ restore drill. Infrastructure remains owned by vps-ops; this is not a deployment
   secret backup. The SQL dump alone cannot recover encrypted OAuth credentials or provider app
   settings; test secret-key recovery separately without logging keys.
 - A restore drill must use a new isolated database: restore the encrypted off-server dump, run
-  `db:check` and readiness from the same release digest, then verify owner admission, invitations,
+  shipped migration checksum/idempotency and readiness from the same exact image digest, then verify owner admission, invitations,
   revoked sessions and audit rows. Record backup age, restore time and checksum. A successful
-  disposable schema migration is not a backup/restore proof.
+  disposable schema migration is not a backup/restore proof. Run `npm run db:check` separately
+  from a source clean checkout against an isolated test PostgreSQL with CREATEDB: it is not
+  packaged in the image, creates its own database for drift and does not validate restored rows.
 - Pool: at most 5 connections per container, 5 s connect timeout, 5 s statement timeout.
 
 ## Runtime variables
@@ -79,6 +84,18 @@ redacted `configuration_invalid` log when a production requirement is missing. N
 rebuild, to change them). Secret names proposed for vps-ops: `pequeverso-backoffice-auth-secret`,
 `pequeverso-backoffice-database-url`, `pequeverso-backoffice-google-oauth`,
 `pequeverso-backoffice-github-oauth`, `pequeverso-assistant-ops-read-token` (shared with the API).
+
+## Optional operational observability
+
+See [observability](observability.md) for the full server-only variables and privacy/bounds.
+`OPS_TELEMETRY_ENABLED=false` preserves legacy summary-only operation. Private telemetry1.0
+is independent from unchanged summary1.2 and the public chat contract. `OBSERVABILITY_METRICS_ENABLED=false`
+keeps `/internal/v1/ops/metrics` absent; enabling it requires a new, distinct
+`OBSERVABILITY_READ_TOKEN`, never the API-client token. `OBSERVABILITY_TRACES_ENABLED=false`
+starts no exporter; enabling requires a reviewed private
+`OBSERVABILITY_OTLP_TRACES_ENDPOINT` and no nonempty ambient `OTEL_*` settings. These switches
+require a restart, never a client build. Metric/collector credentials remain server-only.
+No observability switch changes OAuth admission, roles or assistant activation.
 
 ## Health
 
@@ -126,8 +143,11 @@ app can be restricted at the edge independently.
 
 | Match | Service |
 |---|---|
-| everything on the backoffice host | backoffice:3000 |
+| backoffice host except `/internal/*`, `/healthz`, `/readyz` | backoffice:3000; protected pages require Better Auth |
+| `/internal/*`, `/healthz`, `/readyz` | never publish through the public proxy; private probes/scrape only |
 | (internal only) `http://pequeverso-assistant-api:8000/internal/v1/ops/summary` | reached by the backoffice over the private network; **never routed publicly** |
+| (internal only) API `/internal/v1/ops/telemetry` | optional authenticated server read, same API bearer |
+| (internal only) BO `/internal/v1/ops/metrics` | private Prometheus scrape, separate BO machine bearer |
 
 OAuth callback URLs to register (per environment): `<BACKOFFICE_ORIGIN>/api/auth/callback/google`
 and `<BACKOFFICE_ORIGIN>/api/auth/callback/github`.
@@ -149,6 +169,10 @@ stronger value) because TLS terminates there.
 5. A non-invited account is refused; the ops endpoint is unreachable from outside the network.
 
 ## Verification performed here
+
+The historical resource/size sample above predates the availability/observability addition.
+Each new candidate needs its own exact-image measurements, smoke, scan and CI receipts;
+do not attribute the old sample to a rebuilt artifact.
 
 Image built and run with `--read-only --tmpfs … --cap-drop ALL --security-opt no-new-privileges`
 as uid 1000: migrations applied, health and headers checked. Browser suite against the production

@@ -3,6 +3,18 @@ import { OpsPayloadError, parseOpsSummary } from "./validate.ts";
 
 const MAX_BYTES = 256 * 1024;
 
+/** Only generated W3C00 contexts can cross the private adapter boundary. */
+export function privateTraceHeader(value: string | null): Record<string, string> {
+  if (
+    !value ||
+    !/^00-[a-f0-9]{32}-[a-f0-9]{16}-[a-f0-9]{2}$/.test(value) ||
+    value.slice(3, 35) === "0".repeat(32) ||
+    value.slice(36, 52) === "0".repeat(16)
+  )
+    return {};
+  return { traceparent: value };
+}
+
 /**
  * Server-to-server client for `GET {OPS_API_URL}/internal/v1/ops/summary` with a bearer token.
  * Never cached, bounded in time and size, no redirects followed. Every failure collapses into an
@@ -12,6 +24,7 @@ export function httpOpsSource(
   settings: { url: string; token: string } | null,
   fetcher: typeof fetch = fetch,
   timeoutMs = 4000,
+  traceparent: string | null = null,
 ): OpsSource {
   return {
     async read(): Promise<OpsReading> {
@@ -20,7 +33,11 @@ export function httpOpsSource(
       let response: Response;
       try {
         response = await fetcher(`${settings.url}/internal/v1/ops/summary`, {
-          headers: { Authorization: `Bearer ${settings.token}`, Accept: "application/json" },
+          headers: {
+            Authorization: `Bearer ${settings.token}`,
+            Accept: "application/json",
+            ...privateTraceHeader(traceparent),
+          },
           cache: "no-store",
           redirect: "error",
           signal: AbortSignal.timeout(timeoutMs),

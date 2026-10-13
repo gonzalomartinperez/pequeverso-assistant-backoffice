@@ -1,0 +1,20 @@
+# BO-only proposals for vps-ops to translate; no shared stack or credentials provisioned.
+groups:
+  - name: pequeverso-backoffice
+    rules:
+      - alert: PequeversoBackofficeScrapeUnavailable
+        expr: up{job="pequeverso-backoffice"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Private backoffice metrics scrape has been unavailable for two minutes
+          description: Check network, scrape credential, exporter switch and process health. This is not evidence that the buyer API is down.
+      - alert: PequeversoBackofficeOperationsUnavailable
+        expr: sum(rate(pequeverso_backoffice_operation_total{operation="ops_summary",outcome=~"unavailable|error"}[5m])) / clamp_min(sum(rate(pequeverso_backoffice_operation_total{operation="ops_summary"}[5m])), 0.000001) > 0.5 and sum(increase(pequeverso_backoffice_operation_total{operation="ops_summary"}[5m])) >= 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Multiple private summary reads failed
+          description: At least five observations are needed. No request traffic means no availability percentage can be inferred.

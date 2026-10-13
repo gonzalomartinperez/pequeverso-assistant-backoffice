@@ -1,0 +1,241 @@
+{
+  "runtime_source": "11f13a5; capture source5515732",
+  "data": "local MOCK/fixture",
+  "inspection": "capture and root agents; not human",
+  "files": [
+    {
+      "file": "desktop-dark-availability-budget-overview.png",
+      "sha256": "fe1e28151efe6ea4dda530e825f02c213edda6c9ea135c7ec4097915f660a924",
+      "width_px": 2208,
+      "height_px": 566,
+      "bytes": 61824,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-dark-budget.png",
+      "sha256": "2676f038c85ddcf176c9a3abe714f42ddb814ec48d62f75cb25e31db8df6a770",
+      "width_px": 2208,
+      "height_px": 784,
+      "bytes": 111391,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-dark-catalog.png",
+      "sha256": "f23c8d3631843bb35e9c760cdfa0c6bcd0b661ba6dda5daff8b67bda75b71568",
+      "width_px": 1080,
+      "height_px": 886,
+      "bytes": 80630,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-dark-daily-history.png",
+      "sha256": "916a905d695d9fdf2fe28ad7647d831ebb597ca957c19096c7ae0380b781dae1",
+      "width_px": 2208,
+      "height_px": 1654,
+      "bytes": 154367,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-dark-overview.png",
+      "sha256": "907955fd30b124259a986d38198fe4d6b317d7d69836dffd63af7ac919ad82ad",
+      "width_px": 2880,
+      "height_px": 9644,
+      "bytes": 1306973,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-dark-quality-latency-errors-tokens.png",
+      "sha256": "3ee7ab93dbffaefb7ab12a6ad584508eaf9055eb18ab130e04e2b45375a2213c",
+      "width_px": 2208,
+      "height_px": 1018,
+      "bytes": 150391,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-dark-recent-runs.png",
+      "sha256": "25722aa2368c5a5f909950b78e48c21f5706ea5beecd497b478f99532196c4b1",
+      "width_px": 2208,
+      "height_px": 1756,
+      "bytes": 281181,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-dark-telemetry-resources.png",
+      "sha256": "a6c2f62e1ea3e7affb1d4c9e3b6f5cf39ee33e8f6da56dfe341604e7e19de920",
+      "width_px": 2208,
+      "height_px": 1576,
+      "bytes": 224421,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-light-availability-budget-overview.png",
+      "sha256": "72bffd28e27bdd17ba1eed4bc84ed53fe10521111ceda72434fd614bd1047354",
+      "width_px": 2208,
+      "height_px": 566,
+      "bytes": 59398,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-light-budget.png",
+      "sha256": "099bdfd85ddc3d9603b600598dc8b09c02dba27f295db824b740452d7c40adff",
+      "width_px": 2208,
+      "height_px": 784,
+      "bytes": 106311,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-light-catalog.png",
+      "sha256": "f564943ff5379ef581008bf22ccd09e16871929c3d02c5a536d6b06446c14099",
+      "width_px": 1080,
+      "height_px": 886,
+      "bytes": 77224,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-light-daily-history.png",
+      "sha256": "98b38ad45e24064ebc4b74c7bc1097c492633ca5f5e40004b1f0c91e309afe71",
+      "width_px": 2208,
+      "height_px": 1654,
+      "bytes": 144587,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-light-overview.png",
+      "sha256": "47a0ad59faa5906844947d9d97f5e13d44cb6cc474b334ae363ae06a5b9c98b4",
+      "width_px": 2880,
+      "height_px": 9644,
+      "bytes": 1261616,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-light-quality-latency-errors-tokens.png",
+      "sha256": "5a02670303a6e7c6ead97aafa13c378a70d7faf71097f82adc50c27537f42e64",
+      "width_px": 2208,
+      "height_px": 1018,
+      "bytes": 144652,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-light-recent-runs.png",
+      "sha256": "1e00f4cce63ef240d892649f1811c180254b28e284219461c677f75f41787809",
+      "width_px": 2208,
+      "height_px": 1756,
+      "bytes": 263441,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "desktop-light-telemetry-resources.png",
+      "sha256": "90e3a53ff539d6d385415977234fc5d2ba9a4fbea2bff1f329b4945ae8b8df51",
+      "width_px": 2208,
+      "height_px": 1576,
+      "bytes": 216354,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "mobile-dark-daily-history-scroll-right.png",
+      "sha256": "1b58d7214cbd807a3b1363fd46f62e3c4d7536f39956201490a581848ff9b8b9",
+      "width_px": 716,
+      "height_px": 2466,
+      "bytes": 140913,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "mobile-dark-daily-history.png",
+      "sha256": "a790a3b96d77b3255d1a3579fc83eb8b596da5f571d680b07a688a87daf7d8b6",
+      "width_px": 716,
+      "height_px": 2466,
+      "bytes": 108347,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "mobile-dark-navigation-focus.png",
+      "sha256": "71c70758e246591a40799e8ee64d68d2b38da9df3877ad7dae38872b2ca705ae",
+      "width_px": 780,
+      "height_px": 1688,
+      "bytes": 151893,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "mobile-dark-overview.png",
+      "sha256": "3705e451f90f2834439dcd7626bac39f98b41ac338a0eba4f6a7e13807cf9ca6",
+      "width_px": 780,
+      "height_px": 1688,
+      "bytes": 148217,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "mobile-dark-telemetry-resources.png",
+      "sha256": "7c8b5a5c80723420f62a240c872ed19fb3e5fb6070c0f8fe793119dc5d65123b",
+      "width_px": 716,
+      "height_px": 3884,
+      "bytes": 300274,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "mobile-light-daily-history-scroll-right.png",
+      "sha256": "9eddd7cbc088dae02c6d8a05199bed3ee0f43b9d007c43aabdc0c5b7c3d8839d",
+      "width_px": 716,
+      "height_px": 2466,
+      "bytes": 135488,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "mobile-light-daily-history.png",
+      "sha256": "8f0d87822ba2a600a1ff9745742853ffa379313a273fa0e091ea81fbeaf2e295",
+      "width_px": 716,
+      "height_px": 2466,
+      "bytes": 102804,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "mobile-light-navigation-focus.png",
+      "sha256": "9fd7378914afbfa7fa3841135f716327b6206469b3a05a08eb177ddf237deb6b",
+      "width_px": 780,
+      "height_px": 1688,
+      "bytes": 145802,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "mobile-light-overview.png",
+      "sha256": "e55b7aa50a9b1301e234a8c75f54739ed1577457c7f1f7fa5045b80320890758",
+      "width_px": 780,
+      "height_px": 1688,
+      "bytes": 142221,
+      "root_independent_visual_review": true,
+      "approved": true
+    },
+    {
+      "file": "mobile-light-telemetry-resources.png",
+      "sha256": "335cb1a22ef9c607ab2ef76e8a71c481d53913dfdf042dc2c2745dade57046fb",
+      "width_px": 716,
+      "height_px": 3884,
+      "bytes": 288660,
+      "root_independent_visual_review": true,
+      "approved": true
+    }
+  ]
+}

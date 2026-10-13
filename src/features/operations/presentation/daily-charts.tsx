@@ -42,8 +42,8 @@ const legendLabel = (value: string) => <span style={{ color: "var(--body)" }}>{v
  */
 export function DailyCharts({ rows }: { rows: ChartRow[] }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <figure className="m-0">
+    <div className="grid min-w-0 grid-cols-1 gap-5">
+      <figure className="m-0 min-w-0 rounded-md border border-line bg-surface p-3">
         <figcaption className="mb-2 text-small font-extrabold text-ink">
           Ejecuciones por día
         </figcaption>
@@ -96,7 +96,7 @@ export function DailyCharts({ rows }: { rows: ChartRow[] }) {
           </ResponsiveContainer>
         </div>
       </figure>
-      <figure className="m-0">
+      <figure className="m-0 min-w-0 rounded-md border border-line bg-surface p-3">
         <figcaption className="mb-2 text-small font-extrabold text-ink">
           Costo por día (US$)
         </figcaption>
@@ -129,7 +129,7 @@ export function DailyCharts({ rows }: { rows: ChartRow[] }) {
               <Legend wrapperStyle={legendStyle} formatter={legendLabel} />
               <Bar
                 dataKey="confirmed"
-                name="Confirmado"
+                name="Con uso informado"
                 stackId="cost"
                 fill="var(--chart-confirmed)"
                 isAnimationActive={false}

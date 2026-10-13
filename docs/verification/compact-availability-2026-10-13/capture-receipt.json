@@ -1,0 +1,137 @@
+{
+  "runtime_source": "e91b15e",
+  "capture_source": "1f73216",
+  "capture_purpose": "compact dashboard; real local application HTML, static synthetic ops sample, local fake OAuth; not VPS or model quality",
+  "rendered_application": true,
+  "synthetic_model": true,
+  "static_mock_values": true,
+  "device_scale_factor": 2,
+  "screenshots": [
+    {
+      "file": "desktop-light-overview.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-availability-budget-overview.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-catalog.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-budget.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-quality-latency-errors-tokens.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-daily-history.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-recent-runs.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-telemetry-resources.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-light-overview.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-light-telemetry-resources.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-light-navigation-focus.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-light-daily-history.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-light-daily-history-scroll-right.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-dark-overview.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-availability-budget-overview.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-catalog.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-budget.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-quality-latency-errors-tokens.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-daily-history.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-recent-runs.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-telemetry-resources.png",
+      "theme": "dark"
+    },
+    {
+      "file": "mobile-dark-overview.png",
+      "theme": "dark"
+    },
+    {
+      "file": "mobile-dark-telemetry-resources.png",
+      "theme": "dark"
+    },
+    {
+      "file": "mobile-dark-navigation-focus.png",
+      "theme": "dark"
+    },
+    {
+      "file": "mobile-dark-daily-history.png",
+      "theme": "dark"
+    },
+    {
+      "file": "mobile-dark-daily-history-scroll-right.png",
+      "theme": "dark"
+    }
+  ],
+  "keyboard_focus_light": {
+    "active": true,
+    "focusVisible": true,
+    "outlineStyle": "solid",
+    "outlineWidth": "3px"
+  },
+  "table_scroll_light": {
+    "left": 670,
+    "viewport": 314,
+    "content": 984
+  },
+  "keyboard_focus_dark": {
+    "active": true,
+    "focusVisible": true,
+    "outlineStyle": "solid",
+    "outlineWidth": "3px"
+  },
+  "table_scroll_dark": {
+    "left": 670,
+    "viewport": 314,
+    "content": 984
+  }
+}

@@ -111,11 +111,44 @@ test("owner dashboard shows labelled synthetic data, charts and accessible table
   await expect(page).toHaveURL(/\/panel$/);
   await expect(page.getByRole("heading", { level: 1, name: "Estado del asistente" })).toBeVisible();
   await expect(page.getByTestId("synthetic-banner")).toContainText("Datos sintéticos (fixture)");
+  const overview = page.getByRole("region", { name: "¿Puede responder ahora?", exact: true });
+  await expect(overview.getByText("PRESUPUESTO RESTANTE DEL MES", { exact: true })).toBeVisible();
+  await expect(overview.getByText("RESPUESTAS COMPLETADAS · 24 H", { exact: true })).toBeVisible();
+  await expect(overview.getByText("PRIMER TEXTO · P95 · 24 H", { exact: true })).toBeVisible();
+  // Technical data is available through a real disclosure, not removed or eagerly overwhelming.
+  const diagnostic = page.getByText("Diagnóstico técnico y configuración", { exact: true });
+  await expect(diagnostic.locator("..")).not.toHaveAttribute("open");
+  await diagnostic.focus();
+  await page.keyboard.press("Enter");
+  await expect(diagnostic.locator("..")).toHaveAttribute("open", "");
+  await expect(page.getByRole("heading", { name: "Estado técnico", exact: true })).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(diagnostic.locator("..")).not.toHaveAttribute("open");
+
   const mobile = info.project.name.startsWith("mobile");
   if (!mobile)
     await expect(page.getByTestId("actor")).toContainText("owner@example.test · propietario");
   else await expect(page.getByTestId("actor-role")).toHaveText("Propietario");
   await expect(page.getByRole("heading", { name: "Presupuesto de 2026-10" })).toBeVisible();
+  // The fixture deliberately reports a historical budget day: never imply it is today's spend.
+  const budgetTable = page.getByRole("region", { name: "Gasto del mes y del día" });
+  await expect(budgetTable.getByRole("columnheader", { name: /Día \(2026-10-05\)/ })).toBeVisible();
+  await expect(budgetTable).not.toContainText("Hoy (");
+  for (const [label, month, day] of [
+    ["Con uso informado", "US$ 0,4123", "US$ 0,0612"],
+    ["Estimado", "US$ 0,0180", "US$ 0,0000"],
+    ["Pendiente", "US$ 0,0054", "US$ 0,0054"],
+    ["Límite", "US$ 10,00", "US$ 1,00"],
+  ] as const) {
+    const row = budgetTable
+      .getByRole("row")
+      .filter({ has: page.getByRole("rowheader", { name: label, exact: true }) });
+    await expect(row.getByRole("cell")).toHaveText([month, day]);
+  }
+  await expect(
+    page.getByRole("region", { name: "Presupuesto de 2026-10", exact: true }),
+  ).toContainText("no la factura del proveedor");
+
   await expect(page.getByRole("region", { name: "Gasto del mes y del día" })).toContainText(
     "US$ 0,4123",
   );
@@ -135,9 +168,11 @@ test("owner dashboard shows labelled synthetic data, charts and accessible table
   if (info.project.name === "chromium")
     await page.screenshot({ path: `${SHOTS}/desktop-dashboard.png`, fullPage: true });
   if (mobile) {
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
     await page.screenshot({ path: `${SHOTS}/mobile-dashboard-top.png` });
-    await page.getByRole("heading", { name: "Actividad diaria" }).scrollIntoViewIfNeeded();
-    await page.screenshot({ path: `${SHOTS}/mobile-dashboard-daily.png` });
+    await page
+      .getByRole("region", { name: "Actividad diaria", exact: true })
+      .screenshot({ path: `${SHOTS}/mobile-dashboard-daily.png` });
   }
   // No secret or private configuration reaches the browser.
   const html = await page.content();
@@ -213,9 +248,17 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   await page.getByRole("button", { name: "Crear invitación" }).click();
   const link = (await page.getByTestId("invitation-link").textContent())?.trim() ?? "";
   expect(link).toMatch(/^http:\/\/localhost:3241\/invitacion\/[A-Za-z0-9_-]{43}$/);
-  await axe(page);
-  if (info.project.name === "chromium")
+  if (info.project.name === "chromium") {
+    // Keep the opaque invitation URL only in test memory, never in a public screenshot.
+    await page.reload();
+    await expect(page.getByTestId("invitation-link")).toHaveCount(0);
+    await expect(
+      page
+        .getByRole("region", { name: "Invitaciones" })
+        .getByRole("row", { name: new RegExp(email) }),
+    ).toContainText("Pendiente");
     await page.screenshot({ path: `${SHOTS}/desktop-access.png`, fullPage: true });
+  }
 
   // Someone else with the link but another e-mail is refused, and the link still works afterwards.
   const intruder = await newPage(browser);
@@ -267,7 +310,6 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
   await trigger.click();
-  await axe(page);
   if (info.project.name === "chromium")
     await page.screenshot({ path: `${SHOTS}/desktop-revoke-dialog.png` });
   await dialog.getByRole("button", { name: "Quitar acceso" }).click();
@@ -282,4 +324,166 @@ test("invitation lifecycle: invite, accept as viewer, read-only, revoke", async 
   await viewer.goto("/panel");
   await expect(viewer).toHaveURL(/\/ingresar$/);
   await viewer.context().close();
+});
+
+test("newly created invitations are accessible", async ({ page }, info) => {
+  const attempt = `${info.project.name}-${info.repeatEachIndex}-${info.retry}`;
+  const email = `audit-pending-${attempt}@example.test`;
+  await signIn(page, "owner@example.test", "owner");
+  await page.goto("/panel/accesos");
+  await page.getByLabel("E-mail verificado de la persona").fill(email);
+  await page.getByRole("button", { name: "Crear invitación" }).click();
+  // Audit the same newly created, unconsumed invitation state as the lifecycle.
+  await expect(page.getByTestId("invitation-link")).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Invitaciones" })
+      .getByRole("row", { name: new RegExp(email) }),
+  ).toContainText("Pendiente");
+  await axe(page);
+});
+
+test("the owner's revocation dialog is accessible", async ({ page, browser }, info) => {
+  const attempt = `${info.project.name}-${info.repeatEachIndex}-${info.retry}`;
+  const email = `audit-revoke-${attempt}@example.test`;
+  await signIn(page, "owner@example.test", "owner");
+  await page.goto("/panel/accesos");
+  await page.getByLabel("E-mail verificado de la persona").fill(email);
+  await page.getByRole("button", { name: "Crear invitación" }).click();
+  const link = (await page.getByTestId("invitation-link").textContent())?.trim() ?? "";
+  expect(link).toMatch(/^http:\/\/localhost:3241\/invitacion\/[A-Za-z0-9_-]{43}$/);
+  const viewer = await newPage(browser);
+  try {
+    // Populate the member through the real invitation and OAuth callback, never injected SQL.
+    await viewer.goto(link);
+    await identity(email, `audit-revoke-${attempt}`);
+    await continueWithTestProvider(viewer);
+    await expect(viewer).toHaveURL(/\/panel$/);
+    await expect(viewer.getByTestId("actor")).toContainText(`${email} · lectura`);
+    await page.reload();
+    const member = page
+      .getByRole("region", { name: "Cuentas con acceso" })
+      .getByRole("row", { name: new RegExp(email) });
+    await member.getByRole("button", { name: `Quitar acceso ${email}` }).click();
+    await expect(page.getByRole("dialog", { name: "¿Quitar el acceso?" })).toBeVisible();
+    await axe(page);
+  } finally {
+    await viewer.context().close();
+  }
+});
+
+test("analytics cards and disclosures reflow with 200 percent text @mobile", async ({ page }) => {
+  await signIn(page, "owner@example.test", "owner");
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "200%";
+  });
+  expect(
+    await page.evaluate(() =>
+      Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
+    ),
+  ).toBe(32);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await expect(
+      page.getByRole("region", { name: "¿Puede responder ahora?", exact: true }),
+    ).toBeVisible();
+    const diagnostic = page.getByText("Diagnóstico técnico y configuración", { exact: true });
+    await diagnostic.click();
+    await expect(page.getByRole("heading", { name: "Estado técnico", exact: true })).toBeVisible();
+    const reflow = await page.evaluate(() => {
+      const root = document.documentElement;
+      // Content-free structural diagnostics; deliberately omit text, URLs, ids and tokens.
+      const structuralOverflow = [
+        ...document.querySelectorAll("header, nav, main, section, div, span"),
+      ]
+        .filter((element) => {
+          let ancestor: Element | null = element;
+          while (ancestor) {
+            if (["auto", "scroll"].includes(getComputedStyle(ancestor).overflowX)) return false;
+            ancestor = ancestor.parentElement;
+          }
+          return element.getBoundingClientRect().right + window.scrollX > root.clientWidth + 1;
+        })
+        .slice(0, 12)
+        .map((element) => ({
+          tag: element.tagName,
+          classes: element.className,
+          right: Math.round(element.getBoundingClientRect().right + window.scrollX),
+        }));
+      return { clientWidth: root.clientWidth, scrollWidth: root.scrollWidth, structuralOverflow };
+    });
+    expect(reflow.scrollWidth, JSON.stringify(reflow)).toBeLessThanOrEqual(reflow.clientWidth + 1);
+    await diagnostic.click();
+  }
+  expect(await cspViolations(page)).toEqual([]);
+});
+
+test("technical observation stays honest, accessible and separate from provider availability @mobile", async ({
+  page,
+}, info) => {
+  await signIn(page, "owner@example.test", "owner");
+  await page.getByText("Diagnóstico técnico y configuración", { exact: true }).click();
+  const technical = page.getByRole("region", { name: "Estado técnico" });
+  const fixtureNotice = technical.getByTestId("telemetry-fixture-banner");
+  await expect(fixtureNotice).toContainText("Proveedor de prueba (fixture)");
+  await expect(fixtureNotice).toContainText("La muestra informa HTTP y recursos del proceso");
+  await expect(fixtureNotice).toContainText(
+    "no acredita disponibilidad de OpenAI ni calidad del modelo",
+  );
+  await expect(technical).toContainText("API preparada");
+  await expect(technical).toContainText("Proveedor: sin comprobar");
+  await expect(technical).toContainText("0 / 4 ejecuciones activas");
+  await technical.locator("summary").click();
+  await expect(technical.getByText("Memoria RSS del proceso").locator("..")).toContainText(
+    "No disponible",
+  );
+  await expect(technical).toContainText("no incluyen fallos SSE enviados dentro de HTTP 200");
+  await axe(page);
+  expect(await cspViolations(page)).toEqual([]);
+  const html = await page.content();
+  expect(html).not.toContain("test-observability-token-separate");
+  expect(html).not.toContain("test-ops-read-token");
+  if (info.project.name === "chromium")
+    await page.screenshot({ path: `${SHOTS}/desktop-telemetry-detail.png`, fullPage: true });
+});
+
+test("disabled or invalid optional telemetry preserves valid legacy spend and runs", async ({
+  page,
+}) => {
+  await signIn(page, "owner@example.test", "owner");
+  for (const name of ["telemetry-off", "telemetry-invalid"]) {
+    await variant(name);
+    await page.goto("/panel");
+    await page.getByText("Diagnóstico técnico y configuración", { exact: true }).click();
+    const technical = page.getByRole("region", { name: "Estado técnico" });
+    await expect(technical).toContainText("No disponible");
+    await expect(page.getByRole("heading", { name: "Presupuesto de 2026-10" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Solicitudes · Últimas 24 horas" }),
+    ).toBeVisible();
+    await expect(page.getByRole("region", { name: "Gasto del mes y del día" })).toContainText(
+      "US$ 0,4123",
+    );
+  }
+});
+
+test("private machine metrics require a separate bearer and expose no credentials", async ({
+  request,
+}) => {
+  const path = "/internal/v1/ops/metrics";
+  expect((await request.get(path)).status()).toBe(401);
+  expect((await request.get(path, { headers: { Authorization: "Bearer wrong" } })).status()).toBe(
+    401,
+  );
+  const response = await request.get(path, {
+    headers: { Authorization: "Bearer test-observability-token-separate-000000000000" },
+  });
+  expect(response.status()).toBe(200);
+  expect(response.headers()["cache-control"]).toContain("no-store");
+  const metrics = await response.text();
+  expect(metrics).toContain("pequeverso_backoffice_operation_total");
+  expect(metrics).toContain("pequeverso_backoffice_process_resident_memory_bytes");
+  expect(metrics).not.toMatch(
+    /owner@example|test-ops-read-token|test-observability-token|invitacion|8237/,
+  );
 });

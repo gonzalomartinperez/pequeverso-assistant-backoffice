@@ -56,6 +56,9 @@ const children = [
       AUTH_TEST_ISSUER: "http://127.0.0.1:8238",
       // Every test signs in from 127.0.0.1; Better Auth allows 3 sign-in starts per 10 s per IP.
       AUTH_DISABLE_RATE_LIMIT: "1",
+      OPS_TELEMETRY_ENABLED: "true",
+      OBSERVABILITY_METRICS_ENABLED: "true",
+      OBSERVABILITY_READ_TOKEN: "test-observability-token-separate-000000000000",
       OPS_API_URL: live?.url ?? "http://127.0.0.1:8237",
       OPS_READ_TOKEN: token,
     },

@@ -81,3 +81,18 @@ public chat moved to the storefront (`pequeverso#69`) and its shells were remove
 entries above keep the old name as historical record. vps-ops still references the old name in
 its inventory; the redirect keeps it working and its owner updates it (handoff in the API's
 `docs/handoffs/vps-ops.md`).
+
+
+## 2026-10-12 — private operational contracts
+
+Both private contract source records name API `develop` commit
+`b7dcb0c27d214cb1b560a8ee6101f858545646fc`, integrated through API PR39. The summary1.2
+schema/example bytes are unchanged from the historical `87fc109` pin; telemetry1.0 bytes
+are unchanged from `03898d8` and the accessible interim `debb678` pin. The consumer verified
+all four recorded SHA-256 hashes using that immutable producer commit. Public chat revision1.4
+is independently additive and does not change either private schema or its bearer policy.
+
+The dashboard reads private aggregate data and optional process observations; it performs no
+model requests. Local browser timeout failures and final-image acceptance remain documented
+in [verification](verification.md). No deployment, publication or assistant activation is
+implied by this repin.

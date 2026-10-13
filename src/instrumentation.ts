@@ -18,6 +18,8 @@ export async function register() {
     );
     process.exit(1);
   }
+  const { observability } = await import("./server/observability");
+  await observability(settings.observability).initialize();
   if (settings.environment === "production" && settings.trustedProxies.length === 0)
     console.warn(
       JSON.stringify({

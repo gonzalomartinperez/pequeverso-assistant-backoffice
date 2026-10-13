@@ -1,0 +1,104 @@
+{
+  "rendered_application": true,
+  "synthetic_model": true,
+  "static_mock_values": true,
+  "device_scale_factor": 2,
+  "screenshots": [
+    {
+      "file": "desktop-light-overview.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-availability-budget-overview.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-catalog.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-budget.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-quality-latency-errors-tokens.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-daily-history.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-recent-runs.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-light-telemetry-resources.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-light-overview.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-light-telemetry-resources.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-light-navigation-focus.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-light-daily-history.png",
+      "theme": "light"
+    },
+    {
+      "file": "desktop-dark-overview.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-availability-budget-overview.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-catalog.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-budget.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-quality-latency-errors-tokens.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-daily-history.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-recent-runs.png",
+      "theme": "dark"
+    },
+    {
+      "file": "desktop-dark-telemetry-resources.png",
+      "theme": "dark"
+    },
+    {
+      "file": "mobile-dark-overview.png",
+      "theme": "dark"
+    },
+    {
+      "file": "mobile-dark-telemetry-resources.png",
+      "theme": "dark"
+    },
+    {
+      "file": "mobile-dark-navigation-focus.png",
+      "theme": "dark"
+    },
+    {
+      "file": "mobile-dark-daily-history.png",
+      "theme": "dark"
+    }
+  ]
+}

@@ -1,5 +1,10 @@
 import { isIP } from "node:net";
 import { assertDisposableDatabase, isLoopbackUrl } from "./fixture-safety.ts";
+import {
+  type ObservabilityConfig,
+  observabilitySwitch,
+  parseObservability,
+} from "./observability-config.ts";
 
 /**
  * Backoffice runtime configuration, read on the server only (never inlined into the browser
@@ -24,6 +29,8 @@ export type BackofficeConfig = {
   /** Local fake OIDC issuer for automated tests; refused in production. */
   testIssuer: string | null;
   ops: { url: string; token: string } | null;
+  telemetryEnabled: boolean;
+  observability: ObservabilityConfig;
   sessionHours: number;
   /** Better Auth's per-IP limiter; only automated tests on one address may turn it off. */
   rateLimit: boolean;
@@ -167,6 +174,8 @@ export function parseConfig(env: Record<string, string | undefined>): Backoffice
     github,
     testIssuer,
     ops: opsUrl ? { url: opsUrl.replace(/\/$/, ""), token: opsToken } : null,
+    telemetryEnabled: observabilitySwitch(env.OPS_TELEMETRY_ENABLED, "OPS_TELEMETRY_ENABLED"),
+    observability: parseObservability({ ...env, BACKOFFICE_ENVIRONMENT: environment }),
     sessionHours: 8,
     rateLimit: !rateLimitOff,
     trustedProxies: proxies(env.TRUSTED_PROXY_IPS),

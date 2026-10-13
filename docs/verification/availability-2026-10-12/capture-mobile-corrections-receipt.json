@@ -1,0 +1,54 @@
+{
+  "rendered_application": true,
+  "synthetic_model": true,
+  "static_mock_values": true,
+  "device_scale_factor": 2,
+  "screenshots": [
+    {
+      "file": "mobile-light-navigation-focus.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-light-daily-history.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-light-daily-history-scroll-right.png",
+      "theme": "light"
+    },
+    {
+      "file": "mobile-dark-navigation-focus.png",
+      "theme": "dark"
+    },
+    {
+      "file": "mobile-dark-daily-history.png",
+      "theme": "dark"
+    },
+    {
+      "file": "mobile-dark-daily-history-scroll-right.png",
+      "theme": "dark"
+    }
+  ],
+  "keyboard_focus_light": {
+    "active": true,
+    "focusVisible": true,
+    "outlineStyle": "solid",
+    "outlineWidth": "3px"
+  },
+  "table_scroll_light": {
+    "left": 670,
+    "viewport": 314,
+    "content": 984
+  },
+  "keyboard_focus_dark": {
+    "active": true,
+    "focusVisible": true,
+    "outlineStyle": "solid",
+    "outlineWidth": "3px"
+  },
+  "table_scroll_dark": {
+    "left": 670,
+    "viewport": 314,
+    "content": 984
+  }
+}

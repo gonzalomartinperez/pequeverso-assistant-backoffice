@@ -8,7 +8,6 @@ import path from "node:path";
 import { after, before, describe, it } from "node:test";
 import pg from "pg";
 import { migrate } from "../../scripts/db-migrate.ts";
-import { createAuth, INVITATION_COOKIE } from "../../src/features/auth/adapters/better-auth.ts";
 import { nodeSecrets } from "../../src/features/auth/adapters/node-secrets.ts";
 import { PostgresAccessStore } from "../../src/features/auth/adapters/postgres-access-store.ts";
 import {
@@ -23,6 +22,10 @@ import { assertDisposableDatabase } from "../../src/server/fixture-safety.ts";
 // drops its own `bo_test_*` database there. A remote or malformed URL fails before connecting.
 const rawUrl = process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL;
 const baseUrl = rawUrl ? assertDisposableDatabase(rawUrl, false) : undefined;
+// Reject unsafe fixtures before loading the real authentication dependency tree.
+const { createAuth, INVITATION_COOKIE } = await import(
+  "../../src/features/auth/adapters/better-auth.ts"
+);
 const ORIGIN = "http://localhost:3299";
 const IDP_PORT = 8298;
 const IDP = `http://127.0.0.1:${IDP_PORT}`;

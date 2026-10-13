@@ -42,7 +42,7 @@ const legendLabel = (value: string) => <span style={{ color: "var(--body)" }}>{v
  */
 export function DailyCharts({ rows }: { rows: ChartRow[] }) {
   return (
-    <div className="grid min-w-0 gap-5">
+    <div className="grid min-w-0 grid-cols-1 gap-5">
       <figure className="m-0 min-w-0 rounded-md border border-line bg-surface p-3">
         <figcaption className="mb-2 text-small font-extrabold text-ink">
           Ejecuciones por día

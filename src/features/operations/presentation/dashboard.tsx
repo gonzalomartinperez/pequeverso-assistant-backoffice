@@ -100,14 +100,14 @@ function Summary({
             </a>
           ))}
       </nav>
-      <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div className="grid min-w-0 grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <Daily summary={summary} />
         <div className="flex min-w-0 flex-col gap-5">
           <Budget summary={summary} />
           <Catalog summary={summary} now={now} />
         </div>
       </div>
-      <div className="grid min-w-0 items-start gap-5 xl:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 items-start gap-5 xl:grid-cols-2">
         {summary.windows.length ? (
           summary.windows.map((window) => <Runs key={window.hours} window={window} />)
         ) : (
@@ -120,13 +120,13 @@ function Summary({
       </div>
       <Recent summary={summary} />
       <details className="min-w-0 rounded-lg border border-line bg-surface-raised p-5 shadow-sm">
-        <summary className="min-h-11 cursor-pointer content-center text-title text-ink focus-visible:outline-3 focus-visible:outline-ring">
+        <summary className="min-h-11 cursor-pointer content-center [overflow-wrap:anywhere] text-title text-ink focus-visible:outline-3 focus-visible:outline-ring">
           Diagnóstico técnico y configuración
         </summary>
         <p className="mt-2 text-small text-muted">
           Lecturas opcionales del proceso y del servicio; no acreditan disponibilidad del proveedor.
         </p>
-        <div className="mt-4 grid min-w-0 items-start gap-5">
+        <div className="mt-4 grid min-w-0 grid-cols-1 items-start gap-5">
           <Telemetry reading={telemetry} />
           <Service summary={summary} />
         </div>
@@ -147,7 +147,7 @@ function Availability({ summary }: { summary: OpsSummary }) {
       title="¿Puede responder ahora?"
       description="Estado declarado por la API en esta lectura, no un historial de uptime ni una comprobación del proveedor."
     >
-      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="min-w-0 rounded-md border border-line bg-surface-sunken p-4 [overflow-wrap:anywhere]">
           <p className="text-tiny font-bold text-muted">DISPONIBILIDAD PUNTUAL</p>
           <p className="mt-2 flex items-center gap-2 text-title text-ink">
@@ -297,7 +297,7 @@ function Budget({ summary }: { summary: OpsSummary }) {
       description="Importes calculados con el uso informado y las tarifas versionadas, no la factura del proveedor. Las reservas de uso desconocido y en curso se conservan."
     >
       <div className="flex flex-col gap-2">
-        <div className="flex items-baseline justify-between gap-3 text-small">
+        <div className="flex flex-wrap items-baseline justify-between gap-3 text-small">
           <span className="font-extrabold text-ink">Comprometido del límite mensual</span>
           <span className="tabular-nums text-ink">{f.pct(use)}</span>
         </div>
@@ -348,7 +348,7 @@ function Budget({ summary }: { summary: OpsSummary }) {
         </TableRegion>
       </div>
       <details className="mt-3 rounded-md border border-line p-3">
-        <summary className="min-h-11 cursor-pointer content-center text-small font-extrabold text-link focus-visible:outline-3 focus-visible:outline-ring">
+        <summary className="min-h-11 cursor-pointer content-center [overflow-wrap:anywhere] text-small font-extrabold text-link focus-visible:outline-3 focus-visible:outline-ring">
           Tarifas y estados del gasto
         </summary>
         <p className="mt-2 text-small text-copy">
@@ -378,7 +378,7 @@ function Runs({ window }: { window: RunWindow }) {
       title={`Solicitudes · ${f.windowLabel(window.hours)}`}
       description="Aceptada: la API empezó a responder. Interrumpida: la conexión se cortó antes del final y no cuenta como completada. Rechazada: no llegó a responder (presupuesto, capacidad o límites)."
     >
-      <div className="grid min-w-0 gap-5 2xl:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-5 2xl:grid-cols-2">
         <Facts
           items={[
             { term: "Aceptadas", value: f.count(accepted) },

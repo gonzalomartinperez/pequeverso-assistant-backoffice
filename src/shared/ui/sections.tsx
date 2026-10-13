@@ -36,7 +36,7 @@ export function Section({
 /** Term/value pairs. Values that are not available stay visibly marked as such. */
 export function Facts({ items }: { items: { term: string; value: ReactNode; hint?: string }[] }) {
   return (
-    <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+    <dl className="grid min-w-0 grid-cols-1 gap-x-6 gap-y-3 [overflow-wrap:anywhere] sm:grid-cols-2">
       {items.map((item) => (
         <div key={item.term} className="min-w-0">
           <dt className="text-tiny font-extrabold uppercase tracking-[0.06em] text-muted">

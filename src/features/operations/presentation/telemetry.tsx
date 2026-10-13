@@ -55,7 +55,7 @@ export function Telemetry({ reading }: { reading: TelemetryReading }) {
           </p>
         </Callout>
       ) : null}
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="rounded-md bg-surface-sunken p-4">
           <p className="flex items-center gap-2 font-extrabold text-ink">
             {t.readiness.ready ? (
@@ -91,10 +91,10 @@ export function Telemetry({ reading }: { reading: TelemetryReading }) {
         </div>
       </div>
       <details className="mt-5 rounded-md border border-line p-4">
-        <summary className="min-h-11 cursor-pointer font-extrabold text-link focus-visible:outline-3 focus-visible:outline-ring">
+        <summary className="min-h-11 cursor-pointer [overflow-wrap:anywhere] font-extrabold text-link focus-visible:outline-3 focus-visible:outline-ring">
           Recursos, tráfico y exportación de trazas
         </summary>
-        <div className="mt-4 grid gap-6 lg:grid-cols-2">
+        <div className="mt-4 grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2">
           <div>
             <h3 className="mb-3 text-title">Proceso y cgroup</h3>
             <Facts

@@ -35,7 +35,7 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "lucide-react": "1.52.0",
-    "next": "16.3.8",
+    "next": "16.4.0",
     "pg": "8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -46,7 +46,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
     "@biomejs/biome": "2.5.15",
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "1.64.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "24.19.1",
     "@types/pg": "8.23.1",

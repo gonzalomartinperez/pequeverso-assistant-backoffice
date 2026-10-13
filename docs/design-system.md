@@ -98,8 +98,8 @@ Only state changes animate (150 ms colour/opacity transitions); charts render wi
 
 ## Layout rules
 
-- Content max width 72 rem with 16 px gutters (24 px from `sm`); cards in a 3-column grid from `lg`.
-- Header: brand and account on one row, navigation on its own row below `md`.
+- Content max width 72rem with 16px gutters (24 px from `sm`). Four current summary indicators lead the dashboard; daily analytics share a desktop grid with budget/catalog, while technical diagnostics use a native disclosure. Explicit zero-minimum base tracks keep enlarged text readable; wide tables scroll in their existing keyboard-focusable regions.
+- Header: brand/account/navigation share rows when space permits and wrap naturally with enlarged text. Long words in facts and native summaries can wrap; no content is hidden to mask page overflow.
 - Long values (e-mails, revisions, ids) wrap (`overflow-wrap: anywhere`); wide tables scroll
   horizontally inside a focusable region.
 - Touch targets ≥ 44 px.

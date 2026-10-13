@@ -28,7 +28,7 @@ docker network create "$NET" >/dev/null
 docker run -d --name "$DB" --network "$NET" -e POSTGRES_USER=backoffice -e POSTGRES_PASSWORD="$PW" \
   -e POSTGRES_DB=backoffice --memory 256m --memory-swap 256m --cpus 0.5 --pids-limit 128 \
   --log-driver local --log-opt max-size=5m --log-opt max-file=2 --tmpfs /var/lib/postgresql \
-  postgres:18.6-bookworm@sha256:9551dd5bf356409a21b31248f49b33bba9bb1877365f3a7e933aecd9af3cf52d >/dev/null
+  postgres:18.6-trixie@sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b >/dev/null
 for _ in $(seq 1 30); do docker exec "$DB" pg_isready -U backoffice -d backoffice >/dev/null 2>&1 && break; sleep 1; done
 
 URL="postgres://backoffice:$PW@$DB:5432/backoffice"

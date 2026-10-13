@@ -96,7 +96,7 @@ sequenceDiagram
 nvm use && npm ci
 npx playwright install --with-deps chromium firefox webkit
 docker run -d --rm --name bo-pg -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test \
-  -p 127.0.0.1:55432:5432 postgres:18.6-bookworm@sha256:9551dd5bf356409a21b31248f49b33bba9bb1877365f3a7e933aecd9af3cf52d
+  -p 127.0.0.1:55432:5432 postgres:18.6-trixie@sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b
 npm run build
 TEST_DATABASE_URL=postgres://test:test@127.0.0.1:55432/postgres npm run preview:backoffice
 ```

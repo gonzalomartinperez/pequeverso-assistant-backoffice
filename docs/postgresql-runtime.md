@@ -7,25 +7,38 @@ conversation/catalog/spend data remains in the API's SQLite volume. There is no 
 ## Artifact and security boundary
 
 Build `Dockerfile.postgres` from the reviewed repository commit. Its source is the immutable
-`postgres:18.6-bookworm@sha256:9551dd5bf356409a21b31248f49b33bba9bb1877365f3a7e933aecd9af3cf52d`
+`postgres:18.6-trixie@sha256:885953109528ad3dfc90362b1a6f50a78620b5315be19f187753d267e484dc5b`
 for linux/amd64. A fresh official linux/amd64 manifest pull on 2026-10-12 resolved to that digest. The derived
-artifact installs exact signed Debian security patches for OpenSSL, PCRE2, perl, xz/lzma and
-tzdata; the 18.6 base already contains these exact versions. Available-fix scans must cover **all** severities,
-including UNKNOWN, before using the artifact. Residual advisories remain visible, not accepted
-implicitly. Other architectures are untested. Publish/deploy only by a separately authorized
-registry manifest digest; a local image id is not that digest.
+artifact installs exact signed Debian 13 security patches for OpenSSL, PCRE2, perl, xz/lzma and
+tzdata. Available-fix scans must cover **all** severities, including UNKNOWN, before using the
+artifact. Residual advisories remain visible, not accepted implicitly. Other architectures are
+untested. Publish/deploy only by a separately authorized registry manifest digest; a local image
+id is not that digest.
 
 The official entrypoint is preserved. It calls `gosu` only when starting as uid0; the derived
 artifact removes that unused helper and mandates `USER 999:999` (`postgres`). Overriding the
 runtime user to root is unsupported. Keep psql, pg_dump, pg_restore, pgbench and the PostgreSQL
-server intact. SQLite is not linked by PostgreSQL or its required tools: the inherited gpg
-package was its only reverse dependency. Remove gpg/libsqlite3-0 (and their resulting gnupg,
-gpg-wks-client/server reverse dependencies) explicitly, without autoremove or forced dependency
-removal; keep gpgv for signed APT verification. Runtime GPG/encrypted initialization scripts are
-unsupported; encrypt backups outside this database artifact under infrastructure ownership.
-libxml2 and zlib remain because PostgreSQL core links them; their unresolved advisories remain
-visible activation risks, not implicitly accepted. Installer/file removal adds whiteouts to
-inherited layers: no physical image size saving is claimed. Security changes do not certify a production environment.
+server intact. Unused GPG is purged without autoremove or forced dependency removal. Debian 13
+APT 3 uses the retained `sqv` signature verifier, not a required `gpgv` binary. SQLite remains:
+Trixie util-linux requires `liblastlog2-2`, which links `libsqlite3-0`; removing it would break
+required OS tooling. This is distinct from the historical Bookworm artifact where GPG was
+SQLite's only reverse dependency. Runtime GPG/encrypted initialization scripts are unsupported;
+encrypt backups outside this artifact under infrastructure ownership. libxml2 and zlib remain
+because PostgreSQL core links them. Required XML support retains CVE-2026-6653: Trixie is not an
+XML security fix. Unresolved advisories remain visible activation risks, not implicitly accepted.
+Installer/file removal adds whiteouts to inherited layers; no physical image saving is inferred.
+
+### OS transition and collation boundary
+
+The same PostgreSQL 18.6 version was smoke-tested separately on immutable Bookworm and Trixie
+artifacts. A local **fresh-volume logical** dump/restore of six synthetic UTF8 labels preserved
+its content checksum, ordering sample and restart persistence. Both used `en_US.utf8`; the
+actual/stored libc collation version changed from 2.36 to 2.41. This sample is not proof for
+production indexes, unique constraints or every locale. Never attach the old physical volume
+to the new OS artifact automatically. Infrastructure must inspect actual database/index
+collations, choose and rehearse a supported logical migration/reindex procedure, preserve
+backup/key recovery and verify the real dataset before activation. `ALTER DATABASE ... REFRESH
+COLLATION VERSION` alone does not rebuild affected indexes.
 
 ## Minor-release compatibility
 

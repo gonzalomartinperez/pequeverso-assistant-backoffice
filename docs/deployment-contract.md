@@ -10,7 +10,7 @@ remain outside this repository's authority.
 | Item | Value |
 |---|---|
 | Image | Built from `Dockerfile` at a reviewed `develop` commit; publish to a private registry and deploy **by digest** only. Not published yet. |
-| Base | `node:24.21.0-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20`, `linux/amd64` (built and run locally; other architectures untested) |
+| Base | `node:24.21.0-trixie-slim@sha256:c83040f7e24bacea68e58a0b96a484ba430bf24abb2973eab7ba4701144b7b63`, `linux/amd64` (built and run locally; other architectures untested) |
 | Commands | default `node server.js` (Next.js 16.3.8 standalone); one-shot `node scripts/db-migrate.ts` (migrations) |
 | User | `node` (UID/GID 1000:1000), no capabilities |
 | Port | `3000/tcp` on `0.0.0.0` (`PORT`, `HOSTNAME`) |
@@ -20,13 +20,15 @@ remain outside this repository's authority.
 | Resources | Local bounded synthetic fixture: idle 58.3 MiB, cgroup high-water 104.8 MiB including database loss. Proposal: request 0.1 CPU / 128 MiB, limit 1 CPU / 384 MiB; real-provider and authenticated load remain untested |
 | Size | Historical2026-10-10 final image inspect `Size`: 98,914,506 bytes; CLI image listing: 417 MB. Baseline fields were 96,552,397 bytes / 405 MB. No image/disk size reduction is claimed; global installers are absent from the live filesystem but inherited layers remain |
 
-The immutable official base keeps Node 24.21.0. Its refreshed Debian PCRE2 package is
-`10.42-1+deb12u2`; runtime installs the available signed Debian security package
-`perl-base=5.36.0-7+deb12u4`. Global npm, npx, Corepack and Yarn are removed from runtime;
-application dependencies remain the traced `/app/node_modules`, and migrations use Node/pg.
-Build-stage installers remain isolated from the final artifact. OS advisories without an
-available fix stay visible in exact-image scan evidence; this change does not imply acceptance
-or make the production environment ready.
+The immutable official Debian 13 Trixie base keeps Node 24.21.0. Runtime installs exact signed
+security packages `perl-base=5.40.1-6+deb13u1` and `liblzma5=5.8.1-1+deb13u2`.
+Global npm, npx, Corepack and Yarn are removed from runtime; application dependencies remain
+the traced `/app/node_modules`, and migrations use Node/pg. Build-stage installers remain
+isolated from the final artifact. Removing inherited files creates whiteouts, not automatic
+physical layer savings. The same-version OS transition has separate exact-image smoke/scan
+receipts; previous Bookworm evidence remains historical. The compact dashboard requires its
+own final app artifact, not a relabelled infrastructure baseline. OS advisories remain visible:
+no available package fix is not risk acceptance or production readiness.
 
 ## PostgreSQL (required)
 
@@ -35,7 +37,7 @@ built database artifact, PostgreSQL18 volume boundary, measured bounded recipe a
 restore drill. Infrastructure remains owned by vps-ops; this is not a deployment authorization.
 
 - A dedicated database and role for the backoffice on a private network; never exposed publicly,
-  never shared with portfolio services. Historical tests covered17.6/18.4; current artifact uses supported PostgreSQL18.6. Runtime app credentials must not be superuser; infrastructure owns dedicated migration/runtime grants.
+  never shared with portfolio services. Historical tests covered17.6/18.4; current artifact uses supported PostgreSQL 18.6. Runtime app credentials must not be superuser; infrastructure owns dedicated migration/runtime grants.
 - Store PostgreSQL data on a dedicated persistent volume, never the disposable tmpfs used by
   `scripts/smoke-image.sh`. Volume and backup lifecycle belong to vps-ops; container removal must
   preserve data. Leave at least 20% disk headroom for WAL, migrations and dump/restore working space.

@@ -215,7 +215,7 @@ The complete inventories, including other severities, remain visible in the exte
 SBOM inventories contain 130 and 143 components. A source-package MiniZip applicability note
 is not suppression. PostgreSQL's required XML support retains the affected libxml2
 CVE-2026-6653; the absence of an available stable-base fix is not risk acceptance or readiness.
-A same-version Debian 13 candidate is evaluated separately and does not inherit these scans.
+The same-version Debian 13 transition has its own baseline receipts below; it never inherits these Bookworm scans.
 
 The complete local browser run at capture checkout `5515732` finished in 521.88 s:
 **40 passed, 1 Firefox IAM lifecycle timeout, 3 optional LIVE_OPS skips, zero retries**.
@@ -248,3 +248,42 @@ capture contains no invitation URL/token. The 26-image gallery is unchanged and 
 hash-bound. The unchanged sign-in/live-API legacy images and the 2026-10-05 metrics remain
 historical records; refreshed images do not re-date those test results or turn the failed full
 2026-10-12 browser run green.
+
+### Debian 13 infrastructure baseline `3c88447` (2026-10-13)
+
+The adopted same-version Node 24.21.0/PostgreSQL 18.6 Trixie Docker changes have separate
+local immutable artifacts: app `sha256:e2f59fecf6b686fe4086897c032a7e85a0c62c89477a4c6c275377c2a28f25b4`
+and PostgreSQL `sha256:afcb89c0b8d3c92ffdc98e28b58b9972292f0d90b9ffb8181a305719e768d2c1`.
+Their original OCI revision remains `3c88447`; these images contain the preceding UI, not the
+new compact layout. The shipped app/PG smoke commands passed in 38.40 s / 106.58 s: non-root,
+read-only quotas/no extra swap, health/readiness and DB loss, idempotent migrations, durable
+settings, 2000/2000 synthetic IAM transactions with zero failures, dump/restore hashes,
+restart and normal bounded termination. Real Better Auth fake-provider callbacks also
+verified separate metrics bearer 401/200 gates, shared readiness/RSC counters and actual
+Node JSON/Python protobuf OTLP with both private W3C parent relationships. Zero model requests
+were made. No elapsed-time benchmark is inferred from the correlation receipt.
+
+Fresh independent Trivy 0.75 scans (DB updated 2026-10-12 19:08 UTC) identified Debian 13.7.
+The app had 162 OS rows/71 distinct CVEs: 0 CRITICAL, 43 HIGH, 58 MEDIUM, 60 LOW, 1 UNKNOWN;
+PostgreSQL had 303 rows/117 CVEs: 1 CRITICAL, 61 HIGH, 108 MEDIUM, 126 LOW, 7 UNKNOWN.
+No Node vulnerability rows or available fixed versions were reported. SBOMs contained
+121/144 components respectively. PostgreSQL's actual required libxml2 CVE-2026-6653 remains
+vulnerable with a deferred fix: fewer rows or zero available fixes do not grant risk
+acceptance, certify exploitability or make production ready. The signed APT verifier is SQV;
+required Trixie SQLite is retained rather than forcibly removed.
+
+Image inspect Size fields were 98,461,515 (app) / 163,029,028 (PG) bytes versus the previous
+98,999,626/159,670,971. PostgreSQL metadata grew; inherited layers/whiteouts and shared storage
+prevent inferring physical disk reclamation from these numbers. Local single sequential
+samples also had slower startup/stop; no general performance improvement is claimed.
+Fresh-volume six-label UTF8 logical restore preserved content/order/restart while libc
+collation changed 2.36→2.41. This does not certify production indexes or allow automatic
+physical-volume reuse.
+
+The new compact dashboard is a later source change. Its enlarged-text gate found real
+320 px document overflow; content-free DOM/Range diagnostics isolated header/control wrapping,
+implicit grid tracks and a native summary word. Diagnostic CSSOM trials 662→329→320 were not
+published screenshots or final production acceptance. Corrected-source production build,
+four widths at 200% across browsers, full 48-case suite, final gallery and exact new app
+image smoke/scan remain pending. The older 34 public captures are retained as an explicitly
+identified baseline until final recapture; they are not relabelled as this redesign.

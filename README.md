@@ -6,13 +6,17 @@ freshness, runs, latency, tokens and spend. The public conversation lives only i
 (`pequeverso`); the former chat shells were removed from this repository (see git history).
 
 The repository is public; the application is private. All rights reserved (see `LICENSE`).
-**Status:** the compact availability and telemetry dashboard is a release candidate. Local
-static/build and database checks pass; the full local browser run has two deadline failures
-that remain visible in [verification](docs/verification.md). Final exact-image acceptance and
-complete remote CI are required before merging this candidate. Earlier released image drills
-are historical evidence, not proof of this candidate. This project has not deployed the
-backoffice; real OAuth, infrastructure, capacity and model behavior need separate acceptance.
-The dashboard never enables the storefront.
+**Status — 2026-10-13:** the compact availability and telemetry dashboard and maintained
+distroless runtime are integrated into `main` at `f96d30d` through
+[release PR #50](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/50).
+[Release CI](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/actions/runs/38384606345)
+passed all seven jobs, including the exact CI image smoke and 51 browser tests across four
+projects (three optional live-API tests skipped; no retries). The runtime uses Node24,
+Debian13 and UID/GID65532; current dependencies include Next.js16.4.0 and Playwright1.64.0.
+Earlier local failures and image drills remain dated history in
+[verification](docs/verification.md). CI fixture evidence does not prove deployment,
+real OAuth, TLS cookies, VPS capacity or provider billing. This project has not deployed the
+backoffice, and the dashboard never enables the storefront.
 
 `Next.js 16 · Active LTS` `Node24 · LTS` `PostgreSQL18.6 · supported to2030`
 `React19` `TypeScript7` `Better Auth` `Tailwind4` `OpenTelemetry` `Prometheus/Grafana handoff`

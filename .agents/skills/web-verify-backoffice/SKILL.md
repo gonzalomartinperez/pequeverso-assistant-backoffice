@@ -18,8 +18,10 @@ not available, stop and report the database and browser suites as not run; do no
 4. Optional real reading: run a **committed** API revision (`git archive <sha>`) with the fixture
    provider and `OPS_READ_TOKEN`, then `LIVE_OPS_URL=… LIVE_OPS_TOKEN=… npm run test:browser --
    live-ops.spec.ts`. Never use a paid provider or real keys.
-5. Image: `docker build`, run `node scripts/db-migrate.ts` as a one-shot, then the server with
-   `--read-only --tmpfs /tmp --tmpfs /app/.next/cache:uid=1000,gid=1000,mode=0700,size=32m
+5. Image: build with BuildKit (`docker buildx build --load .`, or `DOCKER_BUILDKIT=1 docker build .`)
+   because the Dockerfile uses a cache mount. The distroless runtime runs as `65532:65532`;
+   run `node scripts/db-migrate.ts` as a one-shot, then the server with
+   `--read-only --tmpfs /tmp --tmpfs /app/.next/cache:uid=65532,gid=65532,mode=0700,size=32m
    --cap-drop ALL` and production-like variables; check `/healthz`, headers on `/ingresar` and the
    redirect from `/panel`.
 6. Open the PNGs in `docs/verification/backoffice/` and judge them (layout, contrast, overflow,

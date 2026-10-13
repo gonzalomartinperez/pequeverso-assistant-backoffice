@@ -1,5 +1,38 @@
 # Verification
 
+## Current reconciliation — 2026-10-13
+
+Main `f96d30d5622b11077d6ab79736fde3f1e6e146fa` incorporates
+[runtime PR #49](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/49)
+through [release PR #50](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/50).
+The release source tree matches develop `2c26e92` and the CI synthetic merge tree.
+[CI 38384606345](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/actions/runs/38384606345)
+passed all seven jobs: 89 unit tests, 17 database integrations, production-image smoke and
+51 browser passes with three optional live-API skips. Independent agent inspection of the
+raw report found 54 attempts, no retry, no flake and no unexpected result; this is not human
+review or a post-main run. The fixture image smoke measured 32 requests, concurrency four,
+1,550 ms startup and 390 ms shutdown. It does not prove VPS or authenticated transaction drainage.
+
+A fresh isolated worktree at `2c26e92` verified the procedure correction with Node24.21.0,
+Next.js16.4.0, Playwright1.64.0 and disposable pinned PostgreSQL18.6:
+
+- `npm ci --no-audit --no-fund` and `npm run check` passed: 89 unit tests, 89 valid local
+  documentation links, three validated skills and the production build.
+- `npm run test:db` passed all 17 integrations with zero schema differences (4.08 s).
+- The initial browser run (198.793 s) had 35 passes, three optional skips and 16 Firefox
+  launch failures because the required Firefox1555 executable was absent. This run is retained
+  as an environment failure, not a green suite.
+- After installing the exact Firefox executable, a separate explicit all-project run with
+  `--retries=0` passed 51 tests with three optional live-API skips (265.017 s): Chromium,
+  Firefox, WebKit and mobile Chromium. Existing cached browsers were preserved.
+
+The canonical verification skill now uses the distroless UID/GID65532 for its mode0700 cache
+tmpfs and requires BuildKit for the Dockerfile cache mount. This documentation-only correction
+does not rebuild a local image or relabel historical UID1000 images, scans or gallery captures.
+Real OAuth, TLS/proxy cookies, private API networking, exact-image scan provenance, VPS capacity
+and effective production restore remain separate acceptance tasks. Older records below retain
+their original versions, failures and limits.
+
 ## Backoffice
 
 Run on 2026-10-05 (WSL2, Node 24.21.0, Next.js 16.3.6, TypeScript 7.0.2, Better Auth 1.7.7,

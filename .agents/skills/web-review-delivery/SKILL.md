@@ -17,9 +17,10 @@ description: "Review a pequeverso-backoffice change or prepare its pull request 
 3. Keep architecture, authentication, design system, deployment contract, pinned ops contract and
    coordination docs accurate. Changes to migrations are append-only; contracts come only from an
    identified committed API revision. Do not render prompts, answers or buyer data in the dashboard.
-4. Dependency PRs: follow [dependencies.md](../../../docs/dependencies.md). The policy decides
-   auto-merge; never approve, merge or re-label a PR to get around it, and treat security updates
-   against `main` by re-targeting them to `develop`.
+4. Dependency PRs: follow [dependencies.md](../../../docs/dependencies.md). The policy only
+   assesses metadata; authorized maintainers merge manually after review and required checks.
+   Never approve, merge or re-label to circumvent those gates; re-target security updates
+   against `main` to `develop`.
 5. Branch flow is a working agreement: task branches into `develop`, only `develop` into `main`,
    and a `hotfix/*` into `main` **only with the owner's explicit authorization**, followed by merging
    `main` back into `develop`.

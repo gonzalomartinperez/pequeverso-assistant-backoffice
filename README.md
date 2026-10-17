@@ -15,6 +15,10 @@ exist; this change adds no collection or synthetic business dashboard. Existing 
 feedback may inform human review, deterministic fixtures/evaluations, a reviewed PR and a
 release. It does not imply automatic model training or additional conversation storage.
 
+Dependency triage is read-only and every merge remains manual after review and required checks;
+updates, native rebases and security alerts stay active. An eligible assessment or label is not
+merge authority. See [the dependency procedure](docs/dependencies.md).
+
 **Runtime maintenance — 2026-10-17:** the selected cohort is Node24.22.0 LTS,
 Next16.4.2, React/DOM19.3.1, Better Auth1.7.10 and Playwright1.64.1. The framework security
 patch is already released at `29b293f` through [PR60](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/60);

@@ -16,7 +16,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const IMPORT =
-  /(?:^|[\s;])(?:import|export)\s[^'"`]*?from\s*["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)|^\s*import\s*["']([^"']+)["']/gm;
+  /(?:^|[\s;])(?:import|export)\s[^'"`]*?from\s*["']([^"']+)["']|import\s*\(\s*["'`]([^"'`]+)["'`]|^\s*import\s*["']([^"']+)["']/gm;
 const IMPURE =
   /\b(window|document|fetch|localStorage|sessionStorage|AbortController|setTimeout|setInterval|process|globalThis|ReadableStream|TextDecoder)\b/;
 

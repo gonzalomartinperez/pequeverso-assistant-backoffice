@@ -38,6 +38,8 @@ it("rejects runtime application dependencies from presentation through aliases a
     'import { inviteMember } from "../application/access";',
     'export { inviteMember } from "@/features/auth/application/access";',
     'export const load = () => import("../application/access");',
+    'export const load = () => import("../application/access", {});',
+    "export const load = () => import (`../application/access`);",
     'import "../application/access";',
   ]) {
     assert.match(
@@ -126,4 +128,17 @@ it("ignores commented-out imports and impurity examples", () => {
     }),
     [],
   );
+});
+
+it("rejects static template and import-options adapter dependencies from presentation", () => {
+  for (const statement of [
+    "export const load = () => import(`../adapters/store`);",
+    "export const load = () => import (`@/features/auth/adapters/store`, {});",
+    'export const load = () => import("../adapters/store", { with: { type: "json" } });',
+  ]) {
+    assert.match(
+      inspect({ "features/auth/presentation/probe.ts": statement }).join("\n"),
+      /presentation may not import adapters/,
+    );
+  }
 });

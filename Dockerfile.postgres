@@ -23,4 +23,5 @@ RUN apt-get purge -y gpg \
 # initialize a NEW volume's ownership separately, then always execute as postgres.
 USER 999:999
 ARG SERVICE_REVISION=
+LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-backoffice"
 LABEL org.opencontainers.image.revision=${SERVICE_REVISION}

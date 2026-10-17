@@ -2,8 +2,8 @@
 # Production image for the Pequeverso assistant backoffice (docs/deployment-contract.md).
 # One image, two commands: `node server.js` (default) and `node scripts/db-migrate.ts` (one-shot
 # migrations, run by the operator before starting a release that needs them).
-# Base pinned by digest (node 24.21.0, Debian trixie slim, linux/amd64 verified).
-FROM node:24.21.0-trixie-slim@sha256:c83040f7e24bacea68e58a0b96a484ba430bf24abb2973eab7ba4701144b7b63 AS build
+# Base pinned by digest (node 24.22.0, Debian trixie slim, linux/amd64 verified).
+FROM node:24.22.0-trixie-slim@sha256:7f486cabe892bff8fef04c0f7da8dba84a560be3e4e2740b7a86afc57ebec315 AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json package-lock.json ./
@@ -14,9 +14,9 @@ COPY public ./public
 # `next build` type-checks with the project-local TypeScript 7 CLI; tests are excluded from the image.
 RUN npx next build --webpack
 
-FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:9eeb7f5887d0e239e78264b06f7f11d2e14be534050481803a9e4728fcdd278e AS runtime
-LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice"
-LABEL org.opencontainers.image.description="Pequeverso assistant private backoffice (operations dashboard and access)"
+FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:59c479c9b8c123e66047315c968aa2d35e31ae5149c856e4110a79c8b3563f0b AS runtime
+LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-backoffice"
+LABEL org.opencontainers.image.description="Pequeverso private backoffice (access and assistant operations)"
 LABEL org.opencontainers.image.licenses="LicenseRef-Proprietary"
 WORKDIR /app
 ENV PATH=/nodejs/bin:/usr/local/bin:/usr/bin:/bin

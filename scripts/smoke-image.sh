@@ -6,7 +6,7 @@
 #   scripts/smoke-image.sh [image]
 set -euo pipefail
 
-IMAGE="${1:-pequeverso-assistant-backoffice:rc}"
+IMAGE="${1:-pequeverso-backoffice:rc}"
 NET="pv-bo-smoke-$$"
 DB="pv-bo-smoke-db-$$"
 APP="pv-bo-smoke-app-$$"

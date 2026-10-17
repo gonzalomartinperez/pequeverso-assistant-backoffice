@@ -1,18 +1,38 @@
-# pequeverso-assistant-backoffice
+# pequeverso-backoffice
 
-Private operations backoffice of the Pequeverso shopping assistant: OAuth sign-in for the owner
-and invited people, access management, and a dashboard of the assistant's health, catalog
-freshness, runs, latency, tokens and spend. The public conversation lives only in the storefront
+Private backoffice for Pequeverso. Its implemented capabilities are OAuth sign-in for the owner
+and invited people, access management, and the shopping assistant's operations dashboard:
+health, catalog freshness, runs, latency, tokens and spend. The public conversation lives only in the storefront
 (`pequeverso`); the former chat shells were removed from this repository (see git history).
 
 The repository is public; the application is private. All rights reserved (see `LICENSE`).
-**Status — 2026-10-13:** the compact availability and telemetry dashboard and maintained
-distroless runtime are integrated into `main` at `f96d30d` through
+
+The repository was renamed to `pequeverso-backoffice` on 2026-10-17; earlier GitHub URLs
+redirect, while local checkout paths and persistent identifiers remain unchanged. This name
+does not claim a completed business analytics suite. Project-wide analytics, events and sales
+funnels are proposals until their authorized data sources, privacy boundaries and contracts
+exist; this change adds no collection or synthetic business dashboard. Existing assistant
+feedback may inform human review, deterministic fixtures/evaluations, a reviewed PR and a
+release. It does not imply automatic model training or additional conversation storage.
+
+Dependency triage is read-only and every merge remains manual after review and required checks;
+updates, native rebases and security alerts stay active. An eligible assessment or label is not
+merge authority. See [the dependency procedure](docs/dependencies.md).
+
+**Runtime maintenance — 2026-10-17:** the selected cohort is Node24.22.0 LTS,
+Next16.4.2, React/DOM19.3.1, Better Auth1.7.10 and Playwright1.64.1. The framework security
+patch is already released at `29b293f` through [PR60](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/60);
+this separate maintenance change keeps admission, roles, contracts and SQL migrations intact.
+Read [the cohort review and verification limits](docs/verification/runtime-cohort-2026-10-17.md)
+before choosing an image. Current-head protected CI determines acceptance; no deployment is implied.
+
+**Historical dashboard release — 2026-10-13:** the compact availability and telemetry dashboard and maintained
+distroless runtime were integrated into `main` at `f96d30d` through
 [release PR #50](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/50).
 [Release CI](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/actions/runs/38384606345)
 passed all seven jobs, including the exact CI image smoke and 51 browser tests across four
-projects (three optional live-API tests skipped; no retries). The runtime uses Node24,
-Debian13 and UID/GID65532; current dependencies include Next.js16.4.2 and Playwright1.64.0.
+projects (three optional live-API tests skipped; no retries). Its runtime design uses Node24,
+Debian13 and UID/GID65532; the maintenance pins above are separate from that historical evidence.
 Earlier local failures and image drills remain dated history in
 [verification](docs/verification.md). CI fixture evidence does not prove deployment,
 real OAuth, TLS cookies, VPS capacity or provider billing. This project has not deployed the
@@ -55,28 +75,31 @@ record provenance and agent inspection; they do not claim human review.
 
 ## Architecture and data flow
 
-```mermaid
-flowchart LR
-  Operator[Invited operator] --> Auth[Better Auth OAuth]
-  Auth --> IAM[(Private PostgreSQL IAM)]
-  Operator --> Guard[Server session and role guard]
-  Guard --> Panel[Pequeverso dashboard]
-  Panel --> Adapter[Bounded validated server adapter]
-  Adapter -->|Private bearer| Summary[API summary1.2]
-  Adapter -. optional same bearer .-> Telemetry[API telemetry1.0]
-  Summary --> APIData[(API-owned SQLite aggregates)]
-  Telemetry --> Process[Point-in-time process readings]
-  BO[BO safe manual instrumentation] -. off by default .-> Collector[Private OTLP collector]
-  Prom[Private Prometheus scrape] -. separate bearer .-> BO
-  Prom --> Grafana[Grafana safe aggregate panels]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture/system-dark.svg">
+  <img src="docs/architecture/system-light.svg" alt="Private Pequeverso backoffice: invited operators authenticate through OAuth and PostgreSQL identity, server guards protect the dashboard, and a bounded server adapter reads API summaries and optional process telemetry.">
+</picture>
 
-The public storefront sends conversations to the API directly. This backoffice serves no
-chat and receives no conversation content, buyer data or provider keys. PostgreSQL owns
-operator IAM only; API SQLite owns sessions, run history and spend. The dashboard explains
-point-in-time readiness and business outcomes; Prometheus/Grafana supplies longer-lived
-private observability when an operator provisions it. No uptime percentage is invented
-from a single observation, process uptime or successful scrape.
+[Full-size light diagram](docs/architecture/system-light.svg) ·
+[Full-size dark diagram](docs/architecture/system-dark.svg) ·
+[Editable light source](docs/architecture/system-light.mmd) ·
+[Editable dark source](docs/architecture/system-dark.mmd)
+
+[Rendering provenance and asset hashes](docs/architecture/manifest.json). Both themes are
+self-contained SVGs with editable Mermaid sources; they add no application dependency.
+
+The private dashboard reads operational evidence through a bounded, validated server adapter.
+Summary revision 1.2 and optional telemetry revision 1.0 come from the assistant API. Private
+PostgreSQL stores operator identity, sessions and invitations; API SQLite owns the public catalog,
+conversations and accounting. This backoffice serves no chat and receives no conversation
+content, buyer data or provider keys. The storefront talks directly to the API only when its
+assistant is separately enabled; publishable storefront builds currently keep it disabled.
+
+Point-in-time process readings are not historical availability: no uptime percentage is invented
+from a single observation, process uptime or successful scrape. Optional OTLP and private
+Prometheus scraping complement Grafana and require vps-ops configuration and separate
+authorization. These boundaries describe integration, not an existing deployment or validated
+VPS capacity. On a narrow screen, use this prose and the full-size links alongside the diagram.
 
 ```mermaid
 sequenceDiagram
@@ -95,7 +118,7 @@ sequenceDiagram
     API-->>BO: Current sample or unavailable
   end
   BO->>BO: Validate both contracts independently
-  BO-->>Operator: Honest values and fixture labels; no credentials
+  BO-->>Operator: Honest values and fixture labels, no credentials
 ```
 
 ## Quick start (no real credentials)
@@ -144,9 +167,9 @@ No real credentials or remote database are permitted. Stop only this own server 
 
 ## Stack
 
-Next.js 16.4.2 (App Router, standalone), React 19.3.1, TypeScript 7.0.2, Better Auth 1.7.7,
+Next.js 16.4.2 (App Router, standalone), React 19.3.1, TypeScript 7.0.2, Better Auth 1.7.10,
 PostgreSQL (`pg` 8.23), Recharts 3.10, Tailwind CSS 4.3 with owned primitives, lucide icons,
-Biome 2.5, Playwright 1.64.0 + axe-core. Node 24.21.0. Support classifications and exact versions are recorded in
+Biome 2.5, Playwright 1.64.1 + axe-core. Node 24.22.0. Support classifications and exact versions are recorded in
 [the runtime inventory](docs/dependencies.md#runtime-support-inventory-2026-10-17);
 maintained libraries are not mislabeled LTS. No infrastructure stack is installed here.
 

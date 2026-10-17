@@ -1,14 +1,14 @@
-# Repository guidelines — pequeverso-assistant-backoffice
+# Repository guidelines — pequeverso-backoffice
 
-Private operations backoffice of the Pequeverso assistant (renamed from `pequeverso-assistant-web`
-on 2026-10-05; GitHub redirects the old URL): OAuth sign-in, access management and an operations
-dashboard.
+Private backoffice for Pequeverso, currently providing assistant operations, OAuth sign-in
+and access management. Repository renamed from `pequeverso-assistant-web` on 2026-10-05 and
+from `pequeverso-assistant-backoffice` on 2026-10-17; old GitHub URLs redirect to the current name.
 The public conversation lives only in the storefront; this repository serves no public chat.
 Public repository; all rights reserved (see `LICENSE`). Never commit secrets,
 private operations details or other repositories' internals.
 
 - English for code, docs and commits. UI copy is neutral Spanish with "tú".
-- Node from `.nvmrc` (24.21.0); restore with `npm ci`. Next.js 16 App Router, React 19, strict
+- Node from `.nvmrc` (24.22.0); restore with `npm ci`. Next.js 16 App Router, React 19, strict
   TypeScript 7, Tailwind 4 with owned primitives, Better Auth on PostgreSQL, Biome.
 - Read [docs/architecture.md](docs/architecture.md) before changing behavior and
   [docs/design-system.md](docs/design-system.md) before changing UI.

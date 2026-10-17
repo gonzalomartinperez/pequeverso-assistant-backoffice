@@ -9,15 +9,15 @@ baseline/routing/release policy; Coolify remains the sole deployment executor.
 | `next` | `16.4.2` |
 | `react` | `19.3.1` |
 | `react-dom` | `19.3.1` |
-| `better-auth` | `1.7.7` |
+| `better-auth` | `1.7.10` |
 | `pg` | `8.23.1` |
 | `typescript` | `7.0.2` |
 | `@biomejs/biome` | `2.5.15` |
-| `@playwright/test` | `1.64.0` |
+| `@playwright/test` | `1.64.1` |
 
 The lockfile is authoritative for the complete dependency graph. This dated view does not
 assert that these versions remain the newest forever or that an image has been published.
-Node24.21.0 is LTS; Next16.x is Active LTS. React, TypeScript, authentication libraries and test tools do not acquire LTS status from that choice. Node26 Current/types are excluded. Both backoffices use Trixie builders and the same digest-pinned nonroot Node24 distroless runtime.
+Node24.22.0 is LTS; Next16.x is Active LTS. React, TypeScript, authentication libraries and test tools do not acquire LTS status from that choice. Node26 Current/types are excluded. This backoffice uses Trixie builder and digest-pinned nonroot Node24 runtime images with matching24.22.0 interpreters; other applications keep independently verified pins.
 
 ## October 2026 framework security update
 
@@ -28,8 +28,10 @@ patch. React/React DOM19.3.1 align with the patched upstream release; updating t
 alone would not replace Next's bundled React Server Components implementation. The lock already
 contains sharp0.35.5, the documented image-processing workaround. No exploit was attempted.
 
-Only framework patches change in this increment: Node24.21.0, Playwright1.64.0, PostgreSQL and
-base-image digests remain pinned. The application image must be rebuilt from this lock and its
+The earlier framework-only security increment retained Node24.21.0, Playwright1.64.0,
+PostgreSQL and the previous image bases; those measurements remain dated history. The separate
+fixed17:35UTC maintenance cohort now selects Node24.22.0, Playwright1.64.1 and Better Auth1.7.10.
+See [the cohort review](verification/runtime-cohort-2026-10-17.md) for scope and acceptance gates. The application image must be rebuilt from this lock and its
 new exact artifact verified before deployment; earlier image IDs and measurements remain
 historical evidence. Current-head protected CI checks DB migrations, synthetic OAuth/browser
 flows and hardened exact-image smoke/restore. Real OAuth, VPS capacity and actual deployment

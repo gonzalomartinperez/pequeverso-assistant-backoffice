@@ -1,11 +1,11 @@
 /**
- * Dependabot auto-merge eligibility policy (docs/dependencies.md). Pure: it decides from
+ * Dependabot read-only eligibility assessment (docs/dependencies.md). Pure: it decides from
  * authenticated GitHub API metadata and the base/head manifests read as data. It never runs PR
- * code. The only automatic action it can authorize is enabling GitHub's native auto-merge for the
- * evaluated head SHA; required checks and branch rules stay authoritative.
+ * code. Every decision keeps automerge false: assessment never authorizes a merge, approval or
+ * repository mutation. Required checks and independent review remain authoritative.
  */
 
-/** Patch updates allowed automatically: small, well-covered libraries and tools. */
+/** Patch updates eligible for lower-risk review: small, well-covered libraries and tools. */
 export const PATCH_ALLOW: ReadonlySet<string> = new Set([
   "lucide-react",
   "clsx",
@@ -18,7 +18,7 @@ export const PATCH_ALLOW: ReadonlySet<string> = new Set([
   "@types/react-dom",
 ]);
 
-/** Minor updates allowed automatically (additive APIs, fully exercised by the suites). */
+/** Minor updates eligible for lower-risk review (additive, exercised by the suites). */
 export const MINOR_ALLOW: ReadonlySet<string> = new Set([
   "lucide-react",
   "clsx",
@@ -26,7 +26,7 @@ export const MINOR_ALLOW: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Never automatic: runtime/compiler/framework/styling migrations and the browser-test engine.
+ * Always elevated review: runtime/compiler/framework/styling migrations and the browser engine.
  * (Deny wins over allow.)
  */
 export const DENY: ReadonlySet<string> = new Set([
@@ -64,7 +64,7 @@ export type PullRequestFacts = {
   /** Raw manifest text at the base and head revisions (null when absent). */
   basePackageJson: string | null;
   headPackageJson: string | null;
-  /** Repository variable DEPENDABOT_AUTOMERGE ("off" pauses automation). */
+  /** Legacy assessment hold input only; no value can authorize automatic merging. */
   automation: string | undefined;
 };
 
@@ -72,8 +72,8 @@ export type Update = { name: string; from: string; to: string; kind: UpdateKind 
 export type UpdateKind = "patch" | "minor" | "major" | "prerelease" | "unknown";
 
 export type Decision =
-  | { verdict: "auto-merge"; headSha: string; updates: Update[]; reasons: string[] }
-  | { verdict: "manual"; updates: Update[]; reasons: string[] };
+  | { verdict: "eligible"; automerge: false; headSha: string; updates: Update[]; reasons: string[] }
+  | { verdict: "manual"; automerge: false; updates: Update[]; reasons: string[] };
 
 type Version = { major: number; minor: number; patch: number; prerelease: boolean };
 
@@ -184,7 +184,7 @@ function updateReason(update: Update): string | null {
 export function decide(pr: PullRequestFacts): Decision {
   const reasons: string[] = [];
   if (pr.automation?.trim().toLowerCase() === "off")
-    reasons.push("automation paused (DEPENDABOT_AUTOMERGE=off)");
+    reasons.push("assessment held by legacy DEPENDABOT_AUTOMERGE=off; merging remains manual");
   if (pr.authorLogin !== DEPENDABOT_LOGIN || pr.authorType !== "Bot")
     reasons.push("author is not dependabot[bot]");
   if (pr.headRepo !== pr.baseRepo) reasons.push("head repository differs from the base repository");
@@ -217,9 +217,10 @@ export function decide(pr: PullRequestFacts): Decision {
     const reason = updateReason(update);
     if (reason) reasons.push(reason);
   }
-  if (reasons.length) return { verdict: "manual", updates, reasons };
+  if (reasons.length) return { verdict: "manual", automerge: false, updates, reasons };
   return {
-    verdict: "auto-merge",
+    verdict: "eligible",
+    automerge: false,
     headSha: pr.headSha,
     updates,
     reasons: updates.map((u) => `${u.name} ${u.from} → ${u.to} (${u.kind}) is allowlisted`),

@@ -63,7 +63,7 @@ updates:
     directory: /
     target-branch: develop
     schedule:
-      interval: monthly
+      interval: weekly
     ignore:
       # The runtime follows the Node LTS line in .nvmrc and package.json engines (24.x); moving to a
       # new major is a deliberate migration, not a routine update.

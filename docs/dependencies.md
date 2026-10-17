@@ -1,7 +1,7 @@
 # Dependency updates and manual integration
 
 Every dependency merge is manual by default. Dependabot continues its configured scheduled
-updates (weekly npm/Actions, existing monthly Docker), native rebases and security alerts. The trusted policy only classifies metadata for
+weekly updates (npm, Actions and Docker), native rebases and security alerts. The trusted policy only classifies metadata for
 review; `decision.automerge` is always false, including lower-risk eligible patches and any
 legacy `DEPENDABOT_AUTOMERGE=on` input. Labels, green checks or an eligible assessment are not
 merge authority. Future automatic merging requires separate owner authorization and a reviewed

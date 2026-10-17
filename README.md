@@ -77,10 +77,12 @@ record provenance and agent inspection; they do not claim human review.
 
 ## Architecture and data flow
 
+<p align="center">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture/system-dark.svg">
   <img src="docs/architecture/system-light.svg" alt="Private Pequeverso backoffice: the owner or invited operators authenticate through OAuth and PostgreSQL identity, server guards protect the dashboard, and a bounded server adapter reads API summaries and optional process telemetry.">
 </picture>
+</p>
 
 [Full-size light diagram](docs/architecture/system-light.svg) ·
 [Full-size dark diagram](docs/architecture/system-dark.svg) ·

@@ -1,58 +1,38 @@
 {
-  "schema_version": 1,
-  "repository": "gonzalomartinperez/pequeverso-backoffice",
-  "architecture_source_revision": "4ffae488ff492fb546e9bff32805286211447896",
-  "source_read": "committed README via git show; application relationships preserved",
+  "format": "authored native SVG; Mermaid preserves semantic relationships, not pixel layout",
+  "committed_architecture_reference": "f269bc19701aa13d6ce9c1e706ce5a75b971cedc",
+  "scope": "Application boundaries; no deployment, activation, capacity or conversion claim",
+  "native_size": [1040, 890],
   "renderer": {
-    "engine": "Mermaid12.2.0 locked local browser bundle",
-    "cli_distribution": "12.0.0 installed and integrity-verified externally; actual SVG rendered by browser bundle, not CLI subprocess",
     "playwright": "1.64.1",
-    "browser": "156.0.8078.4",
-    "securityLevel": "strict",
-    "htmlLabels": "false globally and flowchart",
-    "network_attempts": 0,
-    "svg_postprocessing": "Prepend first-party solid background rect at native viewBox coordinates. No bitmap edits or source fact changes."
+    "chromium": "156.0.8078.4",
+    "widths": [1040, 896, 390],
+    "network_requests": 0
   },
-  "files": [
-    {
-      "path": "system-light.svg",
-      "bytes": 33690,
-      "sha256": "5dbf2944ec7d59fded14e8b7d498ab13f02418b0c2fe12f7cfacc8781fa87b8c"
-    },
-    {
-      "path": "system-light.mmd",
-      "bytes": 2393,
-      "sha256": "a798067848ce519ccfc0943ba0be271d347a7116dd6e811e079db4389753b7ca"
-    },
-    {
-      "path": "system-dark.svg",
-      "bytes": 33774,
-      "sha256": "6b2b24843cb84dfdecd45f51bd69ac106d3f666fab16f8ea48c021a74156c43c"
-    },
-    {
-      "path": "system-dark.mmd",
-      "bytes": 2393,
-      "sha256": "fd60a8cd57dc91f17329d189a7a3bcdde90333822ccd907ed3a0001ec646818b"
-    }
-  ],
   "review": {
-    "coding_agents": "Sources and SVGs inspected; independent Root peer approved light/dark previews at896/390. No human review claimed.",
-    "mobile": "390px overview requires adjacent prose and full-size links for detail.",
-    "consumer_checks": "XML contains no scripts, foreignObject, event handlers or external resource references."
+    "agent_inspection": "README896px and mobile390px previews inspected. Native1040px exported for independent review; narrow readers use adjacent prose, alt text and full-size links.",
+    "independent_review": "Coordinating agent approved native/mobile previews, source, README and removal of exact generated-SVG lint exceptions. No human review is asserted.",
+    "human_review_claimed": false
   },
-  "limits": {
-    "runtime_dependencies_added": false,
-    "application_behavior_changed": false,
-    "deployment_or_vps_capacity_proved": false,
-    "github_rendering_proved": false
+  "sha256": {
+    "system-light.svg": "7d9ad4ca372c15c365aa9e3393b443cea4c350e69e55ed6b4e1e0c687cb4a9eb",
+    "system-dark.mmd": "4431c631e0561c2ebe368a0d07f33e8244de9b0e880b9682934a5d0db242be46",
+    "system-dark.svg": "aa285a433ef27d3df6682f79c16923de183397d3f0cf0393728faf302da698e2",
+    "system-light.mmd": "4431c631e0561c2ebe368a0d07f33e8244de9b0e880b9682934a5d0db242be46"
   },
-  "generated_output_lint_scope": {
-    "paths": ["system-light.svg", "system-dark.svg"],
-    "rules": [
-      "complexity.noImportantStyles",
-      "a11y.noRedundantRoles",
-      "style.noDescendingSpecificity"
-    ],
-    "reason": "Preserve reviewed Mermaid generated CSS precedence/order and native SVG ARIA output byte-for-byte. The override is limited to these generated files; parser, formatter, remaining rules and all application files remain checked. Source hashes, XML checks and README alt/prose are reviewed separately."
+  "contrast": {
+    "light": {
+      "min_text_ratio": 7.203,
+      "min_connection_ratio": 3.882
+    },
+    "dark": {
+      "min_text_ratio": 8.815,
+      "min_connection_ratio": 6.441
+    }
+  },
+  "semantic_mermaid_validation": {
+    "version": "12.2.0",
+    "engine": "locked local browser bundle",
+    "result": "both theme sources parse as flowchart-v2; no network"
   }
 }

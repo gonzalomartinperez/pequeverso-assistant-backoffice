@@ -30,9 +30,9 @@ on both exact local fixtures. Production/containerd/registry size measures are d
 
 ## PostgreSQL (required)
 
-Use the [PostgreSQL runtime and recovery worksheet](postgresql-runtime.md) for the separately
-built database artifact, PostgreSQL18 volume boundary, measured bounded recipe and isolated
-restore drill. Infrastructure remains owned by vps-ops; this is not a deployment authorization.
+Use the [PostgreSQL runtime and recovery worksheet](postgresql-runtime.md) for historical
+application-owned artifact tests, PostgreSQL18 persistence, bounded recipes and isolated restore
+drills. The owner-selected production topology target is one project engine and two logical databases below. Infrastructure remains owned by vps-ops; this is not a deployment authorization.
 
 - A dedicated database and role for the backoffice on a private network; never exposed publicly,
   never shared with portfolio services. Historical tests covered17.6/18.4; current artifact uses supported PostgreSQL 18.6. Runtime app credentials must not be superuser; infrastructure owns dedicated migration/runtime grants.
@@ -59,6 +59,65 @@ restore drill. Infrastructure remains owned by vps-ops; this is not a deployment
   from a source clean checkout against an isolated test PostgreSQL with CREATEDB: it is not
   packaged in the image, creates its own database for drift and does not validate restored rows.
 - Pool: at most 5 connections per container, 5 s connect timeout, 5 s statement timeout.
+
+### One project engine, separate IAM database and credentials
+
+Use the API-owned PostgreSQL18/pgvector artifact as the single Pequeverso engine, with two
+separate databases: API state/knowledge and backoffice IAM. Do not start a second BO database
+controller or share an engine with Portfolio. vps-ops owns the service lifecycle, persistent
+volume, HBA/private network CIDRs, backup storage, capacity and secret inventory. This
+repository owns IAM migrations and its table grants. Follow the API
+[project bootstrap](https://github.com/gonzalomartinperez/pequeverso-assistant-api/blob/develop/docs/knowledge-operations.md#one-project-engine-two-database-bootstrap)
+and [operator handoff](https://github.com/gonzalomartinperez/pequeverso-assistant-api/blob/develop/docs/handoffs/vps-ops.md).
+
+Operator-owned example names below are not credentials or executable application migrations.
+Provision distinct login secrets privately; never put passwords in SQL, CLI arguments or logs.
+Neither IAM identity may be superuser, create roles/databases, replicate or bypass RLS. The
+migration owner is separate from the runtime identity and owns only IAM relations:
+
+```sql
+-- Operator session: substitute reviewed project-specific names before running.
+CREATE ROLE pv_iam_owner LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+CREATE ROLE pv_iam_runtime LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+CREATE DATABASE pv_iam OWNER pv_iam_owner;
+REVOKE CONNECT ON DATABASE pv_iam FROM PUBLIC;
+GRANT CONNECT ON DATABASE pv_iam TO pv_iam_owner, pv_iam_runtime;
+-- Also revoke PUBLIC CONNECT on the API and unused system databases as in API bootstrap.
+-- Grant no API capability membership, ownership or CONNECT to either IAM identity.
+```
+
+Run `node scripts/db-migrate.ts` from the exact image with the private IAM **owner** DSN.
+After migration, connect to IAM as its owner and apply the explicit runtime grants below;
+review them again whenever a new migration adds tables. Do not grant all tables or default
+privileges broadly, and never give runtime owner membership:
+
+```sql
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+GRANT USAGE ON SCHEMA public TO pv_iam_runtime;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.auth_user, public.auth_session,
+  public.auth_account, public.auth_verification, public.auth_rate_limit,
+  public.backoffice_invitation TO pv_iam_runtime;
+GRANT SELECT, INSERT ON public.backoffice_access_audit TO pv_iam_runtime;
+REVOKE ALL ON public.backoffice_schema_migrations FROM pv_iam_runtime;
+REVOKE UPDATE, DELETE ON public.backoffice_access_audit FROM pv_iam_runtime;
+```
+
+`DATABASE_URL` on the long-running backoffice uses only the IAM runtime DSN. Keep the owner
+DSN in the one-shot migration job; it is not a fallback for runtime failures. Confirm actual
+cross-database LOGIN rejection and ownership/privileges after provisioning, rather than
+assuming network isolation or default PUBLIC grants suffice. HBA restrictions complement
+SQL grants and must be selected by vps-ops for its actual private network.
+
+The isolated local one-engine drill passed API31 database tests, BO18 database tests and
+BO51 browser tests (three optional live-ops skips). Six real LOGINs were denied access to the
+other application's database, eight forbidden SQL operations were rejected and five
+least-privilege identities read authorized synthetic rows. Both independent restores into
+fresh target databases matched complete row hashes. The full suites used privileged fixture
+operator connections; separate role probes do **not** establish a full browser run under
+production runtime credentials. A leftover owned browser-test database required explicit
+cleanup and is recorded separately. Dumps omit cluster roles/HBA/secrets: restore their
+private operator inventory separately. This is local logical isolation and recovery evidence,
+not production HBA, off-server secret recovery, capacity or VPS deployment approval.
 
 ## Runtime variables
 

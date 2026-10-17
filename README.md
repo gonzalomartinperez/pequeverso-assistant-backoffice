@@ -12,7 +12,7 @@ distroless runtime are integrated into `main` at `f96d30d` through
 [Release CI](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/actions/runs/38384606345)
 passed all seven jobs, including the exact CI image smoke and 51 browser tests across four
 projects (three optional live-API tests skipped; no retries). The runtime uses Node24,
-Debian13 and UID/GID65532; current dependencies include Next.js16.4.0 and Playwright1.64.0.
+Debian13 and UID/GID65532; current dependencies include Next.js16.4.2 and Playwright1.64.0.
 Earlier local failures and image drills remain dated history in
 [verification](docs/verification.md). CI fixture evidence does not prove deployment,
 real OAuth, TLS cookies, VPS capacity or provider billing. This project has not deployed the
@@ -144,10 +144,10 @@ No real credentials or remote database are permitted. Stop only this own server 
 
 ## Stack
 
-Next.js 16.3.8 (App Router, standalone), React 19.3, TypeScript 7.0.2, Better Auth 1.7.7,
+Next.js 16.4.2 (App Router, standalone), React 19.3.1, TypeScript 7.0.2, Better Auth 1.7.7,
 PostgreSQL (`pg` 8.23), Recharts 3.10, Tailwind CSS 4.3 with owned primitives, lucide icons,
-Biome 2.5, Playwright 1.63 + axe-core. Node 24.21.0. Support classifications and exact versions are recorded in
-[the runtime inventory](docs/dependencies.md#runtime-support-inventory-2026-10-12);
+Biome 2.5, Playwright 1.64.0 + axe-core. Node 24.21.0. Support classifications and exact versions are recorded in
+[the runtime inventory](docs/dependencies.md#runtime-support-inventory-2026-10-17);
 maintained libraries are not mislabeled LTS. No infrastructure stack is installed here.
 
 Shared runtime/version acceptance: [runtime baseline](docs/runtime-baseline.md).

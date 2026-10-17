@@ -3,7 +3,7 @@
 //
 // Features live in src/features/<feature>/<layer>/ (assistant, auth, operations):
 //   domain        → own domain only; no browser, network, timer or process globals; no packages
-//   application   → own domain and application; no packages
+//   application   → own domain and application; no IO globals or packages
 //   adapters      → own domain, application, adapters; packages allowed
 //   presentation  → own domain, application (types), presentation, shared; never adapters or server
 // A feature's inner layers never import another feature (presentation may reuse shared UI only).
@@ -13,11 +13,10 @@
 // Everywhere: no sibling-repository or absolute imports, no NEXT_PUBLIC_* configuration.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = path.resolve(import.meta.dirname, "..");
-const src = path.join(root, "src");
 const IMPORT =
-  /(?:^|[\s;])(?:import|export)\s[^'"`]*?from\s*["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)|^\s*import\s*["']([^"']+)["']/gm;
+  /(?:^|[\s;])(?:import|export)\s[^'"`]*?from\s*["']([^"']+)["']|import\s*\(\s*["'`]([^"'`]+)["'`]|^\s*import\s*["']([^"']+)["']/gm;
 const IMPURE =
   /\b(window|document|fetch|localStorage|sessionStorage|AbortController|setTimeout|setInterval|process|globalThis|ReadableStream|TextDecoder)\b/;
 
@@ -33,7 +32,7 @@ function walk(dir: string): string[] {
   });
 }
 
-function place(file: string): Place {
+function place(src: string, file: string): Place {
   const rel = path.relative(src, file).split(path.sep).join("/");
   const match = rel.match(/^features\/([a-z-]+)\/(domain|application|adapters|presentation)\//);
   const layer = FEATURE_LAYERS.find((name) => name === match?.[2]);
@@ -42,12 +41,6 @@ function place(file: string): Place {
   if (rel.startsWith("server/")) return { layer: "server", feature: null };
   if (rel.startsWith("app/")) return { layer: "app", feature: null };
   return { layer: "other", feature: null };
-}
-
-function resolve(from: string, specifier: string): string | null {
-  if (specifier.startsWith("@/")) return path.join(src, specifier.slice(2));
-  if (specifier.startsWith(".")) return path.resolve(path.dirname(from), specifier);
-  return null; // package import
 }
 
 const ALLOWED: Record<Place["layer"], Place["layer"][]> = {
@@ -61,47 +54,85 @@ const ALLOWED: Record<Place["layer"], Place["layer"][]> = {
   other: ["domain", "application", "adapters", "presentation", "shared", "server", "app", "other"],
 };
 
-const problems: string[] = [];
-const files = walk(src);
-for (const file of files) {
-  const text = readFileSync(file, "utf8");
-  const from = place(file);
-  const rel = path.relative(root, file);
-  if (/NEXT_PUBLIC_/.test(text))
-    problems.push(`${rel}: NEXT_PUBLIC_* configuration is not used by this app`);
-  if (from.layer === "domain" && IMPURE.test(text.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "")))
-    problems.push(`${rel}: ${from.layer} must stay pure (${text.match(IMPURE)?.[1]})`);
-  for (const match of text.matchAll(IMPORT)) {
-    const specifier = match[1] ?? match[2] ?? match[3];
-    if (!specifier) continue;
-    if (specifier.startsWith("/") || /\.\.\/\.\.\/\.\.\/\.\.\/\.\./.test(specifier))
-      problems.push(`${rel}: suspicious import ${specifier}`);
-    const target = resolve(file, specifier);
-    if (!target) {
-      if ((from.layer === "domain" || from.layer === "application") && specifier !== "server-only")
-        problems.push(`${rel}: ${from.layer} may not import package ${specifier}`);
+// Preserve quoted URLs while removing comments; a // inside a string is not a comment.
+function withoutComments(text: string): string {
+  return text.replace(
+    /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\/\*[\s\S]*?\*\/|\/\/[^\r\n]*/g,
+    (token) =>
+      token.startsWith("//") || token.startsWith("/*") ? " ".repeat(token.length) : token,
+  );
+}
+
+// Pure analysis accepts virtual files, so negative tests never alter application source.
+export function checkBoundaries(modules: ReadonlyMap<string, string>, root: string): string[] {
+  const src = path.join(root, "src");
+  const problems: string[] = [];
+  for (const [file, source] of modules) {
+    const text = withoutComments(source);
+    const from = place(src, file);
+    const rel = path.relative(root, file);
+    const featurePath = path.relative(src, file).split(path.sep).join("/").startsWith("features/");
+    if (featurePath && from.layer === "other")
+      problems.push(`${rel}: feature modules must belong to a recognized layer`);
+    if (/NEXT_PUBLIC_/.test(source))
+      problems.push(`${rel}: NEXT_PUBLIC_* configuration is not used by this app`);
+    if ((from.layer === "domain" || from.layer === "application") && IMPURE.test(text))
+      problems.push(`${rel}: ${from.layer} must stay pure (${text.match(IMPURE)?.[1]})`);
+    for (const match of text.matchAll(IMPORT)) {
+      const specifier = match[1] ?? match[2] ?? match[3];
+      if (!specifier) continue;
+      if (specifier.startsWith("/") || /\.\.\/\.\.\/\.\.\/\.\.\/\.\./.test(specifier))
+        problems.push(`${rel}: suspicious import ${specifier}`);
+      const target = specifier.startsWith("@/")
+        ? path.resolve(src, specifier.slice(2))
+        : specifier.startsWith(".")
+          ? path.resolve(path.dirname(file), specifier)
+          : null;
+      if (!target) {
+        if (
+          (from.layer === "domain" || from.layer === "application") &&
+          specifier !== "server-only"
+        )
+          problems.push(`${rel}: ${from.layer} may not import package ${specifier}`);
+        if (
+          from.layer === "presentation" &&
+          (specifier === "server-only" || specifier.startsWith("node:") || specifier === "pg")
+        )
+          problems.push(`${rel}: presentation may not import ${specifier}`);
+        continue;
+      }
+      if (target !== src && !target.startsWith(`${src}${path.sep}`)) {
+        problems.push(`${rel}: imports outside src (${specifier})`);
+        continue;
+      }
+      const candidates = [target, `${target}.ts`, `${target}.tsx`, path.join(target, "index.ts")];
+      const resolved = candidates.find((candidate) => modules.has(candidate)) ?? target;
+      const to = place(src, resolved);
+      if (!ALLOWED[from.layer].includes(to.layer))
+        problems.push(`${rel}: ${from.layer} may not import ${to.layer} (${specifier})`);
+      else if (from.feature && to.feature && from.feature !== to.feature)
+        problems.push(
+          `${rel}: feature ${from.feature} may not import feature ${to.feature} (${specifier})`,
+        );
       if (
         from.layer === "presentation" &&
-        (specifier === "server-only" || specifier.startsWith("node:") || specifier === "pg")
+        to.layer === "application" &&
+        !/^(?:import|export)\s+type\b/.test(match[0].trim().replace(/^;\s*/, ""))
       )
-        problems.push(`${rel}: presentation may not import ${specifier}`);
-      continue;
+        problems.push(`${rel}: presentation may only import application types (${specifier})`);
     }
-    if (!target.startsWith(src)) {
-      problems.push(`${rel}: imports outside src (${specifier})`);
-      continue;
-    }
-    const candidates = [target, `${target}.ts`, `${target}.tsx`, path.join(target, "index.ts")];
-    const resolved = candidates.find((candidate) => files.includes(candidate)) ?? target;
-    const to = place(resolved);
-    if (!ALLOWED[from.layer].includes(to.layer))
-      problems.push(`${rel}: ${from.layer} may not import ${to.layer} (${specifier})`);
-    else if (from.feature && to.feature && from.feature !== to.feature)
-      problems.push(
-        `${rel}: feature ${from.feature} may not import feature ${to.feature} (${specifier})`,
-      );
   }
+  return problems;
 }
-for (const problem of problems) console.error(problem);
-console.log(`Boundaries: ${files.length} modules checked, ${problems.length} violations.`);
-if (problems.length) process.exitCode = 1;
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const root = path.resolve(import.meta.dirname, "..");
+  const files = walk(path.join(root, "src"));
+  const problems = checkBoundaries(
+    new Map(files.map((file) => [file, readFileSync(file, "utf8")])),
+    root,
+  );
+  for (const problem of problems) console.error(problem);
+  console.log(`Boundaries: ${files.length} modules checked, ${problems.length} violations.`);
+  if (problems.length) process.exitCode = 1;
+}

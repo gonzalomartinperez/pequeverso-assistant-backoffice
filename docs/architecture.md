@@ -67,3 +67,24 @@ automatic route/fetch spans cannot leak private URLs or invite tokens. An option
 metrics endpoint requires a distinct machine bearer; protected human pages still recheck
 Better Auth roles. See [observability](observability.md) for switches, bounds, privacy and
 BO-only Prometheus/Grafana proposals. Infrastructure deployment remains owned by vps-ops.
+
+## Enforced dependency boundaries
+
+Domain and application modules contain rules and injected ports, with no browser, network,
+process or timer globals. Adapters implement IO; `src/server` composes adapters and use cases;
+`src/app` remains the route/composition boundary. Presentation can depend on its own domain,
+shared UI and explicit `import type` / `export type` declarations from its own application.
+Runtime application imports, re-exports and dynamic imports from presentation are rejected.
+Keep use-case execution in the outer server/action composition.
+
+Every module under `src/features/<feature>/` must use a recognized `domain`, `application`,
+`adapters` or `presentation` directory. Unknown placement cannot opt out of layer checks.
+Outer framework entry points such as `src/proxy.ts` and `src/instrumentation.ts` retain their
+composition role; they do not make misplaced feature modules valid.
+
+`npm test` runs the checker over real source and negative virtual-module fixtures for these
+rules, alongside positive composition and type-only cases. The checker uses a bounded textual
+scanner rather than a complete TypeScript parser (TypeScript 7 does not expose that API).
+It is a regression guard for declared dependencies, not a sandbox or a proof of semantic purity;
+review indirect IO, computed imports and new syntax explicitly. No runtime authorization or
+framework isolation depends on this scanner.

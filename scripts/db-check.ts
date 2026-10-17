@@ -10,6 +10,7 @@ import pg from "pg";
 import { authOptions } from "../src/features/auth/adapters/better-auth.ts";
 import type { AccessDeps } from "../src/features/auth/application/access.ts";
 import { assertDisposableDatabase } from "../src/server/fixture-safety.ts";
+import { trackPoolClosure } from "./close-pool.ts";
 import { migrate } from "./db-migrate.ts";
 
 let server: string;
@@ -33,6 +34,7 @@ await migrate(url, path.resolve(import.meta.dirname, "..", "migrations"));
 // Applying twice must be a no-op (checksums recorded, nothing pending).
 const again = await migrate(url, path.resolve(import.meta.dirname, "..", "migrations"));
 const pool = new pg.Pool({ connectionString: url });
+const closePool = trackPoolClosure(pool);
 const provider = { clientId: "check", clientSecret: "check" };
 const options = authOptions(
   {
@@ -48,7 +50,7 @@ const options = authOptions(
   {} as AccessDeps,
 );
 const pending = await getMigrations(options);
-await pool.end();
+await closePool();
 await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
 await admin.end();
 const problems = [

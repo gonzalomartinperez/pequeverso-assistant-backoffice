@@ -39,8 +39,8 @@ function pr(overrides: Partial<PullRequestFacts> = {}): PullRequestFacts {
     number: 7,
     authorLogin: "dependabot[bot]",
     authorType: "Bot",
-    headRepo: "gonzalomartinperez/pequeverso-assistant-backoffice",
-    baseRepo: "gonzalomartinperez/pequeverso-assistant-backoffice",
+    headRepo: "gonzalomartinperez/pequeverso-backoffice",
+    baseRepo: "gonzalomartinperez/pequeverso-backoffice",
     headRef: "dependabot/npm_and_yarn/develop/lucide-react-1.48.1",
     baseRef: "develop",
     headSha: "a".repeat(40),
@@ -162,10 +162,7 @@ describe("Dependabot auto-merge policy", () => {
   });
 
   it("rejects a PR from a fork even if the author claims to be Dependabot", () => {
-    assert.equal(
-      decide(pr({ headRepo: "attacker/pequeverso-assistant-backoffice" })).verdict,
-      "manual",
-    );
+    assert.equal(decide(pr({ headRepo: "attacker/pequeverso-backoffice" })).verdict, "manual");
   });
 
   it("rejects unexpected changed files (workflows, application code, Docker)", () => {

@@ -1,8 +1,8 @@
-# Repository guidelines — pequeverso-assistant-backoffice
+# Repository guidelines — pequeverso-backoffice
 
-Private operations backoffice of the Pequeverso assistant (renamed from `pequeverso-assistant-web`
-on 2026-10-05; GitHub redirects the old URL): OAuth sign-in, access management and an operations
-dashboard.
+Private backoffice for Pequeverso, currently providing assistant operations, OAuth sign-in
+and access management. Repository renamed from `pequeverso-assistant-web` on 2026-10-05 and
+from `pequeverso-assistant-backoffice` on 2026-10-17; old GitHub URLs redirect to the current name.
 The public conversation lives only in the storefront; this repository serves no public chat.
 Public repository; all rights reserved (see `LICENSE`). Never commit secrets,
 private operations details or other repositories' internals.

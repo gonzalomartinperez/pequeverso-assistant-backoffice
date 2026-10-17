@@ -1,11 +1,20 @@
-# pequeverso-assistant-backoffice
+# pequeverso-backoffice
 
-Private operations backoffice of the Pequeverso shopping assistant: OAuth sign-in for the owner
-and invited people, access management, and a dashboard of the assistant's health, catalog
-freshness, runs, latency, tokens and spend. The public conversation lives only in the storefront
+Private backoffice for Pequeverso. Its implemented capabilities are OAuth sign-in for the owner
+and invited people, access management, and the shopping assistant's operations dashboard:
+health, catalog freshness, runs, latency, tokens and spend. The public conversation lives only in the storefront
 (`pequeverso`); the former chat shells were removed from this repository (see git history).
 
 The repository is public; the application is private. All rights reserved (see `LICENSE`).
+
+The repository was renamed to `pequeverso-backoffice` on 2026-10-17; earlier GitHub URLs
+redirect, while local checkout paths and persistent identifiers remain unchanged. This name
+does not claim a completed business analytics suite. Project-wide analytics, events and sales
+funnels are proposals until their authorized data sources, privacy boundaries and contracts
+exist; this change adds no collection or synthetic business dashboard. Existing assistant
+feedback may inform human review, deterministic fixtures/evaluations, a reviewed PR and a
+release. It does not imply automatic model training or additional conversation storage.
+
 **Runtime maintenance — 2026-10-17:** the selected cohort is Node24.22.0 LTS,
 Next16.4.2, React/DOM19.3.1, Better Auth1.7.10 and Playwright1.64.1. The framework security
 patch is already released at `29b293f` through [PR60](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/60);
@@ -102,7 +111,7 @@ sequenceDiagram
     API-->>BO: Current sample or unavailable
   end
   BO->>BO: Validate both contracts independently
-  BO-->>Operator: Honest values and fixture labels; no credentials
+  BO-->>Operator: Honest values and fixture labels, no credentials
 ```
 
 ## Quick start (no real credentials)

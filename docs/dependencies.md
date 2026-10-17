@@ -129,17 +129,17 @@ review security advisories, supported versions and exact new artifacts.
 
 | Component | Project revision | Upstream support classification |
 |---|---|---|
-| Node / npm build tooling | Node 24.21.0, bundled npm11.19.0 | [Node24 LTS](https://nodejs.org/en/about/previous-releases); npm has its own stable releases, not a separate guaranteed LTS window |
+| Node / npm build tooling | Node 24.22.0, bundled npm11.19.1 | [Node24 LTS](https://nodejs.org/en/about/previous-releases); npm has its own stable releases, not a separate guaranteed LTS window |
 | Next.js | 16.4.2 | [16.x Active LTS](https://nextjs.org/support-policy); pinned patch, recheck security updates |
 | PostgreSQL image/tools | 18.6-trixie, immutable linux/amd64 manifest in Dockerfile.postgres | [Supported major18 until2030-11-14](https://www.postgresql.org/support/versioning/); current stable minor18.6, not an upstream product called LTS |
 | Debian runtime | Debian 13 Trixie slim + exact signed packages | [Official Trixie support](https://www.debian.org/releases/trixie/): full support through 2028-08-09, LTS through 2030-06-30; architecture/package coverage varies. Residual CVEs remain activation decisions |
 | React / React DOM |19.3.1 | [Stable React19](https://react.dev/versions); no published separate LTS guarantee |
-| Better Auth |1.7.7 | [Stable upstream](https://www.better-auth.com/docs/introduction); pinned and OAuth/schema regression tested, no invented LTS |
+| Better Auth |1.7.10 | [Stable upstream](https://www.better-auth.com/docs/introduction); pinned and OAuth/schema regression tested, no invented LTS |
 | pg |8.23.1 | [Maintained stable](https://node-postgres.com/); no LTS window advertised |
 | OpenTelemetry JS |API1.9.1,resources/traceSDK2.12.0,OTLPHTTP0.223.0 | [Official API/SDK signal stability](https://opentelemetry.io/docs/languages/js/); exporter0.x release line is experimental semver, not LTS; manual bounded usage explicitly reviewed |
 | TypeScript |7.0.2 | [Stable compiler releases](https://www.typescriptlang.org/docs/); no separate LTS policy |
 | Tailwind/PostCSS |4.3.3 | [Stable tooling](https://tailwindcss.com/docs); no separate LTS policy |
-| Playwright / axe |1.64.0 /4.13.0 | [Stable Playwright](https://playwright.dev/docs/release-notes) and [axe](https://github.com/dequelabs/axe-core/releases); test-only, no invented LTS |
+| Playwright / axe |1.64.1 /4.13.0 | [Stable Playwright](https://playwright.dev/docs/release-notes) and [axe](https://github.com/dequelabs/axe-core/releases); test-only, no invented LTS |
 | Biome |2.5.15 (one compatible patch above the2.5.14 reference; no downgrade) | [Stable formatter/linter](https://biomejs.dev/); test/build-only, no separate LTS |
 | lucide / Recharts |1.52.0 /3.10.1 | [Stable icons](https://lucide.dev/) /[charts](https://recharts.github.io/); maintained libraries, no LTS promise |
 | Owned primitives |CVA0.7.1,clsx2.1.1,tailwind-merge3.7.0,server-only0.0.1 | Stable exact dependencies reviewed in lockfile; no LTS promise; CVA/server-only0.x need explicit compatibility review |

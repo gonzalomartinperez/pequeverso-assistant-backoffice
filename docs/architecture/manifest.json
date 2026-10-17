@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "repository": "gonzalomartinperez/pequeverso-backoffice",
+  "architecture_source_revision": "4ffae488ff492fb546e9bff32805286211447896",
+  "source_read": "committed README via git show; application relationships preserved",
+  "renderer": {
+    "engine": "Mermaid12.2.0 locked local browser bundle",
+    "cli_distribution": "12.0.0 installed and integrity-verified externally; actual SVG rendered by browser bundle, not CLI subprocess",
+    "playwright": "1.64.1",
+    "browser": "156.0.8078.4",
+    "securityLevel": "strict",
+    "htmlLabels": "false globally and flowchart",
+    "network_attempts": 0,
+    "svg_postprocessing": "Prepend first-party solid background rect at native viewBox coordinates. No bitmap edits or source fact changes."
+  },
+  "files": [
+    {
+      "path": "system-light.svg",
+      "bytes": 33690,
+      "sha256": "5dbf2944ec7d59fded14e8b7d498ab13f02418b0c2fe12f7cfacc8781fa87b8c"
+    },
+    {
+      "path": "system-light.mmd",
+      "bytes": 2393,
+      "sha256": "a798067848ce519ccfc0943ba0be271d347a7116dd6e811e079db4389753b7ca"
+    },
+    {
+      "path": "system-dark.svg",
+      "bytes": 33774,
+      "sha256": "6b2b24843cb84dfdecd45f51bd69ac106d3f666fab16f8ea48c021a74156c43c"
+    },
+    {
+      "path": "system-dark.mmd",
+      "bytes": 2393,
+      "sha256": "fd60a8cd57dc91f17329d189a7a3bcdde90333822ccd907ed3a0001ec646818b"
+    }
+  ],
+  "review": {
+    "coding_agents": "Sources and SVGs inspected; independent Root peer approved light/dark previews at896/390. No human review claimed.",
+    "mobile": "390px overview requires adjacent prose and full-size links for detail.",
+    "consumer_checks": "XML contains no scripts, foreignObject, event handlers or external resource references."
+  },
+  "limits": {
+    "runtime_dependencies_added": false,
+    "application_behavior_changed": false,
+    "deployment_or_vps_capacity_proved": false,
+    "github_rendering_proved": false
+  },
+  "generated_output_lint_scope": {
+    "paths": ["system-light.svg", "system-dark.svg"],
+    "rules": [
+      "complexity.noImportantStyles",
+      "a11y.noRedundantRoles",
+      "style.noDescendingSpecificity"
+    ],
+    "reason": "Preserve reviewed Mermaid generated CSS precedence/order and native SVG ARIA output byte-for-byte. The override is limited to these generated files; parser, formatter, remaining rules and all application files remain checked. Source hashes, XML checks and README alt/prose are reviewed separately."
+  }
+}

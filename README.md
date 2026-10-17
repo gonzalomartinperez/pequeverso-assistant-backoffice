@@ -75,28 +75,31 @@ record provenance and agent inspection; they do not claim human review.
 
 ## Architecture and data flow
 
-```mermaid
-flowchart LR
-  Operator[Invited operator] --> Auth[Better Auth OAuth]
-  Auth --> IAM[(Private PostgreSQL IAM)]
-  Operator --> Guard[Server session and role guard]
-  Guard --> Panel[Pequeverso dashboard]
-  Panel --> Adapter[Bounded validated server adapter]
-  Adapter -->|Private bearer| Summary[API summary1.2]
-  Adapter -. optional same bearer .-> Telemetry[API telemetry1.0]
-  Summary --> APIData[(API-owned SQLite aggregates)]
-  Telemetry --> Process[Point-in-time process readings]
-  BO[BO safe manual instrumentation] -. off by default .-> Collector[Private OTLP collector]
-  Prom[Private Prometheus scrape] -. separate bearer .-> BO
-  Prom --> Grafana[Grafana safe aggregate panels]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture/system-dark.svg">
+  <img src="docs/architecture/system-light.svg" alt="Private Pequeverso backoffice: invited operators authenticate through OAuth and PostgreSQL identity, server guards protect the dashboard, and a bounded server adapter reads API summaries and optional process telemetry.">
+</picture>
 
-The public storefront sends conversations to the API directly. This backoffice serves no
-chat and receives no conversation content, buyer data or provider keys. PostgreSQL owns
-operator IAM only; API SQLite owns sessions, run history and spend. The dashboard explains
-point-in-time readiness and business outcomes; Prometheus/Grafana supplies longer-lived
-private observability when an operator provisions it. No uptime percentage is invented
-from a single observation, process uptime or successful scrape.
+[Full-size light diagram](docs/architecture/system-light.svg) ·
+[Full-size dark diagram](docs/architecture/system-dark.svg) ·
+[Editable light source](docs/architecture/system-light.mmd) ·
+[Editable dark source](docs/architecture/system-dark.mmd)
+
+[Rendering provenance and asset hashes](docs/architecture/manifest.json). Both themes are
+self-contained SVGs with editable Mermaid sources; they add no application dependency.
+
+The private dashboard reads operational evidence through a bounded, validated server adapter.
+Summary revision 1.2 and optional telemetry revision 1.0 come from the assistant API. Private
+PostgreSQL stores operator identity, sessions and invitations; API SQLite owns the public catalog,
+conversations and accounting. This backoffice serves no chat and receives no conversation
+content, buyer data or provider keys. The storefront talks directly to the API only when its
+assistant is separately enabled; publishable storefront builds currently keep it disabled.
+
+Point-in-time process readings are not historical availability: no uptime percentage is invented
+from a single observation, process uptime or successful scrape. Optional OTLP and private
+Prometheus scraping complement Grafana and require vps-ops configuration and separate
+authorization. These boundaries describe integration, not an existing deployment or validated
+VPS capacity. On a narrow screen, use this prose and the full-size links alongside the diagram.
 
 ```mermaid
 sequenceDiagram

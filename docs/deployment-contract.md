@@ -32,7 +32,7 @@ on both exact local fixtures. Production/containerd/registry size measures are d
 
 Use the [PostgreSQL runtime and recovery worksheet](postgresql-runtime.md) for historical
 application-owned artifact tests, PostgreSQL18 persistence, bounded recipes and isolated restore
-drills. The current production topology uses one project engine and two logical databases below. Infrastructure remains owned by vps-ops; this is not a deployment authorization.
+drills. The owner-selected production topology target is one project engine and two logical databases below. Infrastructure remains owned by vps-ops; this is not a deployment authorization.
 
 - A dedicated database and role for the backoffice on a private network; never exposed publicly,
   never shared with portfolio services. Historical tests covered17.6/18.4; current artifact uses supported PostgreSQL 18.6. Runtime app credentials must not be superuser; infrastructure owns dedicated migration/runtime grants.

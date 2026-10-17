@@ -79,7 +79,7 @@ record provenance and agent inspection; they do not claim human review.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture/system-dark.svg">
-  <img src="docs/architecture/system-light.svg" alt="Private Pequeverso backoffice: invited operators authenticate through OAuth and PostgreSQL identity, server guards protect the dashboard, and a bounded server adapter reads API summaries and optional process telemetry.">
+  <img src="docs/architecture/system-light.svg" alt="Private Pequeverso backoffice: the owner or invited operators authenticate through OAuth and PostgreSQL identity, server guards protect the dashboard, and a bounded server adapter reads API summaries and optional process telemetry.">
 </picture>
 
 [Full-size light diagram](docs/architecture/system-light.svg) ·
@@ -87,13 +87,15 @@ record provenance and agent inspection; they do not claim human review.
 [Editable light source](docs/architecture/system-light.mmd) ·
 [Editable dark source](docs/architecture/system-dark.mmd)
 
-[Rendering provenance and asset hashes](docs/architecture/manifest.json). Both themes are
-self-contained SVGs with editable Mermaid sources; they add no application dependency.
+[Diagram editing and provenance](docs/architecture/README.md) ·
+[Asset hashes](docs/architecture/manifest.json). Both themes are authored, self-contained SVGs;
+Mermaid preserves their semantic relationships without generating the same pixel layout.
+No application dependency is added.
 
 The private dashboard reads operational evidence through a bounded, validated server adapter.
 Summary revision 1.2 and optional telemetry revision 1.0 come from the assistant API. Private
-PostgreSQL stores operator identity, sessions and invitations; API SQLite owns the public catalog,
-conversations and accounting. This backoffice serves no chat and receives no conversation
+PostgreSQL stores operator identity, sessions and invitations; the API owns its catalog,
+conversations and accounting behind the private operations contract. This backoffice serves no chat and receives no conversation
 content, buyer data or provider keys. The storefront talks directly to the API only when its
 assistant is separately enabled; publishable storefront builds currently keep it disabled.
 

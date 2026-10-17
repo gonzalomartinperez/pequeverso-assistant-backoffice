@@ -96,3 +96,23 @@ The dashboard reads private aggregate data and optional process observations; it
 model requests. Local browser timeout failures and final-image acceptance remain documented
 in [verification](verification.md). No deployment, publication or assistant activation is
 implied by this repin.
+
+
+## Project backoffice repository identity — 2026-10-17
+
+The owner authorized the GitHub rename `pequeverso-assistant-backoffice` →
+`pequeverso-backoffice`. The repository ID, visibility, branch tips, rulesets and workflow IDs
+were checked before and after the rename. The shared Git origin now uses the canonical URL;
+physical checkout/worktree directories were deliberately not moved. Historical names, release
+links and dated evidence remain history and use GitHub redirects.
+
+Current package identity, OCI source labels, local CI/smoke image tags, skill descriptions and
+dependency-policy fixtures follow the new repository name. No database, volume, cookie,
+authentication identifier, environment name, contract or telemetry service identity changes.
+Confirmed functionality remains access management and assistant operations/telemetry.
+Project-wide analytics/events/funnels require separately authorized sources and contracts;
+no extra data collection, automatic training or fabricated dashboard was added.
+
+A real Mermaid parser check found the README sequence message with an unescaped semicolon
+invalid. Replacing that punctuation with a comma preserves its meaning and restores parsing;
+no architecture or runtime behavior changes.

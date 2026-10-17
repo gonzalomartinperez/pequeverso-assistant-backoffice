@@ -1,8 +1,8 @@
 name: Dependency policy
 # Trusted evaluation of Dependabot pull requests (docs/dependencies.md). pull_request_target always
 # runs this workflow from the DEFAULT branch (main), and the policy code is checked out from main as
-# well; the PR head is never checked out, installed or executed. Its only write action is enabling/disabling native auto-merge (pinned to
-# the evaluated head SHA) and setting informational labels.
+# well; the PR head is never checked out, installed or executed. This assessment is read-only:
+# no merging, approval, labels or repository mutations.
 on:
   pull_request_target: # zizmor: ignore[dangerous-triggers] -- runs default-branch code only; the PR head is never checked out or executed
     types: [opened, synchronize, reopened, edited, ready_for_review, labeled, unlabeled]
@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
-      contents: write # required by enablePullRequestAutoMerge
-      pull-requests: write
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -31,9 +31,8 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
-      - name: Evaluate and apply the policy (default-branch code only)
+      - name: Evaluate and report the policy (read-only default-branch code)
         run: node scripts/dependabot/run.ts
         env:
           GITHUB_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          DEPENDABOT_AUTOMERGE: ${{ vars.DEPENDABOT_AUTOMERGE }}

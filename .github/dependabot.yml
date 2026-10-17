@@ -19,7 +19,7 @@ updates:
       semver-minor-days: 7
       semver-patch-days: 7
     groups:
-      # Every member must also pass the policy allowlist for the group to auto-merge.
+      # Grouping only reduces review churn; every merge remains manual.
       low-risk-patches:
         applies-to: version-updates
         update-types: [patch]
@@ -63,7 +63,7 @@ updates:
     directory: /
     target-branch: develop
     schedule:
-      interval: monthly
+      interval: weekly
     ignore:
       # The runtime follows the Node LTS line in .nvmrc and package.json engines (24.x); moving to a
       # new major is a deliberate migration, not a routine update.

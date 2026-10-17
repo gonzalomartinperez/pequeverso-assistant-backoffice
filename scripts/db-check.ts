@@ -10,6 +10,7 @@ import pg from "pg";
 import { authOptions } from "../src/features/auth/adapters/better-auth.ts";
 import type { AccessDeps } from "../src/features/auth/application/access.ts";
 import { assertDisposableDatabase } from "../src/server/fixture-safety.ts";
+import { closePool } from "./close-pool.ts";
 import { migrate } from "./db-migrate.ts";
 
 let server: string;
@@ -48,7 +49,7 @@ const options = authOptions(
   {} as AccessDeps,
 );
 const pending = await getMigrations(options);
-await pool.end();
+await closePool(pool);
 await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
 await admin.end();
 const problems = [

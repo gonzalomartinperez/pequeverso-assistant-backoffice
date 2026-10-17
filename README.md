@@ -95,8 +95,8 @@ No application dependency is added.
 The private dashboard reads operational evidence through a bounded, validated server adapter.
 Summary revision 1.2 and optional telemetry revision 1.0 come from the assistant API. Private
 PostgreSQL stores operator identity, sessions and invitations; the API owns its catalog,
-conversations and accounting behind the private operations contract. This backoffice serves no chat and receives no conversation
-content, buyer data or provider keys. The storefront talks directly to the API only when its
+conversations and accounting behind the private operations contract. This backoffice serves no
+chat and receives no conversation content, buyer data or provider keys. The storefront talks directly to the API only when its
 assistant is separately enabled; publishable storefront builds currently keep it disabled.
 
 Point-in-time process readings are not historical availability: no uptime percentage is invented

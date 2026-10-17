@@ -10,8 +10,8 @@
     "network_requests": 0
   },
   "review": {
-    "implementing_agent": "Inspected both themes at README896 and mobile390; native previews also reviewed by coordinating agent. No clipping or overlap observed. Narrow readers use prose/alt/full-size links.",
-    "independent_visual_peer": "Coordinating agent approved all four native SVG previews; final source/docs peer pending",
+    "agent_inspection": "README896px and mobile390px previews inspected. Native1040px exported for independent review; narrow readers use adjacent prose, alt text and full-size links.",
+    "independent_review": "Evidence accompanies the PR; no human review is asserted.",
     "human_review_claimed": false
   },
   "sha256": {

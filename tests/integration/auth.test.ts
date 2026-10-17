@@ -40,6 +40,23 @@ describe("backoffice authentication (PostgreSQL, real callback)", {
   let deps: AccessDeps;
   let auth: ReturnType<typeof createAuth>;
 
+  function authentication(origin: string) {
+    return createAuth(
+      {
+        origin,
+        secret: "integration-secret-0000000000000000000000",
+        secureCookies: origin.startsWith("https:"),
+        sessionHours: 8,
+        google: null,
+        github: null,
+        testIssuer: IDP,
+        rateLimit: false,
+      },
+      pool,
+      deps,
+    );
+  }
+
   before(async () => {
     admin = new pg.Client({ connectionString: baseUrl });
     await admin.connect();
@@ -55,20 +72,7 @@ describe("backoffice authentication (PostgreSQL, real callback)", {
       clock: { now: () => new Date() },
       ownerEmail: "owner@example.test",
     };
-    auth = createAuth(
-      {
-        origin: ORIGIN,
-        secret: "integration-secret-0000000000000000000000",
-        secureCookies: false,
-        sessionHours: 8,
-        google: null,
-        github: null,
-        testIssuer: IDP,
-        rateLimit: false,
-      },
-      pool,
-      deps,
-    );
+    auth = authentication(ORIGIN);
     idp = spawn(process.execPath, ["scripts/fake-idp.ts"], {
       env: { ...process.env, FAKE_IDP_PORT: String(IDP_PORT) },
       stdio: ["ignore", "pipe", "inherit"],
@@ -100,12 +104,14 @@ describe("backoffice authentication (PostgreSQL, real callback)", {
   async function signIn(
     identity: { email: string; email_verified?: boolean; sub?: string },
     jar: Jar = new Map(),
+    instance = auth,
+    origin = ORIGIN,
   ) {
     await fetch(`${IDP}/__identity`, { method: "POST", body: JSON.stringify(identity) });
-    const start = await auth.handler(
-      new Request(`${ORIGIN}/api/auth/sign-in/social`, {
+    const start = await instance.handler(
+      new Request(`${origin}/api/auth/sign-in/social`, {
         method: "POST",
-        headers: { "content-type": "application/json", origin: ORIGIN, cookie: cookieHeader(jar) },
+        headers: { "content-type": "application/json", origin, cookie: cookieHeader(jar) },
         body: JSON.stringify({
           provider: "test-idp",
           callbackURL: "/panel",
@@ -119,15 +125,37 @@ describe("backoffice authentication (PostgreSQL, real callback)", {
     const authorize = await fetch(url, { redirect: "manual" });
     const callback = authorize.headers.get("location") ?? "";
     assert.ok(
-      callback.startsWith(`${ORIGIN}/api/auth/oauth2/callback/test-idp`) ||
-        callback.startsWith(`${ORIGIN}/api/auth/callback/test-idp`),
+      callback.startsWith(`${origin}/api/auth/oauth2/callback/test-idp`) ||
+        callback.startsWith(`${origin}/api/auth/callback/test-idp`),
       callback,
     );
-    const done = await auth.handler(
+    const done = await instance.handler(
       new Request(callback, { headers: { cookie: cookieHeader(jar) } }),
     );
     store(jar, done);
-    return { status: done.status, location: done.headers.get("location") ?? "", jar };
+    // Keep only public cookie attributes in assertions: never print the session value on failure.
+    const sessionCookie = done.headers
+      .getSetCookie()
+      .find((line) => line.split(";")[0]?.split("=")[0]?.endsWith("pv_bo.session_token"));
+    const attributes = sessionCookie
+      ?.split(";")
+      .slice(1)
+      .map((part) => part.trim().toLowerCase());
+    const cookieSecurity = attributes
+      ? {
+          httpOnly: attributes.includes("httponly"),
+          secure: attributes.includes("secure"),
+          sameSiteLax: attributes.includes("samesite=lax"),
+          rootPath: attributes.includes("path=/"),
+          hostScoped: !attributes.some((part) => part.startsWith("domain=")),
+        }
+      : null;
+    return {
+      status: done.status,
+      location: done.headers.get("location") ?? "",
+      jar,
+      cookieSecurity,
+    };
   }
 
   async function session(jar: Jar) {
@@ -148,6 +176,36 @@ describe("backoffice authentication (PostgreSQL, real callback)", {
     const current = await session(result.jar);
     assert.equal(current?.user.email, "owner@example.test");
     assert.equal(await deps.store.memberRole(current?.user.id ?? ""), "owner");
+    assert.deepEqual(result.cookieSecurity, {
+      httpOnly: true,
+      secure: false,
+      sameSiteLax: true,
+      rootPath: true,
+      hostScoped: true,
+    });
+  });
+
+  it("emits Secure host-scoped session cookies for an HTTPS-configured OAuth callback", async () => {
+    const origin = "https://backoffice.example.test";
+    const secured = authentication(origin);
+    const result = await signIn(
+      { email: "owner@example.test", sub: "owner-1" },
+      new Map(),
+      secured,
+      origin,
+    );
+    assert.match(result.location, /\/panel$/);
+    assert.deepEqual(result.cookieSecurity, {
+      httpOnly: true,
+      secure: true,
+      sameSiteLax: true,
+      rootPath: true,
+      hostScoped: true,
+    });
+    // The handler emits real Set-Cookie headers; this does not exercise TLS or browser storage.
+    assert.ok(
+      await secured.api.getSession({ headers: new Headers({ cookie: cookieHeader(result.jar) }) }),
+    );
   });
 
   it("rejects an uninvited identity in the owner's domain and persists nothing", async () => {

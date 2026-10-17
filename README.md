@@ -6,13 +6,20 @@ freshness, runs, latency, tokens and spend. The public conversation lives only i
 (`pequeverso`); the former chat shells were removed from this repository (see git history).
 
 The repository is public; the application is private. All rights reserved (see `LICENSE`).
-**Status — 2026-10-13:** the compact availability and telemetry dashboard and maintained
-distroless runtime are integrated into `main` at `f96d30d` through
+**Runtime maintenance — 2026-10-17:** the selected cohort is Node24.22.0 LTS,
+Next16.4.2, React/DOM19.3.1, Better Auth1.7.10 and Playwright1.64.1. The framework security
+patch is already released at `29b293f` through [PR60](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/60);
+this separate maintenance change keeps admission, roles, contracts and SQL migrations intact.
+Read [the cohort review and verification limits](docs/verification/runtime-cohort-2026-10-17.md)
+before choosing an image. Current-head protected CI determines acceptance; no deployment is implied.
+
+**Historical dashboard release — 2026-10-13:** the compact availability and telemetry dashboard and maintained
+distroless runtime were integrated into `main` at `f96d30d` through
 [release PR #50](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/pull/50).
 [Release CI](https://github.com/gonzalomartinperez/pequeverso-assistant-backoffice/actions/runs/38384606345)
 passed all seven jobs, including the exact CI image smoke and 51 browser tests across four
-projects (three optional live-API tests skipped; no retries). The runtime uses Node24,
-Debian13 and UID/GID65532; current dependencies include Next.js16.4.2 and Playwright1.64.0.
+projects (three optional live-API tests skipped; no retries). Its runtime design uses Node24,
+Debian13 and UID/GID65532; the maintenance pins above are separate from that historical evidence.
 Earlier local failures and image drills remain dated history in
 [verification](docs/verification.md). CI fixture evidence does not prove deployment,
 real OAuth, TLS cookies, VPS capacity or provider billing. This project has not deployed the
@@ -144,9 +151,9 @@ No real credentials or remote database are permitted. Stop only this own server 
 
 ## Stack
 
-Next.js 16.4.2 (App Router, standalone), React 19.3.1, TypeScript 7.0.2, Better Auth 1.7.7,
+Next.js 16.4.2 (App Router, standalone), React 19.3.1, TypeScript 7.0.2, Better Auth 1.7.10,
 PostgreSQL (`pg` 8.23), Recharts 3.10, Tailwind CSS 4.3 with owned primitives, lucide icons,
-Biome 2.5, Playwright 1.64.0 + axe-core. Node 24.21.0. Support classifications and exact versions are recorded in
+Biome 2.5, Playwright 1.64.1 + axe-core. Node 24.22.0. Support classifications and exact versions are recorded in
 [the runtime inventory](docs/dependencies.md#runtime-support-inventory-2026-10-17);
 maintained libraries are not mislabeled LTS. No infrastructure stack is installed here.
 

@@ -1,9 +1,9 @@
 /**
  * Runs the Dependabot policy for one pull request inside the trusted `pull_request_target`
  * workflow (.github/workflows/dependency-policy.yml). It reads only GitHub API metadata and file
- * contents as data (never checks out, installs or executes PR code) and then either enables
- * GitHub's native auto-merge for the evaluated head SHA or makes sure auto-merge is off.
- * Environment: GITHUB_TOKEN, GITHUB_REPOSITORY, PR_NUMBER, DEPENDABOT_AUTOMERGE, GITHUB_STEP_SUMMARY.
+ * contents as data (never checks out, installs or executes PR code), then reports an assessment.
+ * No merge, approval, label or other repository mutation is available.
+ * Environment: read-only GITHUB_TOKEN, GITHUB_REPOSITORY, PR_NUMBER, GITHUB_STEP_SUMMARY.
  */
 import { appendFileSync } from "node:fs";
 import { type Decision, decide, type PullRequestFacts } from "./policy.ts";
@@ -27,18 +27,6 @@ async function rest<T>(path: string, accept = "application/vnd.github+json"): Pr
   });
   if (!response.ok) throw new Error(`GitHub API ${response.status} for ${path}`);
   return (accept.includes("raw") ? await response.text() : await response.json()) as T;
-}
-
-async function graphql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
-  const response = await fetch(`${API}/graphql`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-    body: JSON.stringify({ query, variables }),
-  });
-  const body = (await response.json()) as { data?: T; errors?: { message: string }[] };
-  if (!response.ok || body.errors?.length)
-    throw new Error(`GraphQL: ${body.errors?.map((e) => e.message).join("; ")}`);
-  return body.data as T;
 }
 
 async function paged<T>(path: string, limit: number): Promise<T[]> {
@@ -65,7 +53,6 @@ async function manifestAt(sha: string): Promise<string | null> {
 }
 
 type PullResponse = {
-  node_id: string;
   draft: boolean;
   user: { login: string; type: string };
   head: { ref: string; sha: string; repo: { full_name: string } | null };
@@ -94,50 +81,22 @@ const facts: PullRequestFacts = {
   commitCommitters: commits.map((commit) => commit.committer?.login ?? "(unverified)"),
   basePackageJson: await manifestAt(pr.base.sha),
   headPackageJson: await manifestAt(pr.head.sha),
-  automation: process.env.DEPENDABOT_AUTOMERGE,
+  automation: undefined,
 };
 const decision: Decision = decide(facts);
-
-async function setLabel(add: string, remove: string) {
-  await fetch(`${API}/repos/${repository}/issues/${number}/labels`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-    body: JSON.stringify({ labels: [add] }),
-  });
-  if (facts.labels.includes(remove))
-    await fetch(
-      `${API}/repos/${repository}/issues/${number}/labels/${encodeURIComponent(remove)}`,
-      {
-        method: "DELETE",
-        headers: { authorization: `Bearer ${token}` },
-      },
-    );
-}
-
-if (decision.verdict === "auto-merge") {
-  // expectedHeadOid: GitHub refuses to merge if the head moved after this evaluation.
-  await graphql(
-    `mutation($id: ID!, $sha: GitObjectID!) {
-      enablePullRequestAutoMerge(input: {pullRequestId: $id, mergeMethod: MERGE, expectedHeadOid: $sha}) { clientMutationId }
-    }`,
-    { id: pr.node_id, sha: decision.headSha },
-  );
-  await setLabel("dependencies:auto-merge", "dependencies:manual-review");
-} else {
-  if (pr.auto_merge)
-    await graphql(
-      `mutation($id: ID!) { disablePullRequestAutoMerge(input: {pullRequestId: $id}) { clientMutationId } }`,
-      { id: pr.node_id },
-    );
-  await setLabel("dependencies:manual-review", "dependencies:auto-merge");
-}
 
 const summary = [
   `### Dependency policy for #${number} at ${facts.headSha.slice(0, 12)}`,
   "",
-  decision.verdict === "auto-merge"
-    ? "**Eligible**: native auto-merge enabled for this head; required checks and branch rules still decide."
-    : "**Manual review required**; auto-merge is off.",
+  decision.verdict === "eligible"
+    ? "**Lower-risk assessment eligible**; review and merge remain manual."
+    : "**Elevated manual review required**; this report cannot merge or approve.",
+  "Automatic merging is disabled by policy for every assessment.",
+  ...(pr.auto_merge
+    ? [
+        "**Action required:** native auto-merge is already armed; an authorized maintainer must disable it. This read-only report cannot change it.",
+      ]
+    : []),
   "",
   ...decision.updates.map((u) => `- \`${u.name}\` ${u.from} → ${u.to} (${u.kind})`),
   "",

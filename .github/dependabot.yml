@@ -19,7 +19,7 @@ updates:
       semver-minor-days: 7
       semver-patch-days: 7
     groups:
-      # Every member must also pass the policy allowlist for the group to auto-merge.
+      # Grouping only reduces review churn; every merge remains manual.
       low-risk-patches:
         applies-to: version-updates
         update-types: [patch]

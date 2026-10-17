@@ -134,6 +134,7 @@ No real credentials or remote database are permitted. Stop only this own server 
 
 ## Documentation
 
+- [Engineering standards](docs/engineering-standards.md): review, boundaries, reproducibility and evidence.
 - [Architecture](docs/architecture.md) and decisions: [auth](docs/adr/005-backoffice-auth-better-auth.md),
   [IAM in PostgreSQL](docs/adr/006-iam-in-postgresql.md), [ops data](docs/adr/007-ops-data-source.md)
 - [Deployment contract](docs/deployment-contract.md) — vps-ops handoff: image, PostgreSQL, secrets, routing

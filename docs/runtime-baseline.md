@@ -1,4 +1,4 @@
-# Runtime baseline acceptance — 2026-10-13
+# Runtime baseline acceptance — 2026-10-17
 
 The owner authorized execution of the shared deployment-readiness plan. This repository owns
 its code, tests, image and runtime contract. The private vps-ops inventory owns the shared
@@ -6,9 +6,9 @@ baseline/routing/release policy; Coolify remains the sole deployment executor.
 
 | Applicable component | Exact committed lock version |
 | --- | --- |
-| `next` | `16.4.0` |
-| `react` | `19.3.0` |
-| `react-dom` | `19.3.0` |
+| `next` | `16.4.2` |
+| `react` | `19.3.1` |
+| `react-dom` | `19.3.1` |
 | `better-auth` | `1.7.7` |
 | `pg` | `8.23.1` |
 | `typescript` | `7.0.2` |
@@ -18,6 +18,22 @@ baseline/routing/release policy; Coolify remains the sole deployment executor.
 The lockfile is authoritative for the complete dependency graph. This dated view does not
 assert that these versions remain the newest forever or that an image has been published.
 Node24.21.0 is LTS; Next16.x is Active LTS. React, TypeScript, authentication libraries and test tools do not acquire LTS status from that choice. Node26 Current/types are excluded. Both backoffices use Trixie builders and the same digest-pinned nonroot Node24 distroless runtime.
+
+## October 2026 framework security update
+
+Next16.4.2 includes the [16.4.1 security fixes](https://github.com/vercel/next.js/releases/tag/v16.4.1)
+for Cache Components RCE, image optimization RCE and Server Actions denial of service. This
+backoffice uses Server Actions, so authorization checks do not substitute for the framework
+patch. React/React DOM19.3.1 align with the patched upstream release; updating those packages
+alone would not replace Next's bundled React Server Components implementation. The lock already
+contains sharp0.35.5, the documented image-processing workaround. No exploit was attempted.
+
+Only framework patches change in this increment: Node24.21.0, Playwright1.64.0, PostgreSQL and
+base-image digests remain pinned. The application image must be rebuilt from this lock and its
+new exact artifact verified before deployment; earlier image IDs and measurements remain
+historical evidence. Current-head protected CI checks DB migrations, synthetic OAuth/browser
+flows and hardened exact-image smoke/restore. Real OAuth, VPS capacity and actual deployment
+remain separate gates.
 
 ## Image and operations boundaries
 

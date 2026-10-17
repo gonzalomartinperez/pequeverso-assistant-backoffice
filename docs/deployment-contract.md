@@ -11,7 +11,7 @@ remain outside this repository's authority.
 |---|---|
 | Image | Built from `Dockerfile` at a reviewed `develop` commit; publish to a private registry and deploy **by digest** only. Not published yet. |
 | Base | Builder `node:24.21.0-trixie-slim@sha256:c83040f7e24bacea68e58a0b96a484ba430bf24abb2973eab7ba4701144b7b63`; runtime `gcr.io/distroless/nodejs24-debian13:nonroot@sha256:9eeb7f5887d0e239e78264b06f7f11d2e14be534050481803a9e4728fcdd278e`, `linux/amd64` (built and run locally; other architectures untested) |
-| Commands | default `node server.js` (Next.js16.4.0 standalone); one-shot `node scripts/db-migrate.ts` (migrations) |
+| Commands | default `node server.js` (Next.js16.4.2 standalone); one-shot `node scripts/db-migrate.ts` (migrations) |
 | User | `65532:65532` (distroless nonroot), no capabilities |
 | Port | `3000/tcp` on `0.0.0.0` (`PORT`, `HOSTNAME`) |
 | Filesystem | Read-only root tested; writable tmpfs `/tmp` and `/app/.next/cache` (`uid=65532,gid=65532,mode=0700,size=32m`) |

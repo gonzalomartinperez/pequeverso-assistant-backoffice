@@ -1,6 +1,7 @@
 # Third-party notices and provenance
 
-This repository is proprietary (see `LICENSE`). The items below keep their own terms.
+Owner-authored software uses the [MIT License](LICENSE); [NOTICE.md](NOTICE.md)
+describes reserved brand, content and data. The items below keep their own terms.
 
 ## Brand assets (Pequeverso, all rights reserved)
 

@@ -3,6 +3,7 @@
 !Dockerfile
 !.dockerignore
 !LICENSE
+!NOTICE.md
 !THIRD_PARTY_NOTICES.md
 !package.json
 !package-lock.json

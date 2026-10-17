@@ -17,11 +17,11 @@ RUN npx next build --webpack
 FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:59c479c9b8c123e66047315c968aa2d35e31ae5149c856e4110a79c8b3563f0b AS runtime
 LABEL org.opencontainers.image.source="https://github.com/gonzalomartinperez/pequeverso-backoffice"
 LABEL org.opencontainers.image.description="Pequeverso private backoffice (access and assistant operations)"
-LABEL org.opencontainers.image.licenses="LicenseRef-Proprietary"
+LABEL org.opencontainers.image.licenses="MIT"
 WORKDIR /app
 ENV PATH=/nodejs/bin:/usr/local/bin:/usr/bin:/bin
 ENV NODE_ENV=production BACKOFFICE_ENVIRONMENT=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
-COPY --chown=65532:65532 LICENSE THIRD_PARTY_NOTICES.md ./
+COPY --chown=65532:65532 LICENSE NOTICE.md THIRD_PARTY_NOTICES.md ./
 COPY --from=build --chown=65532:65532 /app/.next/standalone ./
 COPY --from=build --chown=65532:65532 /app/.next/static ./.next/static
 COPY --from=build --chown=65532:65532 /app/public ./public

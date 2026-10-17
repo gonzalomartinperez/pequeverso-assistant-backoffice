@@ -5,7 +5,9 @@ and invited people, access management, and the shopping assistant's operations d
 health, catalog freshness, runs, latency, tokens and spend. The public conversation lives only in the storefront
 (`pequeverso`); the former chat shells were removed from this repository (see git history).
 
-The repository is public; the application is private. All rights reserved (see `LICENSE`).
+The repository is public; the application is private. Owner-authored software uses
+the [MIT License](LICENSE); [NOTICE.md](NOTICE.md) reserves brand, content and data
+and preserves third-party rights.
 
 The repository was renamed to `pequeverso-backoffice` on 2026-10-17; earlier GitHub URLs
 redirect, while local checkout paths and persistent identifiers remain unchanged. This name
@@ -174,3 +176,12 @@ Biome 2.5, Playwright 1.64.1 + axe-core. Node 24.22.0. Support classifications a
 maintained libraries are not mislabeled LTS. No infrastructure stack is installed here.
 
 Shared runtime/version acceptance: [runtime baseline](docs/runtime-baseline.md).
+
+## Software license
+
+Owner-authored software and technical documentation use the [MIT License](LICENSE).
+Brand, product/commercial content, media, datasets, private data and third-party
+material are excluded; see [NOTICE.md](NOTICE.md) and the preserved
+[third-party attribution](THIRD_PARTY_NOTICES.md). The runtime carries all three
+notices under `/app/`; the application's access controls and privacy obligations
+are unchanged.

@@ -83,6 +83,42 @@ labels, hierarchy and controls remained legible, with no unexpected page overflo
 verification PNGs are retained locally outside Git; this dependency change does not replace
 the historical README gallery or claim human review.
 
+### Exact local image and recovery drill
+
+Application/runtime inputs at `d6eb9fa` produced the local immutable app artifact
+`sha256:77df25b37a5bb44c3c2703bedc03ba23b33079164268e9837b26f06da5469723`.
+The hardened smoke passed fail-closed configuration, idempotent migrations (2 then 0),
+UID 65532/read-only root, private headers, readiness and database-loss rejection. Startup was
+2.340 s; idle memory was 66.27 MiB and post-load memory 74.67 MiB after 32 synthetic HTTP
+requests at concurrency four. Cgroup peak after database loss was 134,045,696 bytes;
+shutdown took 310 ms, exit 143, without OOM. These are bounded local fixtures, not VPS capacity.
+
+The unchanged PostgreSQL recipe, labelled with the full source revision, produced
+`sha256:e73cae3e4dc79b6b8e7b38997e07c5c55a710399d521edc21ec802fb6ba132df`.
+Both default and bounded configurations completed 2,000/2,000 synthetic transactions without
+failure. Dump/restore and restart hashes matched, restored app health/readiness returned 200,
+and shutdowns stayed within the existing grace period. Disposable resources were removed.
+
+Trivy 0.76.0 used a separate cache and the origin database artifact
+`ghcr.io/aquasecurity/trivy-db@sha256:10584ede500597f516f0d5f4ab750c125999dc0359995a4494ab6cb12e700730`,
+updated 2026-10-17 18:34 UTC and downloaded 19:13 UTC. The app had 31 advisory/package rows
+(23 medium, 8 low; 25 distinct CVEs); PostgreSQL had 303 rows (1 critical, 59 high, 107 medium,
+132 low, 4 unknown; 117 distinct CVEs). Neither report supplied a fixed version for its
+findings. CycloneDX inventories contained 56 app and 144 database components; detectable
+package inventories do not identify every dependency bundled into application code.
+Scanner/SBOM work was limited to one CPU worker while separate functional storefront tests
+ran; no timing here is a benchmark.
+
+The critical database finding is the already documented required libxml2
+[CVE-2026-6653](https://security-tracker.debian.org/tracker/CVE-2026-6653).
+The Debian tracker still marks the installed Trixie package affected, with `no-dsa`/minor
+classification; the scanner's NVD severity is critical/CVSS 9.8. Neither classification makes
+the risk disappear. No Trixie fix is available in these sources. The finding remains open
+as a deployment gate: no suppression, implicit risk acceptance, XML removal or unstable
+Debian substitution was introduced. See [the database runtime review](../postgresql-runtime.md).
+The local artifacts were not published; protected CI must independently build and verify
+its own exact artifacts before integration.
+
 No real OAuth, paid model call, provider key, VPS load, image publication or deployment is part
 of this maintenance. Live HTTPS/proxy cookies, provider JWKS behavior, production capacity,
-current image SBOM/scans and off-server recovery remain separate operator gates.
+production image selection/scans and off-server recovery remain separate operator gates.

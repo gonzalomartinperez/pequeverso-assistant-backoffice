@@ -1,95 +1,50 @@
-# Dependency updates and conservative auto-merge
+# Dependency updates and manual integration
 
-Dependabot keeps dependencies current; a trusted policy decides which of its pull requests may be
-merged **automatically after all required checks pass**. Everything else waits for a human.
-Passing CI does not make an update safe by itself: automation is limited to updates whose risk is
-low *and* whose behavior the suites exercise.
+Every dependency merge is manual by default. Dependabot continues its configured scheduled
+updates (weekly npm/Actions, existing monthly Docker), native rebases and security alerts. The trusted policy only classifies metadata for
+review; `decision.automerge` is always false, including lower-risk eligible patches and any
+legacy `DEPENDABOT_AUTOMERGE=on` input. Labels, green checks or an eligible assessment are not
+merge authority. Future automatic merging requires separate owner authorization and a reviewed
+contract/proof; no hidden flag can reactivate it.
 
-## What is automatic
+## Read-only assessment
 
-A Dependabot pull request gets native auto-merge only when **all** of these hold (verified from
-authenticated API metadata, never from the title, labels or branch name alone):
+The existing allowlists in `scripts/dependabot/policy.ts` classify lower-risk patches/minors
+versus elevated review. Authenticated author/commit provenance, same-repository heads,
+`develop` target, manifest-only scope and semantic version changes remain required for an
+eligible assessment. Framework/runtime/browser-engine updates, majors, ambiguous versions,
+lockfile-only changes, forks, human commits and mixed-risk groups remain manual/elevated.
+Deterministic tests preserve these cases; an eligible result still has `automerge: false`.
 
-- author `dependabot[bot]` (type Bot), head branch in this repository, base branch `develop`;
-- every commit authored by `dependabot[bot]` and committed by `dependabot[bot]` or GitHub;
-- changed files limited to `package.json` and `package-lock.json`;
-- `package.json` differs **only** in dependency version strings (no script, engine or other field
-  changes, no added or removed packages);
-- every updated package qualifies — a group is eligible only if all members are:
+`.github/workflows/dependency-policy.yml` uses trusted default-branch code on
+`pull_request_target`; it never checks out, installs or executes PR code. Its token permissions
+are only `contents: read` and `pull-requests: read`. The runner performs GET requests for metadata
+and manifest data and writes only a job summary. It has no GraphQL/REST mutation, merge,
+approval or label writer. If metadata says native auto-merge was already armed, it reports the
+condition for an authorized maintainer to disable; a read-only job cannot disarm it.
 
-| Update | Packages |
-|---|---|
-| patch | `lucide-react`, `clsx`, `tailwind-merge`, `class-variance-authority`, `@biomejs/biome`, `@axe-core/playwright`, `@types/node`, `@types/react`, `@types/react-dom` |
-| minor | `lucide-react`, `clsx`, `@axe-core/playwright` |
+## Manual integration procedure
 
-Source of truth: `scripts/dependabot/policy.ts` (tested in `tests/unit/dependabot-policy.test.ts`).
+1. Review changelog, support policy, direct/transitive scope and application compatibility.
+2. Keep required checks and independent review on the exact current head; never use admin,
+   bypass, bot approvals or an automatic merge command. Only authorized maintainers integrate.
+3. Merge eligible changes into `develop` using a merge commit, this repository's required method.
+   Release only `develop` into `main` through the protected release flow.
+4. Preserve alerts until the fix reaches `main`. Security PRs target the default branch; retarget
+   them to `develop` for normal review rather than merging directly to `main`.
+5. Use native `@dependabot rebase` when needed. Keep version updates, cooldowns/grouping,
+   security alerts and configured rebase behavior enabled. A hold label is informational;
+   it does not grant or revoke repository permissions.
 
-## What needs review (and why)
+No open Dependabot PRs were reported during the owner-coordinated 2026-10-17 reconciliation.
+Repository settings/armed requests must be checked separately by the authorized owner; source
+changes only take effect when released to the default branch. Neither this document nor a
+successful test claims a remote setting was changed.
 
-| Change | Reason |
-|---|---|
-| Major, prerelease, downgrades, non-exact versions | Breaking or ambiguous by definition |
-| 0.x minor bumps | Semver allows breaking changes in 0.x minors |
-| `next`, `react`, `react-dom`, `typescript`, `tailwindcss`, `@tailwindcss/postcss`, `@playwright/test`, `server-only` (even patches) | Runtime, compiler, framework, styling or test-engine migrations |
-| Anything not on the allowlists | Not explicitly approved |
-| Lockfile-only updates (transitive) | Full impact cannot be established automatically |
-| GitHub Actions and Docker base-image updates | Workflow/permission and OS changes |
-| Extra files, script changes, human commits, forks, drafts | Unexpected scope or untrusted authorship |
-| Wrong base branch (e.g. security updates against `main`) | Only `develop` receives automated merges |
+## Historical automation assessment — 2026-09-27
 
-## How the decision is applied
-
-1. `.github/workflows/dependency-policy.yml` runs on `pull_request_target` (opened, synchronize,
-   reopened, edited, ready_for_review, labeled, unlabeled) for Dependabot PRs. GitHub runs the
-   workflow file from the default branch (`main`); it checks out `scripts/dependabot/` from `main`
-   only and runs it with Node; the PR head is never checked
-   out, installed or executed, and PR text is never interpolated into shell commands.
-2. Eligible → `enablePullRequestAutoMerge` with `mergeMethod: MERGE` and
-   `expectedHeadOid` = the evaluated head SHA. Not eligible → auto-merge is disabled if it was on.
-   Labels `dependencies:auto-merge` / `dependencies:manual-review` only communicate the result.
-3. GitHub merges only when the `protect-develop` ruleset is satisfied: **Required checks** (workflow
-   lint, history secret scan, static checks, database suite, production image, browser suite against
-   a production build with real PostgreSQL and a fake IdP) green on a head that is up to date with
-   `develop` (strict). There is no bypass actor; the workflow never merges directly.
-4. Any new push, rebase, base change, reopen or label change re-runs the policy, so a PR that stops
-   qualifying loses auto-merge before its checks can finish.
-
-Token: the workflow's `GITHUB_TOKEN` with `contents: write` and `pull-requests: write` for that job
-only (required by the auto-merge mutation). No PAT and no secrets are used.
-
-**Post-merge CI:** a merge performed through auto-merge is attributed to GitHub Actions' token, and
-events created by `GITHUB_TOKEN` do not start new workflow runs, so the `push` run on `develop` does
-not fire. The merged tree equals the tested, up-to-date PR head (strict checks), so nothing untested
-lands.
-
-## Keeping pull requests current
-
-`rebase-strategy: auto` lets Dependabot rebase its PRs when `develop` moves or conflicts appear;
-each rebase is a new head, which re-runs CI and the policy. Dependabot stops rebasing a PR once
-someone else pushes to it (and the policy then requires review), and old or conflicted PRs may need
-`@dependabot rebase` or closing. Cooldowns (7/7/30 days for patch/minor/major; 7 days for Actions and Docker) and grouping reduce
-churn for routine updates; they do not delay security updates.
-
-## Security updates
-
-Dependabot raises security updates against the **default branch (`main`)**, not `target-branch`.
-They are never auto-merged and must not be merged into `main` directly (only `develop` is
-released into `main`). Re-target them for normal integration: `gh pr edit <number> --base develop` (or let the
-next version update carry the fix). Alerts stay open until the fix reaches `main` through a release;
-do not dismiss them to get around the flow.
-
-## Operating it
-
-- **Pause everything:** `gh variable set DEPENDABOT_AUTOMERGE --body off` (resume with `--body on`
-  or delete the variable). Open PRs lose auto-merge on their next event.
-- **Force review of one PR:** add the label `dependencies:hold`.
-- **Recover from a bad update:** open a normal PR into `develop` that reverts the merge commit
-  (`git revert -m 1 <merge-sha>`) and let CI verify it; never push to protected branches.
-- **Change the policy:** edit `scripts/dependabot/policy.ts` and its tests in a normal PR. The new
-  policy takes effect once it is released to `main` (both the workflow and its scripts come from
-  the default branch).
-
-## Live verification (2026-09-27)
+The following dated observations describe the former automation profile, which is superseded
+by the manual default above. They are not activation instructions or current authorization.
 
 As soon as the configuration reached `main`, Dependabot opened four real pull requests against
 `develop`. The policy workflow ran on `pull_request_target` (from the default branch) for each and
@@ -103,23 +58,8 @@ correctly withheld auto-merge (label `dependencies:manual-review`):
 | #11 | Docker `node` 24.21.0 → 26.10.0 | Dockerfile changed | declined: runtime major outside the Node 24 LTS line; ignore rule added |
 | #17 | `actions/setup-node` 4.4.0 → 7.0.0 | workflow files changed | full CI green → merged |
 
-The positive path (an allowlisted npm patch receiving native auto-merge) has only been verified by
-the deterministic tests so far; it will be observed live on the first such Dependabot PR.
+The former positive auto-merge path had only deterministic coverage at that time; it is no longer enabled.
 
-## Activation prerequisites
-
-- Dependabot reads `.github/dependabot.yml` from the **default branch (`main`)**: version updates
-  start only after this configuration reaches `main` through the release flow.
-- `pull_request_target` always runs workflow files from the **default branch** (`main`), whatever the
-  PR's base; the policy scripts are checked out from `main` too. Policy changes therefore take effect
-  only after a release reaches `main` (observed live: a workflow present only on `develop` did not
-  run).
-- Repository settings already in place: auto-merge allowed, merge commits only, branch deletion on
-  merge, rulesets `protect-main` / `protect-develop` without bypass. The repository is public, so
-  rulesets are available on the current plan.
-- No approving review is required by the rulesets (single maintainer; GitHub forbids self-approval).
-  If a required review is introduced later, unattended merges stop until a reviewer approves — the
-  policy must not be replaced by bot approvals.
 
 ## Runtime support inventory (2026-10-17)
 

@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { describe, it } from "node:test";
 import { classify, decide, type PullRequestFacts } from "../../scripts/dependabot/policy.ts";
 
@@ -79,17 +82,18 @@ describe("version classification", () => {
   });
 });
 
-describe("Dependabot auto-merge policy", () => {
-  it("auto-merges an allowlisted patch, pinned to the evaluated head", () => {
+describe("Dependabot read-only assessment policy", () => {
+  it("classifies an allowlisted patch as eligible at its evaluated head", () => {
     const decision = decide(pr());
-    assert.equal(decision.verdict, "auto-merge");
-    assert.equal(decision.verdict === "auto-merge" && decision.headSha, "a".repeat(40));
+    assert.equal(decision.verdict, "eligible");
+    assert.equal(decision.automerge, false);
+    assert.equal(decision.verdict === "eligible" && decision.headSha, "a".repeat(40));
   });
 
-  it("auto-merges an explicitly allowed minor update", () => {
+  it("classifies an explicitly allowed minor update as eligible", () => {
     assert.equal(
       decide(pr({ headPackageJson: bump("dependencies", "lucide-react", "1.49.0") })).verdict,
-      "auto-merge",
+      "eligible",
     );
   });
 
@@ -114,7 +118,7 @@ describe("Dependabot auto-merge policy", () => {
     assert.equal(
       decide(pr({ headPackageJson: bump("dependencies", "class-variance-authority", "0.7.2") }))
         .verdict,
-      "auto-merge",
+      "eligible",
     );
     assert.equal(
       decide(pr({ headPackageJson: bump("dependencies", "class-variance-authority", "0.8.0") }))
@@ -221,7 +225,7 @@ describe("Dependabot auto-merge policy", () => {
     const pushed = decide(
       pr({ headSha: "b".repeat(40), files: ["package.json", "package-lock.json", "src/x.ts"] }),
     );
-    assert.equal(first.verdict, "auto-merge");
+    assert.equal(first.verdict, "eligible");
     assert.equal(pushed.verdict, "manual");
   });
 
@@ -252,19 +256,113 @@ describe("Dependabot auto-merge policy", () => {
   });
 });
 
-describe("merge gating stays native", () => {
+describe("manual merge authority", () => {
   const workflow = readFileSync(
     new URL("../../.github/workflows/dependency-policy.yml", import.meta.url),
     "utf8",
   );
   const runner = readFileSync(new URL("../../scripts/dependabot/run.ts", import.meta.url), "utf8");
 
-  it("never merges directly: it only enables auto-merge pinned to the evaluated head", () => {
-    assert.match(
+  it("never authorizes automatic merging, even for eligible updates or legacy on inputs", () => {
+    for (const automation of [undefined, "on", "true", "off"]) {
+      const decision = decide(pr({ automation }));
+      assert.equal(decision.automerge, false);
+      assert.equal(decision.verdict, automation === "off" ? "manual" : "eligible");
+    }
+    for (const facts of [pr({ baseRef: "main" }), pr({ authorLogin: "spoofed" })])
+      assert.equal(decide(facts).automerge, false);
+  });
+
+  it("has no mutation, approval, label writer or privileged workflow permission", () => {
+    assert.doesNotMatch(
       runner,
-      /enablePullRequestAutoMerge\(input: \{pullRequestId: \$id, mergeMethod: MERGE, expectedHeadOid: \$sha\}\)/,
+      /graphql|enablePullRequestAutoMerge|disablePullRequestAutoMerge|mergePullRequest|gh pr merge|\/labels|method:\s*["'](?:POST|PATCH|PUT|DELETE)["']/i,
     );
-    assert.doesNotMatch(runner, /mergePullRequest|\/merge"|gh pr merge/);
+    assert.doesNotMatch(
+      workflow,
+      /contents:\s*write|pull-requests:\s*write|issues:\s*write|write-all|DEPENDABOT_AUTOMERGE/,
+    );
+    assert.match(workflow, /contents: read/);
+    assert.match(workflow, /pull-requests: read/);
+    assert.match(runner, /native auto-merge is already armed/);
+  });
+
+  it("executes eligible reports without any network mutation, even with armed metadata", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "bo-policy-readonly-"));
+    try {
+      for (const armed of [false, true]) {
+        const requests = path.join(directory, `requests-${armed}.jsonl`);
+        const summary = path.join(directory, `summary-${armed}.md`);
+        const fixture = {
+          draft: false,
+          user: { login: "dependabot[bot]", type: "Bot" },
+          head: {
+            ref: "dependabot/npm_and_yarn/develop/lucide-react-1.48.1",
+            sha: "a".repeat(40),
+            repo: { full_name: "owner/backoffice" },
+          },
+          base: { ref: "develop", sha: "b".repeat(40), repo: { full_name: "owner/backoffice" } },
+          labels: [{ name: "dependencies" }],
+          auto_merge: armed ? { merge_method: "merge" } : null,
+        };
+        const preload = `
+          import { appendFileSync } from "node:fs";
+          globalThis.fetch = async (input, options) => {
+            const url = new URL(String(input));
+            const method = options?.method ?? "GET";
+            appendFileSync(${JSON.stringify(requests)}, JSON.stringify({ method, path: url.pathname }) + "\\n");
+            if (url.origin !== "https://api.github.com" || method !== "GET")
+              throw new Error("fixture forbids external traffic and mutations");
+            let body;
+            if (url.pathname.endsWith("/pulls/7")) body = ${JSON.stringify(fixture)};
+            else if (url.pathname.endsWith("/files")) body = [{ filename: "package.json" }, { filename: "package-lock.json" }];
+            else if (url.pathname.endsWith("/commits")) body = [{ author: { login: "dependabot[bot]" }, committer: { login: "dependabot[bot]" } }];
+            else if (url.pathname.endsWith("/contents/package.json")) {
+              const manifest = url.searchParams.get("ref") === "${"a".repeat(40)}"
+                ? ${JSON.stringify(bump("dependencies", "lucide-react", "1.48.1"))}
+                : ${JSON.stringify(manifest())};
+              return new Response(manifest);
+            } else throw new Error("unexpected fixture route");
+            return Response.json(body);
+          };
+        `;
+        const result = spawnSync(
+          process.execPath,
+          [
+            "--import",
+            `data:text/javascript,${encodeURIComponent(preload)}`,
+            "scripts/dependabot/run.ts",
+          ],
+          {
+            cwd: path.resolve(import.meta.dirname, "../.."),
+            env: {
+              PATH: process.env.PATH ?? "",
+              NODE_ENV: "test",
+              GITHUB_TOKEN: "fixture-read-token",
+              GITHUB_REPOSITORY: "owner/backoffice",
+              PR_NUMBER: "7",
+              GITHUB_STEP_SUMMARY: summary,
+              DEPENDABOT_AUTOMERGE: "on",
+            },
+            encoding: "utf8",
+            timeout: 10_000,
+          },
+        );
+        assert.equal(result.status, 0, result.stderr);
+        assert.match(result.stdout, /review and merge remain manual/);
+        assert.doesNotMatch(result.stdout, /fixture-read-token/);
+        assert.equal(result.stdout.includes("native auto-merge is already armed"), armed);
+        const calls = readFileSync(requests, "utf8")
+          .trim()
+          .split("\n")
+          .map((line) => JSON.parse(line) as { method: string });
+        assert.equal(calls.length, 5);
+        assert.ok(calls.every((call) => call.method === "GET"));
+        assert.match(readFileSync(summary, "utf8"), /Automatic merging is disabled/);
+      }
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("runs trusted default-branch code without checking out or executing the PR head", () => {

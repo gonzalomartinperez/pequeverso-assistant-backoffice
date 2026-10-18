@@ -4,11 +4,9 @@
 //   8238  fake OAuth identity provider (scripts/fake-idp.ts), test only
 // Needs TEST_DATABASE_URL (a disposable PostgreSQL server); a fresh database is created per run.
 import { spawn } from "node:child_process";
-import { randomBytes } from "node:crypto";
 import path from "node:path";
-import pg from "pg";
 import { assertDisposableDatabase } from "../src/server/fixture-safety.ts";
-import { migrate } from "./db-migrate.ts";
+import { browserDatabase, withoutBootstrapDatabaseCredentials } from "./browser-database.ts";
 
 let base: string;
 try {
@@ -17,13 +15,8 @@ try {
   console.error(error instanceof Error ? error.message : "invalid TEST_DATABASE_URL");
   process.exit(2);
 }
-const name = `bo_test_e2e_${randomBytes(4).toString("hex")}`;
-const admin = new pg.Client({ connectionString: base });
-await admin.connect();
-await admin.query(`CREATE DATABASE ${name}`);
-const url = new URL(base);
-url.pathname = `/${name}`;
-await migrate(url.toString(), path.resolve(import.meta.dirname, "..", "migrations"));
+const database = await browserDatabase(base, path.resolve(import.meta.dirname, "..", "migrations"));
+const childEnv = withoutBootstrapDatabaseCredentials(process.env);
 
 // LIVE_OPS_URL/LIVE_OPS_TOKEN point the dashboard at a running pequeverso-assistant-api (fixture
 // provider) instead of the mock; used by tests/backoffice/live-ops.spec.ts.
@@ -37,21 +30,21 @@ const children = [
     : [
         spawn(process.execPath, ["scripts/mock-ops.ts"], {
           stdio: "inherit",
-          env: { ...process.env, MOCK_OPS_PORT: "8237", OPS_READ_TOKEN: token },
+          env: { ...childEnv, MOCK_OPS_PORT: "8237", OPS_READ_TOKEN: token },
         }),
       ]),
   spawn(process.execPath, ["scripts/fake-idp.ts"], {
     stdio: "inherit",
-    env: { ...process.env, FAKE_IDP_PORT: "8238" },
+    env: { ...childEnv, FAKE_IDP_PORT: "8238" },
   }),
   spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--port", "3241"], {
     stdio: "inherit",
     env: {
-      ...process.env,
+      ...childEnv,
       BACKOFFICE_ENVIRONMENT: "test",
       BACKOFFICE_ORIGIN: "http://localhost:3241",
       BETTER_AUTH_SECRET: "e2e-secret-not-for-production-000000000000",
-      DATABASE_URL: url.toString(),
+      DATABASE_URL: database.runtimeUrl,
       OWNER_EMAIL: "owner@example.test",
       AUTH_TEST_ISSUER: "http://127.0.0.1:8238",
       // Every test signs in from 127.0.0.1; Better Auth allows 3 sign-in starts per 10 s per IP.
@@ -64,16 +57,40 @@ const children = [
     },
   }),
 ];
+// Register immediately so an exit/error during startup cannot race cleanup observation.
+const childClosed = children.map(
+  (child) => new Promise<void>((resolve) => child.once("close", () => resolve())),
+);
 
 let stopping = false;
+let childFailed = false;
 async function stop() {
   if (stopping) return;
   stopping = true;
-  for (const child of children) child.kill("SIGTERM");
-  await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`).catch(() => undefined);
-  await admin.end();
-  process.exit(0);
+  for (const child of children)
+    if (child.exitCode === null && child.signalCode === null) child.kill("SIGTERM");
+  try {
+    await Promise.all(childClosed);
+    await database.close();
+    console.error(
+      "Browser fixture cleanup: child processes closed, database and runtime role removed",
+    );
+    process.exit(childFailed ? 1 : 0);
+  } catch {
+    // Never print URLs or database credentials, including errors during fixture cleanup.
+    console.error("Browser fixture cleanup failed; preserve the fixture evidence");
+    process.exit(1);
+  }
 }
 process.on("SIGINT", stop);
 process.on("SIGTERM", stop);
-for (const child of children) child.on("exit", () => void stop());
+for (const child of children)
+  child.on("exit", () => {
+    if (!stopping) childFailed = true;
+    void stop();
+  });
+for (const child of children)
+  child.on("error", () => {
+    childFailed = true;
+    void stop();
+  });

@@ -26,6 +26,8 @@ export function assertDisposableDatabase(
   }
   if (!["postgres:", "postgresql:"].includes(url.protocol) || !LOOPBACK.has(url.hostname))
     throw new Error("Test databases must be on a loopback host (value redacted)");
+  if (url.search || url.hash)
+    throw new Error("Test database query parameters and fragments are forbidden (value redacted)");
   if (requireTestName && !/(test|fixture)/i.test(url.pathname))
     throw new Error("Test databases must have a test/fixture name (value redacted)");
   return url.toString();

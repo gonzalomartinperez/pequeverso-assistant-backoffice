@@ -4,7 +4,8 @@ Private backoffice for Pequeverso, currently providing assistant operations, OAu
 and access management. Repository renamed from `pequeverso-assistant-web` on 2026-10-05 and
 from `pequeverso-assistant-backoffice` on 2026-10-17; old GitHub URLs redirect to the current name.
 The public conversation lives only in the storefront; this repository serves no public chat.
-Public repository; all rights reserved (see `LICENSE`). Never commit secrets,
+Public repository; software is MIT-licensed (see `LICENSE` and the reserved scope in `NOTICE.md`).
+Never commit secrets,
 private operations details or other repositories' internals.
 
 - English for code, docs and commits. UI copy is neutral Spanish with "tú".

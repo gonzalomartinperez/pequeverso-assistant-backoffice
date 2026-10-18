@@ -1,21 +1,9 @@
----
-{"config": {"theme": "base", "look": "classic", "fontFamily": "Arial, sans-serif", "htmlLabels": false, "themeVariables": {"background": "#fffdf8", "primaryTextColor": "#06305b", "lineColor": "#65758a", "clusterBkg": "#fffdf8", "clusterBorder": "#65758a", "edgeLabelBackground": "#fffdf8", "fontSize": "18px", "textColor": "#06305b", "titleColor": "#06305b", "nodeTextColor": "#06305b", "clusterTextColor": "#06305b"}, "flowchart": {"curve": "basis", "nodeSpacing": 30, "rankSpacing": 36, "padding": 14, "htmlLabels": false, "wrappingWidth": 340}, "markdownAutoWrap": false, "themeCSS": ".cluster-label text,.nodeLabel,.edgeLabel text,.label text{fill:#06305b!important;} .edgeLabel rect,.edgeLabel polygon{fill:#fffdf8!important;opacity:1!important;}"}}
----
 flowchart TB
-  accTitle: Pequeverso private backoffice components and boundaries
-  accDescr: Invited operators authenticate using OAuth and private PostgreSQL. Server session and role guards protect the dashboard. A bounded server adapter reads API summary and optional telemetry, separate from private observability.
-  Operator["INVITED OPERATOR<br/>Private application access"] --> Guard["SERVER ACCESS BOUNDARY<br/>Better Auth OAuth · session / role guard<br/>PostgreSQL identity · sessions · invitations"]
-  Guard --> Panel["PEQUEVERSO DASHBOARD<br/>Health · catalog · runs · latency · spend"]
-  Panel --> Adapter["SERVER ADAPTER<br/>Bounded · validated · private bearer"]
-  Adapter --> Summary["API SUMMARY · REVISION1.2<br/>API-owned SQLite aggregates"]
-  Adapter -. "Optional · same bearer" .-> Telemetry["API TELEMETRY · REVISION1.0<br/>Point-in-time process readings"]
-  Panel -. "Separate private integration" .-> Monitor["VPS-OPS OBSERVABILITY<br/>OTLP instrumentation · OFF by default<br/>Separate metrics bearer → Prometheus → Grafana"]
-  Monitor ~~~ Legend["KEY · Solid: implemented path<br/>Dashed: OFF, optional or future · read labels"]
-  class Operator person
-  class Guard,Panel,Adapter app
-  class Summary,Telemetry data
-  class Monitor,Legend external
-  classDef person fill:#fff1d8,stroke:#06305b,color:#06305b,stroke-width:1.5px;
-  classDef app fill:#fff9ef,stroke:#06305b,color:#06305b,stroke-width:1.5px;
-  classDef data fill:#e4f4ef,stroke:#007e80,color:#06305b,stroke-width:1.5px;
-  classDef external fill:#f0f2f5,stroke:#65758a,color:#06305b,stroke-width:1.2px,stroke-dasharray:4 3;
+  accTitle: Pequeverso private backoffice access and aggregate operations
+  accDescr: The owner or invited operators authenticate through Better Auth OAuth. Server-side session and role checks use the separate PostgreSQL identity database. A bounded server adapter reads private API summaries and optional telemetry. Observability is optional and operator-owned.
+  Operator["Owner or invited operator<br/>No public sign-up or domain admission"] --> Access["Server access boundary<br/>Better Auth OAuth · session and role checks"]
+  Access --> IAM["PostgreSQL 18 · private IAM<br/>Identity, sessions and invitations"]
+  Access --> Panel["Operations dashboard<br/>Health, catalog, runs, latency, tokens and spend"]
+  Panel --> Adapter["Bounded server adapter<br/>Private bearer and validated payloads"]
+  Adapter --> API["Assistant API · private ops<br/>Summary rev. 1.2 · optional telemetry rev. 1.0<br/>Aggregates, no prompts or buyer data"]
+  Panel -. Optional operator integration .-> Ops["vps-ops · private observability<br/>OTLP and metrics · Prometheus and Grafana<br/>No monitoring stack deployed here"]

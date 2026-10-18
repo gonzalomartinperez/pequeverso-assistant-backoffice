@@ -33,5 +33,7 @@ export default defineConfig({
     url: "http://localhost:3241/healthz",
     reuseExistingServer: false,
     timeout: 90_000,
+    // Let the fixture parent close children and remove its database/role before forced teardown.
+    gracefulShutdown: { signal: "SIGTERM", timeout: 5_000 },
   },
 });

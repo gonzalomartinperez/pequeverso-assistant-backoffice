@@ -81,7 +81,7 @@ review security advisories, supported versions and exact new artifacts.
 | Tailwind/PostCSS |4.3.3 | [Stable tooling](https://tailwindcss.com/docs); no separate LTS policy |
 | Playwright / axe |1.64.1 /4.13.0 | [Stable Playwright](https://playwright.dev/docs/release-notes) and [axe](https://github.com/dequelabs/axe-core/releases); test-only, no invented LTS |
 | Biome |2.5.15 (one compatible patch above the2.5.14 reference; no downgrade) | [Stable formatter/linter](https://biomejs.dev/); test/build-only, no separate LTS |
-| lucide / Recharts |1.52.0 /3.10.1 | [Stable icons](https://lucide.dev/) /[charts](https://recharts.github.io/); maintained libraries, no LTS promise |
+| lucide / Recharts |1.55.0 /3.10.1 | [Stable icons](https://lucide.dev/) /[charts](https://recharts.github.io/); maintained libraries, no LTS promise |
 | Owned primitives |CVA0.7.1,clsx2.1.1,tailwind-merge3.7.0,server-only0.0.1 | Stable exact dependencies reviewed in lockfile; no LTS promise; CVA/server-only0.x need explicit compatibility review |
 | Docker / Grafana / Prometheus / collector |Infrastructure selected versions pending | Project does not install or upgrade a shared stack; vps-ops must select official supported versions and validate supplied BO artifacts |
 

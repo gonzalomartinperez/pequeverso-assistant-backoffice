@@ -5,7 +5,9 @@ and invited people, access management, and the shopping assistant's operations d
 health, catalog freshness, runs, latency, tokens and spend. The public conversation lives only in the storefront
 (`pequeverso`); the former chat shells were removed from this repository (see git history).
 
-The repository is public; the application is private. All rights reserved (see `LICENSE`).
+The repository is public; the application is private. Owner-authored software uses
+the [MIT License](LICENSE); [NOTICE.md](NOTICE.md) reserves brand, content and data
+and preserves third-party rights.
 
 The repository was renamed to `pequeverso-backoffice` on 2026-10-17; earlier GitHub URLs
 redirect, while local checkout paths and persistent identifiers remain unchanged. This name
@@ -75,24 +77,28 @@ record provenance and agent inspection; they do not claim human review.
 
 ## Architecture and data flow
 
+<p align="center">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture/system-dark.svg">
-  <img src="docs/architecture/system-light.svg" alt="Private Pequeverso backoffice: invited operators authenticate through OAuth and PostgreSQL identity, server guards protect the dashboard, and a bounded server adapter reads API summaries and optional process telemetry.">
+  <img src="docs/architecture/system-light.svg" alt="Private Pequeverso backoffice: the owner or invited operators authenticate through OAuth and PostgreSQL identity, server guards protect the dashboard, and a bounded server adapter reads API summaries and optional process telemetry.">
 </picture>
+</p>
 
 [Full-size light diagram](docs/architecture/system-light.svg) ·
 [Full-size dark diagram](docs/architecture/system-dark.svg) ·
 [Editable light source](docs/architecture/system-light.mmd) ·
 [Editable dark source](docs/architecture/system-dark.mmd)
 
-[Rendering provenance and asset hashes](docs/architecture/manifest.json). Both themes are
-self-contained SVGs with editable Mermaid sources; they add no application dependency.
+[Diagram editing and provenance](docs/architecture/README.md) ·
+[Asset hashes](docs/architecture/manifest.json). Both themes are authored, self-contained SVGs;
+Mermaid preserves their semantic relationships without generating the same pixel layout.
+No application dependency is added.
 
 The private dashboard reads operational evidence through a bounded, validated server adapter.
 Summary revision 1.2 and optional telemetry revision 1.0 come from the assistant API. Private
-PostgreSQL stores operator identity, sessions and invitations; API SQLite owns the public catalog,
-conversations and accounting. This backoffice serves no chat and receives no conversation
-content, buyer data or provider keys. The storefront talks directly to the API only when its
+PostgreSQL stores operator identity, sessions and invitations; the API owns its catalog,
+conversations and accounting behind the private operations contract. This backoffice serves no
+chat and receives no conversation content, buyer data or provider keys. The storefront talks directly to the API only when its
 assistant is separately enabled; publishable storefront builds currently keep it disabled.
 
 Point-in-time process readings are not historical availability: no uptime percentage is invented
@@ -174,3 +180,12 @@ Biome 2.5, Playwright 1.64.1 + axe-core. Node 24.22.0. Support classifications a
 maintained libraries are not mislabeled LTS. No infrastructure stack is installed here.
 
 Shared runtime/version acceptance: [runtime baseline](docs/runtime-baseline.md).
+
+## Software license
+
+Owner-authored software and technical documentation use the [MIT License](LICENSE).
+Brand, product/commercial content, media, datasets, private data and third-party
+material are excluded; see [NOTICE.md](NOTICE.md) and the preserved
+[third-party attribution](THIRD_PARTY_NOTICES.md). The runtime carries all three
+notices under `/app/`; the application's access controls and privacy obligations
+are unchanged.

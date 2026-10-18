@@ -36,6 +36,30 @@ describe("fixture safety", () => {
     assert.doesNotMatch(result.stdout + result.stderr, new RegExp(PROBE));
   });
 
+  it("rejects connection query overrides and fragments before the driver can reinterpret them", () => {
+    for (const suffix of [
+      "?host=remote.invalid",
+      "?hostaddr=192.0.2.1",
+      "?host=%2Ftmp",
+      "?service=remote",
+      "?dbname=live",
+      "?sslmode=require",
+      "#fixture-redaction-probe",
+      "?host=remote.invalid#fixture-redaction-probe",
+    ]) {
+      assert.throws(
+        () => assertDisposableDatabase(`postgres://u:${PROBE}@127.0.0.1/bo_test_x${suffix}`, true),
+        (error: unknown) => {
+          assert.ok(error instanceof Error);
+          assert.match(error.message, /query|fragment/);
+          assert.doesNotMatch(error.message, new RegExp(PROBE));
+          assert.doesNotMatch(error.message, /remote\.invalid/);
+          return true;
+        },
+      );
+    }
+  });
+
   it("requires a test/fixture database name where asked", () => {
     assert.throws(
       () => assertDisposableDatabase("postgres://u:p@127.0.0.1/backoffice", true),

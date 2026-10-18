@@ -80,9 +80,10 @@ migration owner is separate from the runtime identity and owns only IAM relation
 CREATE ROLE pv_iam_owner LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
 CREATE ROLE pv_iam_runtime LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
 CREATE DATABASE pv_iam OWNER pv_iam_owner;
-REVOKE CONNECT ON DATABASE pv_iam FROM PUBLIC;
+REVOKE ALL ON DATABASE pv_iam FROM PUBLIC;
 GRANT CONNECT ON DATABASE pv_iam TO pv_iam_owner, pv_iam_runtime;
--- Also revoke PUBLIC CONNECT on the API and unused system databases as in API bootstrap.
+-- Operator retains explicit owner/admin access; PUBLIC TEMPORARY and CREATE are revoked too.
+-- Apply the same PUBLIC revoke on the API and unused system databases in API bootstrap.
 -- Grant no API capability membership, ownership or CONNECT to either IAM identity.
 ```
 
@@ -108,7 +109,7 @@ cross-database LOGIN rejection and ownership/privileges after provisioning, rath
 assuming network isolation or default PUBLIC grants suffice. HBA restrictions complement
 SQL grants and must be selected by vps-ops for its actual private network.
 
-The isolated local one-engine drill passed API31 database tests, BO18 database tests and
+The initial isolated local one-engine drill passed API31 database tests, BO18 database tests and
 BO51 browser tests (three optional live-ops skips). Six real LOGINs were denied access to the
 other application's database, eight forbidden SQL operations were rejected and five
 least-privilege identities read authorized synthetic rows. Both independent restores into
@@ -118,6 +119,20 @@ production runtime credentials. A leftover owned browser-test database required 
 cleanup and is recorded separately. Dumps omit cluster roles/HBA/secrets: restore their
 private operator inventory separately. This is local logical isolation and recovery evidence,
 not production HBA, off-server secret recovery, capacity or VPS deployment approval.
+
+The browser harness now separates its fixture bootstrap and runtime identities. Its disposable
+loopback operator needs CREATEDB/CREATEROLE for test provisioning; only the parent retains that
+credential. Next, mock operations and the fake identity provider receive no bootstrap database
+variables. Next receives only a fresh NOSUPERUSER, non-owner IAM runtime identity with the
+explicit grants above. Real PostgreSQL regression checks cover allowed DML and denied TEMP,
+DDL, migration history, audit mutation and cross-database connections. The initial administrative
+browser run remains historical evidence, not a runtime-role run.
+
+Fixture teardown uses SIGTERM with a five-second infrastructure grace period; children must
+close before the database and role are dropped and their absence verified. This does not
+change test/expect deadlines, workers or generation retries. A forced teardown or a missing
+cleanup confirmation is not a successful resource-cleanup proof. These fixture procedures do
+not provision a production owner, runtime secret, HBA rule or shared engine.
 
 ## Runtime variables
 
